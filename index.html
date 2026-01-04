@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fitness Tracker</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>Fitness Tracker</h1>
+            <p class="subtitle">Übersicht über dein Training.</p>
+        </header>
+
+        <section class="selection-area">
+            <div class="control-group">
+                <select id="workout-select">
+                    <option value="" disabled selected>Workout wählen...</option>
+                    <option value="1">Workout 1: Push</option>
+                    <option value="2">Workout 2: Pull</option>
+                    <option value="3">Workout 3: Legs</option>
+                </select>
+                <button id="load-workout-btn">Laden</button>
+            </div>
+            <h2 id="next-workout-hint"
+                style="text-align: center; margin-bottom: 20px; font-size: 1rem; color: var(--accent-color);"></h2>
+        </section>
+
+        <main id="workout-container">
+            <!-- Dynamischer Content -->
+            <div class="loading-spinner" id="main-loader"></div>
+        </main>
+
+        <section class="actions">
+            <button id="save-btn" disabled>Workout speichern</button>
+            <div id="motivation"></div>
+        </section>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
