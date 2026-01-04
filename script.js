@@ -13,16 +13,27 @@ const mainLoader = document.getElementById("main-loader");
 const MOTIVATION_QUOTES = []; // Deaktiviert
 
 
-document.getElementById("load-workout-btn").addEventListener("click", loadWorkout);
+document.getElementById("load-workout-btn").addEventListener("click", () => {
+  loadWorkout();
+  saveDraft(); // Save the selected workout ID
+});
 saveBtn.addEventListener("click", saveWorkout);
+
 
 async function init() {
   try {
     // motivationEl.style.display = "none";
     await Promise.all([loadPlan(), loadLogs()]);
-
     mainLoader.style.display = "none";
-    suggestNextWorkout();
+
+    // Check for saved draft
+    const savedDraft = JSON.parse(localStorage.getItem("workout_draft"));
+    if (savedDraft && savedDraft.workoutId) {
+      workoutSelect.value = savedDraft.workoutId;
+      loadWorkout(savedDraft.entries);
+    } else {
+      suggestNextWorkout();
+    }
   } catch (error) {
     console.error("Initialization error:", error);
     workoutContainer.innerHTML = `<p style="color: #ef4444; text-align: center;">Fehler beim Laden der Daten. Bitte prüfe die Internetverbindung.</p>`;
@@ -66,23 +77,80 @@ function showMotivation() {
 
 function suggestNextWorkout() {
   if (logs.length === 0) {
-    nextWorkoutHint.textContent = "Tipp: Starte mit Workout 1!";
+    nextWorkoutHint.innerHTML = `<span style="color: var(--primary-color)">Willkommen! Starte heute mit **Full Body 1**</span>`;
+    workoutSelect.value = 1;
     return;
   }
 
-  // Find the last workout ID from logs
-  const lastLog = [...logs].sort((a, b) => new Date(b.date) - new Date(a.date))[0];
-  const lastWorkoutId = lastLog.workout;
+  // Get unique sessions (Date + WorkoutID)
+  const sessions = [];
+  const seenSessions = new Set();
 
-  // Simple rotation (1 -> 2 -> 3 -> 1)
+  [...logs].sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(log => {
+    const key = `${log.date}-${log.workout}`;
+    if (!seenSessions.has(key)) {
+      sessions.push({ date: log.date, workout: log.workout });
+      seenSessions.add(key);
+    }
+  });
+
+  const lastSessions = sessions.slice(0, 3);
+  let historyHtml = `<div style="margin-bottom: 10px; font-size: 0.85rem; color: var(--text-muted);">Deine letzten Trainings:</div>`;
+
+  lastSessions.forEach((s, i) => {
+    const dateStr = new Date(s.date).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
+    historyHtml += `<div style="opacity: ${1 - i * 0.2}; margin-bottom: 4px;">${i === 0 ? ' zuletzt: ' : ' davor: '} <strong>FB ${s.workout}</strong> (${dateStr})</div>`;
+  });
+
+  const lastWorkoutId = lastSessions[0].workout;
   let nextId = lastWorkoutId + 1;
   if (nextId > 3) nextId = 1;
 
-  nextWorkoutHint.textContent = `Nächstes empfohlenes Workout: ${nextId}`;
+  nextWorkoutHint.innerHTML = `
+    ${historyHtml}
+    <div style="margin-top: 15px; padding: 10px; background: rgba(16, 185, 129, 0.1); border-radius: 8px; border: 1px solid var(--accent-color);">
+      HEUTE DRAN: <strong style="color: var(--accent-color)">Full Body ${nextId}</strong>
+    </div>
+  `;
   workoutSelect.value = nextId;
 }
 
-function loadWorkout() {
+/* ---------------- TIMER & VOLUME ---------------- */
+
+let timerInterval;
+let startTime;
+
+function startTimer() {
+  if (timerInterval) clearInterval(timerInterval);
+  startTime = Date.now();
+  timerInterval = setInterval(updateTimer, 1000);
+}
+
+function updateTimer() {
+  const elapsed = Math.floor((Date.now() - startTime) / 1000);
+  const mins = Math.floor(elapsed / 60).toString().padStart(2, '0');
+  const secs = (elapsed % 60).toString().padStart(2, '0');
+  motivationEl.innerHTML = `⏱ Zeit: ${mins}:${secs} | ⚖️ Volumen: <span id="volume-val">0</span> kg`;
+  updateVolume();
+}
+
+function updateVolume() {
+  let totalVolume = 0;
+  document.querySelectorAll(".exercise-card").forEach(card => {
+    const weights = card.querySelectorAll(".weight");
+    const reps = card.querySelectorAll(".reps");
+    weights.forEach((w, i) => {
+      const v = Number(w.value) || 0;
+      const r = Number(reps[i].value) || 0;
+      totalVolume += v * r;
+    });
+  });
+  const volEl = document.getElementById("volume-val");
+  if (volEl) volEl.textContent = totalVolume.toLocaleString('de-DE');
+}
+
+
+function loadWorkout(draftEntries = null) {
   const workoutId = Number(workoutSelect.value);
   if (!workoutId) return;
 
@@ -124,13 +192,16 @@ function loadWorkout() {
       const row = document.createElement("div");
       row.className = "set-row";
 
-      // Try to pre-fill weight from last time or planned weight
-      const lastWeight = lastLogs[i - 1]?.weight || ex.planned_weight || "";
+      // PRE-FILL LOGIC: 1. Draft, 2. Last Time, 3. Planned
+      let currentWeight = draftEntries?.find(d => d.ex === ex.exercise && d.set === i)?.weight;
+      if (currentWeight === undefined) currentWeight = lastLogs[i - 1]?.weight || ex.planned_weight || "";
+
+      let currentReps = draftEntries?.find(d => d.ex === ex.exercise && d.set === i)?.reps || "";
 
       row.innerHTML = `
         <label>Satz ${i}</label>
-        <input type="number" step="0.5" placeholder="kg" value="${lastWeight}" data-ex="${ex.exercise}" data-set="${i}" class="weight">
-        <input type="number" placeholder="Wdh." data-ex="${ex.exercise}" data-set="${i}" class="reps">
+        <input type="number" step="0.5" placeholder="kg" value="${currentWeight}" data-ex="${ex.exercise}" data-set="${i}" class="weight">
+        <input type="number" placeholder="Wdh." value="${currentReps}" data-ex="${ex.exercise}" data-set="${i}" class="reps">
       `;
       card.appendChild(row);
     }
@@ -138,9 +209,40 @@ function loadWorkout() {
     workoutContainer.appendChild(card);
   });
 
+  // Attach autosave and volume listeners
+  document.querySelectorAll("input").forEach(input => {
+    input.addEventListener("input", () => {
+      saveDraft();
+      updateVolume();
+    });
+  });
+
+  startTimer();
   // Scroll to top of container
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
+
+
+function saveDraft() {
+  const workoutId = workoutSelect.value;
+  const entries = [];
+  document.querySelectorAll(".exercise-card").forEach(card => {
+    const weights = card.querySelectorAll(".weight");
+    const reps = card.querySelectorAll(".reps");
+    weights.forEach((w, i) => {
+      if (w.value || reps[i].value) {
+        entries.push({
+          ex: w.dataset.ex,
+          set: Number(w.dataset.set),
+          weight: w.value,
+          reps: reps[i].value
+        });
+      }
+    });
+  });
+  localStorage.setItem("workout_draft", JSON.stringify({ workoutId, entries }));
+}
+
 
 function getLastExerciseLogs(workoutId, exercise, sets) {
   const filtered = logs
@@ -215,7 +317,9 @@ async function saveWorkout() {
     });
 
     // Since we use no-cors, we can't read the response, but we assume success if no error is thrown
+    localStorage.removeItem("workout_draft"); // Clear draft on success
     alert("Workout erfolgreich gespeichert! 💪");
+
     saveBtn.textContent = "Workout speichern";
     saveBtn.disabled = false;
 

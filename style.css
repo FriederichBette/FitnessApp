@@ -214,12 +214,26 @@ input[type="number"]:focus {
 }
 
 #motivation {
-    text-align: center;
-    font-style: italic;
-    color: var(--accent-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 12px;
+    border-radius: 12px;
+    font-family: monospace;
+    font-size: 1rem;
+    color: var(--primary-color);
     margin-top: 24px;
-    min-height: 2em;
+    min-height: 50px;
+    border: 1px solid var(--glass-border);
 }
+
+#volume-val {
+    color: var(--accent-color);
+    font-weight: bold;
+}
+
 
 .loading-spinner {
     width: 40px;
