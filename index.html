@@ -28,8 +28,10 @@
                 </select>
                 <button id="load-workout-btn">Laden</button>
             </div>
+
             <h2 id="next-workout-hint"
-                style="text-align: center; margin-bottom: 20px; font-size: 1rem; color: var(--accent-color);"></h2>
+                style="text-align: center; margin-bottom: 20px; font-size: 1rem; color: var(--accent-color);">
+            </h2>
         </section>
 
         <main id="workout-container">
@@ -43,7 +45,11 @@
         </section>
     </div>
 
-    <script src="script.js"></script>
-</body>
+    <!-- Supabase zuerst laden -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 
+    <!-- danach dein eigenes Script -->
+    <script src="script.js"></script>
+
+</body>
 </html>

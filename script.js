@@ -1,4 +1,8 @@
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyL9f3zlyGVh7JQmuiO3svTuQn-tT0xkv_RoidHX1HEzXvOzN-J6Xewa8F0j2-_7m3phQ/exec";
+// ---- SUPABASE VERBINDUNG ----
+const client = supabase.createClient(
+  "https://yfqergfvydwfwyryggvo.supabase.co",
+  "sb_publishable_auj_m_StlyxYK4uGiJYU3w_kll5T-lG"
+);
 
 let plan = [];
 let logs = [];
@@ -15,18 +19,17 @@ const MOTIVATION_QUOTES = []; // Deaktiviert
 
 document.getElementById("load-workout-btn").addEventListener("click", () => {
   loadWorkout();
-  saveDraft(); // Save the selected workout ID
+  saveDraft();
 });
 saveBtn.addEventListener("click", saveWorkout);
 
 
+// ---------------- INITIALISIERUNG ----------------
 async function init() {
   try {
-    // motivationEl.style.display = "none";
     await Promise.all([loadPlan(), loadLogs()]);
     mainLoader.style.display = "none";
 
-    // Check for saved draft
     const savedDraft = JSON.parse(localStorage.getItem("workout_draft"));
     if (savedDraft && savedDraft.workoutId) {
       workoutSelect.value = savedDraft.workoutId;
@@ -36,53 +39,55 @@ async function init() {
     }
   } catch (error) {
     console.error("Initialization error:", error);
-    workoutContainer.innerHTML = `<p style="color: #ef4444; text-align: center;">Fehler beim Laden der Daten. Bitte prüfe die Internetverbindung.</p>`;
+    workoutContainer.innerHTML = `<p style="color: #ef4444; text-align: center;">Fehler beim Laden der Daten. Bitte Internet prüfen.</p>`;
   }
 }
 
 init();
 
-/* ---------------- DATA FETCHING ---------------- */
 
+// ---------------- SUPABASE DATEN LADEN ----------------
 async function loadPlan() {
-  const res = await fetch(`${WEB_APP_URL}?mode=plan`);
-  if (!res.ok) throw new Error("Plan could not be loaded");
-  plan = await res.json();
+  const { data, error } = await client
+    .from("plan")
+    .select("*")
+    .order("workout", { ascending: true });
+
+  if (error) throw error;
+
+  plan = data;
   console.log("PLAN Loaded:", plan);
 }
 
 async function loadLogs() {
-  const res = await fetch(`${WEB_APP_URL}?mode=logs`);
-  if (!res.ok) throw new Error("Logs could not be loaded");
-  const raw = await res.json();
+  const { data, error } = await client
+    .from("logs")
+    .select("*")
+    .order("date", { ascending: true });
 
-  logs = raw.map(r => ({
+  if (error) throw error;
+
+  logs = data.map(r => ({
     date: r.date,
     workout: Number(r.workout),
-    exercise: String(r.exercise).trim(),
+    exercise: r.exercise.trim(),
     set: Number(r.set),
-    reps: r.reps ? Number(r.reps) : null,
-    weight: r.weight ? Number(r.weight) : null
+    reps: r.reps === null ? null : Number(r.reps),
+    weight: r.weight === null ? null : Number(r.weight)
   }));
 
   console.log("LOGS Loaded:", logs);
 }
 
-/* ---------------- UI LOGIC ---------------- */
 
-function showMotivation() {
-  motivationEl.textContent = "";
-}
-
-
+// ---------------- UI LOGIK ----------------
 function suggestNextWorkout() {
   if (logs.length === 0) {
-    nextWorkoutHint.innerHTML = `<span style="color: var(--primary-color)">Willkommen! Starte heute mit **Full Body 1**</span>`;
+    nextWorkoutHint.innerHTML = `<span style="color: var(--primary-color)">Willkommen! Starte heute mit <strong>Full Body 1</strong></span>`;
     workoutSelect.value = 1;
     return;
   }
 
-  // Get unique sessions (Date + WorkoutID)
   const sessions = [];
   const seenSessions = new Set();
 
@@ -115,8 +120,8 @@ function suggestNextWorkout() {
   workoutSelect.value = nextId;
 }
 
-/* ---------------- TIMER & VOLUME ---------------- */
 
+// ---------------- TIMER & VOLUME ----------------
 let timerInterval;
 let startTime;
 
@@ -150,6 +155,7 @@ function updateVolume() {
 }
 
 
+// ---------------- WORKOUT LADEN ----------------
 function loadWorkout(draftEntries = null) {
   const workoutId = Number(workoutSelect.value);
   if (!workoutId) return;
@@ -160,7 +166,7 @@ function loadWorkout(draftEntries = null) {
   const exercises = plan.filter(p => p.workout === workoutId);
 
   if (exercises.length === 0) {
-    workoutContainer.innerHTML = `<p style="text-align: center; color: var(--text-muted);">Keine Übungen für Workout ${workoutId} im Plan gefunden.</p>`;
+    workoutContainer.innerHTML = `<p style="text-align: center; color: var(--text-muted);">Keine Übungen für Workout ${workoutId} gefunden.</p>`;
     return;
   }
 
@@ -168,13 +174,11 @@ function loadWorkout(draftEntries = null) {
     const card = document.createElement("div");
     card.className = "exercise-card";
 
-    /* Header */
     const header = `
       <h3>${ex.exercise}</h3>
       <div class="exercise-info">${ex.sets} Sätze · ${ex.reps_min}-${ex.reps_max} Wdh.</div>
     `;
 
-    /* Last Logs Section */
     const lastLogs = getLastExerciseLogs(workoutId, ex.exercise, ex.sets);
     const lastLogsHtml = `
       <div class="last-logs">
@@ -187,12 +191,10 @@ function loadWorkout(draftEntries = null) {
 
     card.innerHTML = header + lastLogsHtml;
 
-    /* Input Rows */
     for (let i = 1; i <= ex.sets; i++) {
       const row = document.createElement("div");
       row.className = "set-row";
 
-      // PRE-FILL LOGIC: 1. Draft, 2. Last Time, 3. Planned
       let currentWeight = draftEntries?.find(d => d.ex === ex.exercise && d.set === i)?.weight;
       if (currentWeight === undefined) currentWeight = lastLogs[i - 1]?.weight || ex.planned_weight || "";
 
@@ -209,7 +211,6 @@ function loadWorkout(draftEntries = null) {
     workoutContainer.appendChild(card);
   });
 
-  // Attach autosave and volume listeners
   document.querySelectorAll("input").forEach(input => {
     input.addEventListener("input", () => {
       saveDraft();
@@ -218,11 +219,11 @@ function loadWorkout(draftEntries = null) {
   });
 
   startTimer();
-  // Scroll to top of container
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 
+// ---------------- DRAFT SAVE ----------------
 function saveDraft() {
   const workoutId = workoutSelect.value;
   const entries = [];
@@ -244,6 +245,7 @@ function saveDraft() {
 }
 
 
+// ---------------- LETZTE LOGS ----------------
 function getLastExerciseLogs(workoutId, exercise, sets) {
   const filtered = logs
     .filter(l => l.workout === workoutId && l.exercise === exercise)
@@ -253,7 +255,6 @@ function getLastExerciseLogs(workoutId, exercise, sets) {
     return Array.from({ length: sets }, () => ({ reps: null, weight: null }));
   }
 
-  // Get the most recent date used for this exercise
   const lastDate = filtered[0].date;
   const sameWorkoutData = filtered
     .filter(l => l.date === lastDate)
@@ -268,8 +269,8 @@ function getLastExerciseLogs(workoutId, exercise, sets) {
   return result;
 }
 
-/* ---------------- SAVE ---------------- */
 
+// ---------------- SPEICHERN → SUPABASE ----------------
 async function saveWorkout() {
   const workoutId = Number(workoutSelect.value);
   const today = new Date().toISOString().slice(0, 10);
@@ -285,7 +286,6 @@ async function saveWorkout() {
     const rInput = document.querySelector(`.reps[data-ex="${exercise}"][data-set="${set}"]`);
     const reps = rInput.value ? Number(rInput.value) : null;
 
-    // Only save if at least reps are entered (0 is allowed but unlikely)
     if (reps !== null || weight !== null) {
       workoutData.push({
         date: today,
@@ -306,30 +306,19 @@ async function saveWorkout() {
   saveBtn.disabled = true;
   saveBtn.textContent = "Speichere...";
 
-  try {
-    const response = await fetch(WEB_APP_URL, {
-      method: "POST",
-      mode: "no-cors", // Necessary for some GAS deployments to avoid CORS preflight issues
-      body: JSON.stringify(workoutData),
-      headers: {
-        "Content-Type": "text/plain" // GAS wants text/plain for POST contents usually
-      }
-    });
+  const { error } = await client.from("logs").insert(workoutData);
 
-    // Since we use no-cors, we can't read the response, but we assume success if no error is thrown
-    localStorage.removeItem("workout_draft"); // Clear draft on success
+  if (error) {
+    console.error(error);
+    alert("Fehler beim Speichern.");
+  } else {
+    localStorage.removeItem("workout_draft");
     alert("Workout erfolgreich gespeichert! 💪");
 
-    saveBtn.textContent = "Workout speichern";
-    saveBtn.disabled = false;
-
-    // Clear inputs or reload
     await loadLogs();
-    loadWorkout(); // Refresh UI to show new "last time" logs
-  } catch (error) {
-    console.error("Save error:", error);
-    alert("Fehler beim Speichern. Bitte versuche es erneut.");
-    saveBtn.textContent = "Workout speichern";
-    saveBtn.disabled = false;
+    loadWorkout();
   }
+
+  saveBtn.textContent = "Workout speichern";
+  saveBtn.disabled = false;
 }
