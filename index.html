@@ -12,6 +12,22 @@
 </head>
 
 <body>
+
+    <!-- AUTH BEREICH -->
+    <div id="auth" style="padding: 20px; border-bottom: 1px solid #ccc;">
+        <h3>Login</h3>
+        <input id="email" placeholder="Email">
+        <input id="password" placeholder="Passwort" type="password">
+        <button id="login-btn">Login</button>
+
+        <h3>Registrieren</h3>
+        <input id="reg-email" placeholder="Email">
+        <input id="reg-password" placeholder="Passwort" type="password">
+        <button id="register-btn">Registrieren</button>
+
+        <button id="logout-btn">Logout</button>
+    </div>
+
     <div class="container">
         <header>
             <h1>Fitness Tracker</h1>
@@ -35,7 +51,6 @@
         </section>
 
         <main id="workout-container">
-            <!-- Dynamischer Content -->
             <div class="loading-spinner" id="main-loader"></div>
         </main>
 
@@ -45,10 +60,10 @@
         </section>
     </div>
 
-    <!-- Supabase zuerst laden -->
+    <!-- Supabase zuerst -->
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 
-    <!-- danach dein eigenes Script -->
+    <!-- dann dein Script -->
     <script src="script.js"></script>
 
 </body>

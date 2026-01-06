@@ -6,6 +6,7 @@ const client = supabase.createClient(
 
 let plan = [];
 let logs = [];
+let exercises = [];
 
 const workoutContainer = document.getElementById("workout-container");
 const saveBtn = document.getElementById("save-btn");
@@ -14,9 +15,76 @@ const motivationEl = document.getElementById("motivation");
 const nextWorkoutHint = document.getElementById("next-workout-hint");
 const mainLoader = document.getElementById("main-loader");
 
-const MOTIVATION_QUOTES = []; // Deaktiviert
+
+// -------------------------------- AUTH --------------------------------
+
+async function login() {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  const { error } = await client.auth.signInWithPassword({
+    email,
+    password
+  });
+
+  if (error) {
+    alert("Login fehlgeschlagen");
+    console.error(error);
+    return;
+  }
+
+  alert("Login erfolgreich");
+  location.reload();
+}
+document.getElementById("login-btn").addEventListener("click", login);
 
 
+async function register() {
+  const email = document.getElementById("reg-email").value;
+  const password = document.getElementById("reg-password").value;
+
+  const { error } = await client.auth.signUp({
+    email,
+    password
+  });
+
+  if (error) {
+    alert("Registrierung fehlgeschlagen");
+    console.error(error);
+    return;
+  }
+
+  alert("Account erstellt. Falls Email-Bestätigung aktiv ist, bitte Postfach prüfen.");
+}
+document.getElementById("register-btn").addEventListener("click", register);
+
+
+async function logout() {
+  await client.auth.signOut();
+  alert("Abgemeldet");
+  location.reload();
+}
+document.getElementById("logout-btn").addEventListener("click", logout);
+
+
+// ---------------- EXERCISES ----------------
+async function loadExercises() {
+  const { data, error } = await client
+    .from("exercises")
+    .select("*")
+    .order("name");
+
+  if (error) {
+    console.error("Error loading exercises:", error);
+    return;
+  }
+
+  exercises = data;
+  console.log("EXERCISES Loaded:", exercises);
+}
+
+
+// ---------------- INITIALISIERUNG ----------------
 document.getElementById("load-workout-btn").addEventListener("click", () => {
   loadWorkout();
   saveDraft();
@@ -24,10 +92,26 @@ document.getElementById("load-workout-btn").addEventListener("click", () => {
 saveBtn.addEventListener("click", saveWorkout);
 
 
-// ---------------- INITIALISIERUNG ----------------
 async function init() {
+
+  const {
+    data: { session }
+  } = await client.auth.getSession();
+
+  if (!session) {
+    workoutContainer.innerHTML =
+      "<p style='text-align:center'>Bitte zuerst einloggen.</p>";
+    mainLoader.style.display = "none";
+    return;
+  }
+
   try {
-    await Promise.all([loadPlan(), loadLogs()]);
+    await Promise.all([
+      loadExercises(),
+      loadPlan(),
+      loadLogs()
+    ]);
+
     mainLoader.style.display = "none";
 
     const savedDraft = JSON.parse(localStorage.getItem("workout_draft"));
@@ -37,16 +121,18 @@ async function init() {
     } else {
       suggestNextWorkout();
     }
+
   } catch (error) {
     console.error("Initialization error:", error);
-    workoutContainer.innerHTML = `<p style="color: #ef4444; text-align: center;">Fehler beim Laden der Daten. Bitte Internet prüfen.</p>`;
+    workoutContainer.innerHTML =
+      "<p style='color: #ef4444; text-align: center;'>Fehler beim Laden der Daten.</p>";
   }
 }
 
 init();
 
 
-// ---------------- SUPABASE DATEN LADEN ----------------
+// ---------------- PLAN & LOGS LADEN ----------------
 async function loadPlan() {
   const { data, error } = await client
     .from("plan")
@@ -80,10 +166,11 @@ async function loadLogs() {
 }
 
 
-// ---------------- UI LOGIK ----------------
+// ---------------- NEXT WORKOUT LOGIK ----------------
 function suggestNextWorkout() {
   if (logs.length === 0) {
-    nextWorkoutHint.innerHTML = `<span style="color: var(--primary-color)">Willkommen! Starte heute mit <strong>Full Body 1</strong></span>`;
+    nextWorkoutHint.innerHTML =
+      `<span style="color: var(--primary-color)">Willkommen. Starte heute mit <strong>Full Body 1</strong></span>`;
     workoutSelect.value = 1;
     return;
   }
@@ -100,11 +187,15 @@ function suggestNextWorkout() {
   });
 
   const lastSessions = sessions.slice(0, 3);
-  let historyHtml = `<div style="margin-bottom: 10px; font-size: 0.85rem; color: var(--text-muted);">Deine letzten Trainings:</div>`;
+  let historyHtml =
+    `<div style="margin-bottom: 10px; font-size: 0.85rem; color: var(--text-muted);">Deine letzten Trainings:</div>`;
 
   lastSessions.forEach((s, i) => {
     const dateStr = new Date(s.date).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
-    historyHtml += `<div style="opacity: ${1 - i * 0.2}; margin-bottom: 4px;">${i === 0 ? ' zuletzt: ' : ' davor: '} <strong>FB ${s.workout}</strong> (${dateStr})</div>`;
+    historyHtml += `<div style="opacity: ${1 - i * 0.2}; margin-bottom: 4px;">
+      ${i === 0 ? 'zuletzt: ' : 'davor: '} 
+      <strong>FB ${s.workout}</strong> (${dateStr})
+    </div>`;
   });
 
   const lastWorkoutId = lastSessions[0].workout;
@@ -114,9 +205,10 @@ function suggestNextWorkout() {
   nextWorkoutHint.innerHTML = `
     ${historyHtml}
     <div style="margin-top: 15px; padding: 10px; background: rgba(16, 185, 129, 0.1); border-radius: 8px; border: 1px solid var(--accent-color);">
-      HEUTE DRAN: <strong style="color: var(--accent-color)">Full Body ${nextId}</strong>
+      Heute dran: <strong style="color: var(--accent-color)">Full Body ${nextId}</strong>
     </div>
   `;
+
   workoutSelect.value = nextId;
 }
 
@@ -135,7 +227,8 @@ function updateTimer() {
   const elapsed = Math.floor((Date.now() - startTime) / 1000);
   const mins = Math.floor(elapsed / 60).toString().padStart(2, '0');
   const secs = (elapsed % 60).toString().padStart(2, '0');
-  motivationEl.innerHTML = `⏱ Zeit: ${mins}:${secs} | ⚖️ Volumen: <span id="volume-val">0</span> kg`;
+  motivationEl.innerHTML =
+    `⏱ Zeit: ${mins}:${secs} | ⚖️ Volumen: <span id="volume-val">0</span> kg`;
   updateVolume();
 }
 
@@ -155,7 +248,7 @@ function updateVolume() {
 }
 
 
-// ---------------- WORKOUT LADEN ----------------
+// ---------------- WORKOUT UI ----------------
 function loadWorkout(draftEntries = null) {
   const workoutId = Number(workoutSelect.value);
   if (!workoutId) return;
@@ -163,14 +256,17 @@ function loadWorkout(draftEntries = null) {
   workoutContainer.innerHTML = "";
   saveBtn.disabled = false;
 
-  const exercises = plan.filter(p => p.workout === workoutId);
+  const exs = plan.filter(p => p.workout === workoutId);
 
-  if (exercises.length === 0) {
-    workoutContainer.innerHTML = `<p style="text-align: center; color: var(--text-muted);">Keine Übungen für Workout ${workoutId} gefunden.</p>`;
+  if (exs.length === 0) {
+    workoutContainer.innerHTML =
+      `<p style="text-align: center; color: var(--text-muted);">
+        Keine Übungen für Workout ${workoutId} gefunden.
+      </p>`;
     return;
   }
 
-  exercises.forEach(ex => {
+  exs.forEach(ex => {
     const card = document.createElement("div");
     card.className = "exercise-card";
 
@@ -182,10 +278,10 @@ function loadWorkout(draftEntries = null) {
     const lastLogs = getLastExerciseLogs(workoutId, ex.exercise, ex.sets);
     const lastLogsHtml = `
       <div class="last-logs">
-        <strong>Dein letztes Mal:</strong>
+        <strong>Letztes Mal:</strong>
         ${lastLogs.map((s, i) =>
-      `<div>Satz ${i + 1}: ${s.weight !== null ? s.weight + " kg × " + s.reps : "–"}</div>`
-    ).join("")}
+          `<div>Satz ${i + 1}: ${s.weight !== null ? s.weight + " kg × " + s.reps : "–"}</div>`
+        ).join("")}
       </div>
     `;
 
@@ -196,15 +292,25 @@ function loadWorkout(draftEntries = null) {
       row.className = "set-row";
 
       let currentWeight = draftEntries?.find(d => d.ex === ex.exercise && d.set === i)?.weight;
-      if (currentWeight === undefined) currentWeight = lastLogs[i - 1]?.weight || ex.planned_weight || "";
+      if (currentWeight === undefined)
+        currentWeight = lastLogs[i - 1]?.weight || ex.planned_weight || "";
 
-      let currentReps = draftEntries?.find(d => d.ex === ex.exercise && d.set === i)?.reps || "";
+      let currentReps =
+        draftEntries?.find(d => d.ex === ex.exercise && d.set === i)?.reps || "";
 
       row.innerHTML = `
         <label>Satz ${i}</label>
-        <input type="number" step="0.5" placeholder="kg" value="${currentWeight}" data-ex="${ex.exercise}" data-set="${i}" class="weight">
-        <input type="number" placeholder="Wdh." value="${currentReps}" data-ex="${ex.exercise}" data-set="${i}" class="reps">
+        <input type="number" step="0.5" placeholder="kg"
+          value="${currentWeight}"
+          data-ex="${ex.exercise}" data-set="${i}"
+          class="weight">
+
+        <input type="number" placeholder="Wdh."
+          value="${currentReps}"
+          data-ex="${ex.exercise}" data-set="${i}"
+          class="reps">
       `;
+
       card.appendChild(row);
     }
 
@@ -227,9 +333,11 @@ function loadWorkout(draftEntries = null) {
 function saveDraft() {
   const workoutId = workoutSelect.value;
   const entries = [];
+
   document.querySelectorAll(".exercise-card").forEach(card => {
     const weights = card.querySelectorAll(".weight");
     const reps = card.querySelectorAll(".reps");
+
     weights.forEach((w, i) => {
       if (w.value || reps[i].value) {
         entries.push({
@@ -241,6 +349,7 @@ function saveDraft() {
       }
     });
   });
+
   localStorage.setItem("workout_draft", JSON.stringify({ workoutId, entries }));
 }
 
@@ -251,11 +360,11 @@ function getLastExerciseLogs(workoutId, exercise, sets) {
     .filter(l => l.workout === workoutId && l.exercise === exercise)
     .sort((a, b) => new Date(b.date) - new Date(a.date));
 
-  if (filtered.length === 0) {
+  if (filtered.length === 0)
     return Array.from({ length: sets }, () => ({ reps: null, weight: null }));
-  }
 
   const lastDate = filtered[0].date;
+
   const sameWorkoutData = filtered
     .filter(l => l.date === lastDate)
     .sort((a, b) => a.set - b.set);
@@ -270,7 +379,7 @@ function getLastExerciseLogs(workoutId, exercise, sets) {
 }
 
 
-// ---------------- SPEICHERN → SUPABASE ----------------
+// ---------------- SPEICHERN ----------------
 async function saveWorkout() {
   const workoutId = Number(workoutSelect.value);
   const today = new Date().toISOString().slice(0, 10);
@@ -283,7 +392,10 @@ async function saveWorkout() {
     const set = Number(wInput.dataset.set);
     const weight = wInput.value ? Number(wInput.value) : null;
 
-    const rInput = document.querySelector(`.reps[data-ex="${exercise}"][data-set="${set}"]`);
+    const rInput = document.querySelector(
+      `.reps[data-ex="${exercise}"][data-set="${set}"]`
+    );
+
     const reps = rInput.value ? Number(rInput.value) : null;
 
     if (reps !== null || weight !== null) {
@@ -310,10 +422,10 @@ async function saveWorkout() {
 
   if (error) {
     console.error(error);
-    alert("Fehler beim Speichern.");
+    alert("Fehler beim Speichern");
   } else {
     localStorage.removeItem("workout_draft");
-    alert("Workout erfolgreich gespeichert! 💪");
+    alert("Workout gespeichert");
 
     await loadLogs();
     loadWorkout();
