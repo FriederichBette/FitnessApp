@@ -146,9 +146,19 @@ async function loadPlan() {
 }
 
 async function loadLogs() {
+  const { data: auth } = await client.auth.getUser();
+  const userId = auth.user?.id;
+
+  if (!userId) {
+    logs = [];
+    console.warn("Kein User eingeloggt → keine Logs geladen");
+    return;
+  }
+
   const { data, error } = await client
     .from("logs")
     .select("*")
+    .eq("user_id", userId)
     .order("date", { ascending: true });
 
   if (error) throw error;
@@ -293,7 +303,7 @@ function loadWorkout(draftEntries = null) {
 
       let currentWeight = draftEntries?.find(d => d.ex === ex.exercise && d.set === i)?.weight;
       if (currentWeight === undefined)
-        currentWeight = lastLogs[i - 1]?.weight || ex.planned_weight || "";
+        currentWeight = lastLogs[i - 1]?.weight || "";
 
       let currentReps =
         draftEntries?.find(d => d.ex === ex.exercise && d.set === i)?.reps || "";
@@ -418,7 +428,15 @@ async function saveWorkout() {
   saveBtn.disabled = true;
   saveBtn.textContent = "Speichere...";
 
-  const { error } = await client.from("logs").insert(workoutData);
+ const { data: auth } = await client.auth.getUser();
+const userId = auth.user?.id;
+
+// jedem Eintrag user_id hinzufügen
+workoutData.forEach(d => d.user_id = userId);
+
+const { error } = await client
+  .from("logs")
+  .insert(workoutData);
 
   if (error) {
     console.error(error);
