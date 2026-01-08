@@ -83,7 +83,11 @@ document.getElementById("register-btn").addEventListener("click", async () => {
 });
 
 document.getElementById("logout-btn").addEventListener("click", async () => {
-  await client.auth.signOut();
+  document.body.classList.add("crt-off");
+  setTimeout(async () => {
+    await client.auth.signOut();
+    document.body.classList.remove("crt-off");
+  }, 600);
 });
 
 // UI Toggles
