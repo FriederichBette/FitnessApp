@@ -1,4 +1,4 @@
-// ---- SUPABASE VERBINDUNG ----
+// ---- MU-TH-UR 6.0 SYSTEM ----
 const client = supabase.createClient(
   "https://yfqergfvydwfwyryggvo.supabase.co",
   "sb_publishable_auj_m_StlyxYK4uGiJYU3w_kll5T-lG"
@@ -6,326 +6,643 @@ const client = supabase.createClient(
 
 let plan = [];
 let logs = [];
-let exercises = [];
+let availableWorkouts = [];
 
+// DOM Elements
+const authOverlay = document.getElementById("auth-overlay");
+const mainApp = document.getElementById("main-app");
 const workoutContainer = document.getElementById("workout-container");
+const contentArea = document.getElementById("content-area");
 const saveBtn = document.getElementById("save-btn");
 const workoutSelect = document.getElementById("workout-select");
 const motivationEl = document.getElementById("motivation");
 const nextWorkoutHint = document.getElementById("next-workout-hint");
 const mainLoader = document.getElementById("main-loader");
+const userDisplay = document.getElementById("user-display");
+const routineSelect = document.getElementById("routine-select");
 
+// Creation Elements
+const exerciseListEditor = document.getElementById("exercise-list-editor");
 
-// -------------------------------- AUTH --------------------------------
+// Notification System
+// Notification System (Toast)
+function notify(msg, type = "info") {
+  const container = document.getElementById("toast-container");
+  if (!container) return; // Should not happen
 
-async function login() {
+  const toast = document.createElement("div");
+  toast.className = `toast ${type === "error" ? "error" : ""}`;
+  toast.textContent = `>>> ${msg.toUpperCase()} <<<`;
+
+  container.appendChild(toast);
+
+  // Auto-remove
+  setTimeout(() => {
+    toast.style.opacity = "0";
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
+}
+
+// Timer Logic
+let restTimerInterval;
+let restTimeLeft = 0;
+
+// ---------------- AUTH LOGIC ----------------
+
+async function handleAuthState() {
+  const { data: { session } } = await client.auth.getSession();
+  if (session) {
+    authOverlay.style.display = "none";
+    mainApp.style.display = "block";
+    userDisplay.textContent = `ID: ${session.user.email.toUpperCase()}`;
+    init();
+    showPage("home");
+  } else {
+    authOverlay.style.display = "flex";
+    mainApp.style.display = "none";
+  }
+}
+
+client.auth.onAuthStateChange((event, session) => {
+  handleAuthState();
+});
+
+document.getElementById("login-btn").addEventListener("click", async () => {
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
+  const { error } = await client.auth.signInWithPassword({ email, password });
+  if (error) notify("FEHLER: " + error.message, "error");
+});
 
-  const { error } = await client.auth.signInWithPassword({
-    email,
-    password
-  });
-
-  if (error) {
-    alert("Login fehlgeschlagen");
-    console.error(error);
-    return;
-  }
-
-  alert("Login erfolgreich");
-  location.reload();
-}
-document.getElementById("login-btn").addEventListener("click", login);
-
-
-async function register() {
+document.getElementById("register-btn").addEventListener("click", async () => {
   const email = document.getElementById("reg-email").value;
   const password = document.getElementById("reg-password").value;
+  const { error } = await client.auth.signUp({ email, password });
+  if (error) notify("FEHLER: " + error.message, "error");
+  else notify("REGISTRIERUNG ERFOLGREICH: BITTE EMAIL BESTÄTIGEN");
+});
 
-  const { error } = await client.auth.signUp({
-    email,
-    password
+document.getElementById("logout-btn").addEventListener("click", async () => {
+  await client.auth.signOut();
+});
+
+// UI Toggles
+document.getElementById("show-register").addEventListener("click", (e) => {
+  e.preventDefault();
+  document.getElementById("login-form").style.display = "none";
+  document.getElementById("register-form").style.display = "block";
+  document.getElementById("auth-title").textContent = "NEU REGISTRIEREN";
+});
+
+document.getElementById("show-login").addEventListener("click", (e) => {
+  e.preventDefault();
+  document.getElementById("login-form").style.display = "block";
+  document.getElementById("register-form").style.display = "none";
+  document.getElementById("auth-title").textContent = "ANMELDUNG";
+});
+
+// ---------------- NAVIGATION ----------------
+
+const navItems = document.querySelectorAll(".nav-item");
+const pages = document.querySelectorAll(".page");
+
+navItems.forEach(item => {
+  item.addEventListener("click", () => {
+    const targetPage = item.dataset.page;
+    showPage(targetPage);
+  });
+});
+
+function showPage(pageId) {
+  navItems.forEach(i => {
+    i.classList.remove("active");
+    if (i.dataset.page === pageId) i.classList.add("active");
+  });
+  pages.forEach(p => p.style.display = "none");
+  const target = document.getElementById(`page-${pageId}`);
+  if (target) target.style.display = "block";
+
+  if (pageId === "home") {
+    // Force reload to ensure dropdowns are populated
+    loadWorkouts().then(() => {
+      populateRoutineSelect();
+      populateWorkoutSelect();
+    });
+  }
+  if (pageId === "history") renderHistory();
+  if (pageId === "create") {
+    renderMyWorkouts();
+    toggleWorkoutForm(false);
+  }
+  // Ensure nav is visible when changing pages
+  document.querySelector(".bottom-nav").style.display = "flex";
+}
+
+// ---------------- PLAN VERWALTUNG ----------------
+
+const workoutsListContainer = document.getElementById("workouts-list-container");
+const workoutFormContainer = document.getElementById("workout-form-container");
+const myWorkoutsList = document.getElementById("my-workouts-list");
+const editWorkoutIdInput = document.getElementById("edit-workout-id");
+const formTitle = document.getElementById("form-title");
+
+document.getElementById("show-create-form-btn").addEventListener("click", () => {
+  formTitle.textContent = "NEUER PLAN";
+  editWorkoutIdInput.value = "";
+  document.getElementById("new-routine-name").value = "";
+  document.getElementById("new-workout-name").value = "";
+  exerciseListEditor.innerHTML = "";
+  addExerciseField();
+  toggleWorkoutForm(true);
+});
+
+document.getElementById("cancel-form-btn").addEventListener("click", () => toggleWorkoutForm(false));
+
+function toggleWorkoutForm(show) {
+  workoutFormContainer.style.display = show ? "block" : "none";
+  workoutsListContainer.style.display = show ? "none" : "block";
+}
+
+async function renderMyWorkouts() {
+  const templatesList = document.getElementById("system-templates-list");
+  myWorkoutsList.innerHTML = "LADE DATEN...";
+  if (templatesList) templatesList.innerHTML = "";
+
+  await loadWorkouts();
+  myWorkoutsList.innerHTML = "";
+
+  const templates = availableWorkouts.filter(w => w.is_template);
+  const personal = availableWorkouts.filter(w => !w.is_template);
+
+  // Render Templates
+  if (templatesList) {
+    if (templates.length === 0) {
+      templatesList.innerHTML = "<p style='font-size:0.7rem; color:var(--text-muted);'>KEINE SYSTEM_VORLAGEN GEFUNDEN</p>";
+    } else {
+      templates.forEach(w => {
+        const item = document.createElement("div");
+        item.className = "plan-manage-item";
+        item.innerHTML = `
+                    <span>${w.name.toUpperCase()}</span>
+                    <button class="secondary" style="width:auto; padding:5px 10px; font-size:0.6rem;" onclick="copyWorkout('${w.id}')">KOPIEREN</button>
+                `;
+        templatesList.appendChild(item);
+      });
+    }
+  }
+
+  // Group by routine
+  const groups = {};
+  personal.forEach(w => {
+    const r = (w.routine_name || "EINZELNE_WORKOUTS").toUpperCase();
+    if (!groups[r]) groups[r] = [];
+    groups[r].push(w);
   });
 
-  if (error) {
-    alert("Registrierung fehlgeschlagen");
-    console.error(error);
-    return;
+  Object.keys(groups).sort().forEach(routine => {
+    const header = document.createElement("div");
+    header.className = "editor-header";
+    header.style.cssText = "margin-top: 20px; border-bottom: 1px solid var(--secondary-color); padding-bottom: 5px; color: var(--primary-color); display: flex; justify-content: space-between; align-items: center;";
+    header.innerHTML = `
+            <span>${routine}</span>
+            <button onclick="deleteRoutine('${routine}')" style="width: auto; padding: 2px 8px; font-size: 0.6rem; color: var(--error-color); border-color: var(--error-color);">X_ROUTINE_LÖSCHEN</button>
+        `;
+    myWorkoutsList.appendChild(header);
+
+    groups[routine].forEach(w => {
+      const item = document.createElement("div");
+      item.className = "plan-manage-item";
+      item.innerHTML = `
+                <span>${w.name.toUpperCase()}</span>
+                <div class="plan-btn-group">
+                    <button class="btn-edit" onclick="editWorkout('${w.id}')">BEARB.</button>
+                    <button class="btn-delete" onclick="deleteWorkout('${w.id}')">LÖSCHEN</button>
+                </div>
+            `;
+      myWorkoutsList.appendChild(item);
+    });
+  });
+
+  // Add safe spacer to avoid bottom nav overlap at the very end
+  const spacer = document.createElement("div");
+  spacer.className = "safe-spacer";
+  myWorkoutsList.appendChild(spacer);
+}
+
+window.copyWorkout = async (id) => {
+  const routine = prompt("ROUTINE-NAME? (FREI LASSEN FÜR EINZELNES WORKOUT)", "");
+  const finalRoutine = routine ? routine.trim().toUpperCase() : "EINZELNE_WORKOUTS";
+
+  notify("DATEN_TRANSMISSION...");
+  const { data: { user } } = await client.auth.getUser();
+  const original = availableWorkouts.find(w => w.id === id);
+  if (!original) return;
+
+  const { data: newW, error: wErr } = await client.from("workouts")
+    .insert({
+      name: original.name,
+      user_id: user.id,
+      is_template: false,
+      routine_name: finalRoutine
+    })
+    .select().single();
+
+  if (wErr) return notify("FEHLER_BEIM_KOPIEREN", "error");
+
+  const { data: steps } = await client.from("workout_exercises").select("*").eq("workout_id", id);
+  if (steps && steps.length > 0) {
+    const newSteps = steps.map(s => ({
+      workout_id: newW.id,
+      exercise: s.exercise,
+      sets: s.sets,
+      reps: s.reps || s.reps_max,
+      rest_time: s.rest_time || 60
+    }));
+    await client.from("workout_exercises").insert(newSteps);
   }
 
-  alert("Account erstellt. Falls Email-Bestätigung aktiv ist, bitte Postfach prüfen.");
+  notify("PLAN_SYNCHRONISIERT");
+  await init();
+  renderMyWorkouts();
+};
+
+window.editWorkout = async (id) => {
+  const workout = availableWorkouts.find(w => w.id === id);
+  if (!workout) return;
+
+  formTitle.textContent = "PLAN ÄNDERN";
+  editWorkoutIdInput.value = id;
+  document.getElementById("new-routine-name").value = workout.routine_name || "";
+  document.getElementById("new-workout-name").value = workout.name;
+
+  exerciseListEditor.innerHTML = "LADE ÜBUNGEN...";
+  const { data: steps } = await client.from("workout_exercises").select("*").eq("workout_id", id);
+  exerciseListEditor.innerHTML = "";
+
+  if (steps && steps.length > 0) {
+    steps.forEach(s => addExerciseWithData(s));
+  } else {
+    addExerciseField();
+  }
+  toggleWorkoutForm(true);
+};
+
+function addExerciseWithData(data) {
+  const div = document.createElement("div");
+  div.className = "exercise-edit-row";
+  div.style.cssText = "display: grid; grid-template-columns: 2fr 1fr 1fr 1.2fr 40px; gap: 10px; align-items: center; margin-bottom: 10px;";
+  const isCardio = data.is_cardio || false;
+  div.innerHTML = `
+        <input type="text" placeholder="ÜBUNG" class="edit-name" value="${data.exercise}" style="margin:0;">
+        <input type="number" placeholder="${isCardio ? 'DAUER' : 'SÄTZE'}" title="${isCardio ? 'MINUTEN' : 'SÄTZE'}" class="edit-sets" value="${data.sets}" style="margin:0;">
+        <input type="number" placeholder="${isCardio ? 'KCAL' : 'WDH'}" title="${isCardio ? 'KCAL' : 'WDH'}" class="edit-reps" value="${data.reps || data.reps_max || ""}" style="margin:0;">
+        <input type="number" placeholder="PAUSE" class="edit-rest" value="${data.rest_time || 60}" style="margin:0;">
+        <div style="display:flex; flex-direction:column; gap:4px; align-items:center;">
+            <input type="checkbox" class="edit-cardio" ${isCardio ? 'checked' : ''} style="width:20px; height:20px; margin:0;" onchange="toggleRowLabels(this)">
+            <button onclick="this.parentElement.parentElement.remove()" style="padding: 2px; color: var(--error-color); border:none; font-size:0.8rem;">X</button>
+        </div>
+    `;
+  exerciseListEditor.appendChild(div);
 }
-document.getElementById("register-btn").addEventListener("click", register);
 
-
-async function logout() {
-  await client.auth.signOut();
-  alert("Abgemeldet");
-  location.reload();
+function addExerciseField() {
+  const div = document.createElement("div");
+  div.className = "exercise-edit-row";
+  div.style.cssText = "display: grid; grid-template-columns: 2fr 1fr 1fr 1.2fr 40px; gap: 10px; align-items: center; margin-bottom: 10px;";
+  div.innerHTML = `
+        <input type="text" placeholder="ÜBUNG" class="edit-name" style="margin:0;">
+        <input type="number" placeholder="SÄTZE" class="edit-sets" style="margin:0;">
+        <input type="number" placeholder="WDH" class="edit-reps" style="margin:0;">
+        <input type="number" placeholder="PAUSE" class="edit-rest" value="60" style="margin:0;">
+        <div style="display:flex; flex-direction:column; gap:4px; align-items:center;">
+            <input type="checkbox" class="edit-cardio" style="width:20px; height:20px; margin:0;" onchange="toggleRowLabels(this)">
+            <button onclick="this.parentElement.parentElement.remove()" style="padding: 2px; color: var(--error-color); border:none; font-size:0.8rem;">X</button>
+        </div>
+    `;
+  exerciseListEditor.appendChild(div);
 }
-document.getElementById("logout-btn").addEventListener("click", logout);
 
+window.toggleRowLabels = (cb) => {
+  const row = cb.parentElement.parentElement;
+  const sInput = row.querySelector(".edit-sets");
+  const rInput = row.querySelector(".edit-reps");
+  if (cb.checked) {
+    sInput.placeholder = "DAUER"; sInput.title = "MINUTEN";
+    rInput.placeholder = "KCAL"; rInput.title = "KCAL";
+  } else {
+    sInput.placeholder = "SÄTZE"; sInput.title = "SÄTZE";
+    rInput.placeholder = "WDH"; rInput.title = "WDH";
+  }
+};
 
-// ---------------- EXERCISES ----------------
-async function loadExercises() {
-  const { data, error } = await client
-    .from("exercises")
-    .select("*")
-    .order("name");
+window.deleteRoutine = async (routineName) => {
+  if (!confirm(`GESAMTE ROUTINE "${routineName}" UND ALLE ENTHALTENEN PLÄNE LÖSCHEN?`)) return;
 
-  if (error) {
-    console.error("Error loading exercises:", error);
-    return;
+  notify("BEREINIGE_DATENBANK...");
+  const { data: { user } } = await client.auth.getUser();
+
+  // 1. Find all workout IDs in this routine
+  const { data: ws } = await client.from("workouts")
+    .select("id")
+    .eq("user_id", user.id)
+    .eq("routine_name", routineName);
+
+  if (ws && ws.length > 0) {
+    const ids = ws.map(w => w.id);
+    // 2. Delete exercises
+    await client.from("workout_exercises").delete().in("workout_id", ids);
+    // 3. Delete workouts
+    await client.from("workouts").delete().in("id", ids);
   }
 
-  exercises = data;
-  console.log("EXERCISES Loaded:", exercises);
-}
+  await init();
+  renderMyWorkouts();
+  notify("ROUTINE_ENTFERNT");
+};
 
+window.deleteWorkout = async (id) => {
+  if (!confirm("PLAN WIRKLICH LÖSCHEN?")) return;
+  await client.from("workout_exercises").delete().eq("workout_id", id);
+  await client.from("workouts").delete().eq("id", id);
+  await init();
+  renderMyWorkouts();
+};
+
+document.getElementById("save-new-workout-btn").addEventListener("click", async () => {
+  const routine = document.getElementById("new-routine-name").value.trim().toUpperCase() || "STANDARD";
+  const name = document.getElementById("new-workout-name").value.trim();
+  const editId = editWorkoutIdInput.value;
+  if (!name) return notify("NAME_FEHLT", "error");
+
+  const { data: { user } } = await client.auth.getUser();
+  let workoutId = editId;
+
+  if (editId) {
+    await client.from("workouts").update({ name, routine_name: routine }).eq("id", editId);
+    await client.from("workout_exercises").delete().eq("workout_id", editId);
+  } else {
+    const { data: wData } = await client.from("workouts").insert({ name, routine_name: routine, user_id: user.id }).select().single();
+    workoutId = wData.id;
+  }
+
+  const steps = [];
+  document.querySelectorAll(".exercise-edit-row").forEach(row => {
+    const exName = row.querySelector(".edit-name").value.trim();
+    const sets = row.querySelector(".edit-sets").value;
+    const reps = row.querySelector(".edit-reps").value;
+    const rest = row.querySelector(".edit-rest").value;
+    const is_cardio = row.querySelector(".edit-cardio").checked;
+    if (exName && sets) {
+      steps.push({
+        workout_id: workoutId,
+        exercise: exName,
+        sets: Number(sets),
+        reps: Number(reps) || null,
+        rest_time: Number(rest) || 60,
+        is_cardio: is_cardio
+      });
+    }
+  });
+
+  if (steps.length > 0) await client.from("workout_exercises").insert(steps);
+  notify("PLAN_GESPEICHERT");
+  toggleWorkoutForm(false);
+  await init();
+  renderMyWorkouts();
+});
+
+document.getElementById("add-exercise-field-btn").addEventListener("click", addExerciseField);
 
 // ---------------- INITIALISIERUNG ----------------
-document.getElementById("load-workout-btn").addEventListener("click", () => {
-  loadWorkout();
-  saveDraft();
-});
-saveBtn.addEventListener("click", saveWorkout);
-
 
 async function init() {
+  mainLoader.style.display = "block";
+  contentArea.innerHTML = "";
+  const actionEl = document.getElementById("workout-actions");
+  if (actionEl) actionEl.style.display = "none";
 
-  const {
-    data: { session }
-  } = await client.auth.getSession();
+  try {
+    await Promise.all([loadWorkouts(), loadPlan(), loadLogs()]);
+    populateRoutineSelect();
 
-  if (!session) {
-    workoutContainer.innerHTML =
-      "<p style='text-align:center'>Bitte zuerst einloggen.</p>";
+    const savedDraft = JSON.parse(localStorage.getItem("workout_draft"));
+    if (savedDraft && savedDraft.workout) {
+      const w = availableWorkouts.find(x => x.id === savedDraft.workout);
+      if (w) {
+        routineSelect.value = w.routine_name;
+        populateWorkoutSelect();
+        workoutSelect.value = savedDraft.workout;
+        loadWorkout(savedDraft.entries);
+      }
+    } else {
+      // Pick most recent routine from logs
+      if (logs.length > 0) {
+        const lastW = availableWorkouts.find(w => w.id == logs[0].workout);
+        if (lastW) routineSelect.value = lastW.routine_name;
+      }
+      populateWorkoutSelect();
+      suggestNextWorkout();
+    }
+  } catch (err) {
+    console.error("Ladefehler:", err);
+  } finally {
     mainLoader.style.display = "none";
+  }
+}
+
+async function loadWorkouts() {
+  const { data } = await client.from("workouts").select("*").order("name");
+  availableWorkouts = data || [];
+}
+
+async function loadPlan() {
+  const { data } = await client.from("workout_exercises").select("*");
+  plan = data || [];
+}
+
+async function loadLogs(fetchAll = false) {
+  const { data: { user } } = await client.auth.getUser();
+  let query = client.from("logs").select("*").eq("user_id", user.id).order("date", { ascending: false });
+
+  if (!fetchAll) {
+    query = query.limit(50);
+  }
+
+  const { data } = await query;
+  logs = data || [];
+  if (fetchAll) notify("GESAMTES ARCHIV GELADEN");
+}
+
+function populateRoutineSelect() {
+  const routines = [...new Set(availableWorkouts.filter(w => !w.is_template).map(w => w.routine_name))].filter(Boolean).sort();
+  routineSelect.innerHTML = '<option value="">-- ALLE ROUTINEN --</option>';
+  routines.forEach(r => {
+    const opt = document.createElement("option");
+    opt.value = r;
+    opt.textContent = r.toUpperCase();
+    routineSelect.appendChild(opt);
+  });
+}
+
+function populateWorkoutSelect() {
+  const routine = routineSelect.value;
+  const placeholder = workoutSelect.options[0];
+  workoutSelect.innerHTML = "";
+  workoutSelect.appendChild(placeholder);
+
+  const filtered = availableWorkouts.filter(w => !w.is_template && (!routine || w.routine_name === routine));
+
+  filtered.forEach(w => {
+    const opt = document.createElement("option");
+    opt.value = w.id;
+    opt.textContent = w.name.toUpperCase();
+    workoutSelect.appendChild(opt);
+  });
+}
+
+routineSelect.addEventListener("change", () => {
+  populateWorkoutSelect();
+  suggestNextWorkout();
+});
+
+function suggestNextWorkout() {
+  const currentRoutine = routineSelect.value;
+  const personalWorkouts = availableWorkouts.filter(w => !w.is_template);
+
+  if (personalWorkouts.length === 0) {
+    nextWorkoutHint.innerHTML = "KEINE PLÄNE VORHANDEN";
     return;
+  }
+
+  // Global suggestion or Routine-specific?
+  const sourcePool = currentRoutine
+    ? personalWorkouts.filter(w => w.routine_name === currentRoutine)
+    : personalWorkouts;
+
+  if (sourcePool.length === 0) {
+    nextWorkoutHint.innerHTML = "WÄHLE EINE ROUTINE";
+    return;
+  }
+
+  // Find last log from THIS POOL
+  const lastLogFromPool = logs.find(l => {
+    return sourcePool.some(w => w.id == l.workout);
+  });
+
+  let nextId;
+  if (!lastLogFromPool) {
+    nextId = sourcePool[0].id; // Default to first in list
+  } else {
+    const lastWId = lastLogFromPool.workout;
+    const ids = sourcePool.map(w => w.id);
+    let nextIndex = ids.indexOf(lastWId) + 1;
+    if (nextIndex >= ids.length || nextIndex === -1) nextIndex = 0;
+    nextId = ids[nextIndex];
+  }
+
+  const nextW = sourcePool.find(w => w.id === nextId);
+  nextWorkoutHint.innerHTML = `VORSCHLAG: <span style="color: var(--primary-color)">${nextW.name.toUpperCase()}</span>`;
+
+  // Auto-select ONLY if it matches filter
+  if (!currentRoutine || nextW.routine_name === currentRoutine) {
+    workoutSelect.value = nextId;
+  }
+}
+
+// ---------------- TRAINING ----------------
+
+document.getElementById("load-workout-btn").addEventListener("click", async () => {
+  await loadWorkout();
+  saveDraft();
+});
+
+async function loadWorkout(draftEntries = null) {
+  const workoutId = workoutSelect.value;
+  if (!workoutId) return;
+
+  // Safety: Reload plan if empty (can happen on refresh/auth race condition)
+  if (!plan || plan.length === 0) {
+    await loadPlan();
+  }
+
+
+
+  contentArea.innerHTML = "";
+  // Dynamische Navigation: Verstecken für mehr Platz
+  document.querySelector(".bottom-nav").style.display = "none";
+  document.querySelector(".selection-area").style.display = "none";
+  document.getElementById("next-workout-hint").style.display = "none";
+
+  const actionEl = document.getElementById("workout-actions");
+  if (actionEl) actionEl.style.display = "flex";
+  saveBtn.disabled = false;
+
+  // Ensure type safety (ID comparison)
+  const exercisesInWorkout = plan.filter(p => p.workout_id == workoutId);
+
+  if (exercisesInWorkout.length === 0) {
+    // Fallback: Try to fetch specifically for this ID if local plan is incomplete
+    const { data: specificExercises } = await client.from("workout_exercises").select("*").eq("workout_id", workoutId);
+
+    if (!specificExercises || specificExercises.length === 0) {
+      contentArea.innerHTML = "<p style='text-align:center;'>FEHLER: KEINE ÜBUNGEN GEFUNDEN</p>";
+      return;
+    }
+    exercisesInWorkout.push(...specificExercises);
   }
 
   try {
-    await Promise.all([
-      loadExercises(),
-      loadPlan(),
-      loadLogs()
-    ]);
+    exercisesInWorkout.forEach((ex) => {
+      if (!ex.exercise) return; // Skip invalid entries
 
-    mainLoader.style.display = "none";
+      const card = document.createElement("div");
+      card.className = "exercise-card";
+      const lastLogs = getLastExerciseLogs(ex.exercise);
 
-    const savedDraft = JSON.parse(localStorage.getItem("workout_draft"));
-    if (savedDraft && savedDraft.workoutId) {
-      workoutSelect.value = savedDraft.workoutId;
-      loadWorkout(savedDraft.entries);
-    } else {
-      suggestNextWorkout();
-    }
+      if (ex.is_cardio) {
+        card.innerHTML = `
+                    <h3>[ CARDIO ] ${ex.exercise.toUpperCase()}</h3>
+                    <div class="exercise-info">ZIEL: ${ex.sets} MIN | KCAL: ${ex.reps || "--"}</div>
+                    <div class="last-logs">ZULETZT: ${lastLogs}</div>
+                    <div class="set-row cardio-entry">
+                        <label style="font-size:0.75rem;">IST-DATEN:</label>
+                        <input type="number" placeholder="MIN" class="weight duration" data-ex="${ex.exercise}" data-iscardio="true" style="width: 70px;">
+                        <input type="number" placeholder="KCAL" class="reps calories" data-ex="${ex.exercise}" style="width: 70px;">
+                    </div>
+                `;
+      } else {
+        card.innerHTML = `
+                    <h3>${ex.exercise.toUpperCase()}</h3>
+                    <div class="exercise-info">ZIEL: ${ex.sets} SÄTZE | WDH: ${ex.reps || "--"}</div>
+                    <div class="last-logs">ZULETZT: ${lastLogs}</div>
+                `;
 
-  } catch (error) {
-    console.error("Initialization error:", error);
-    workoutContainer.innerHTML =
-      "<p style='color: #ef4444; text-align: center;'>Fehler beim Laden der Daten.</p>";
-  }
-}
-
-init();
-
-
-// ---------------- PLAN & LOGS LADEN ----------------
-async function loadPlan() {
-  const { data, error } = await client
-    .from("plan")
-    .select("*")
-    .order("workout", { ascending: true });
-
-  if (error) throw error;
-
-  plan = data;
-  console.log("PLAN Loaded:", plan);
-}
-
-async function loadLogs() {
-  const { data: auth } = await client.auth.getUser();
-  const userId = auth.user?.id;
-
-  if (!userId) {
-    logs = [];
-    console.warn("Kein User eingeloggt → keine Logs geladen");
-    return;
-  }
-
-  const { data, error } = await client
-    .from("logs")
-    .select("*")
-    .eq("user_id", userId)
-    .order("date", { ascending: true });
-
-  if (error) throw error;
-
-  logs = data.map(r => ({
-    date: r.date,
-    workout: Number(r.workout),
-    exercise: r.exercise.trim(),
-    set: Number(r.set),
-    reps: r.reps === null ? null : Number(r.reps),
-    weight: r.weight === null ? null : Number(r.weight)
-  }));
-
-  console.log("LOGS Loaded:", logs);
-}
-
-
-// ---------------- NEXT WORKOUT LOGIK ----------------
-function suggestNextWorkout() {
-  if (logs.length === 0) {
-    nextWorkoutHint.innerHTML =
-      `<span style="color: var(--primary-color)">Willkommen. Starte heute mit <strong>Full Body 1</strong></span>`;
-    workoutSelect.value = 1;
-    return;
-  }
-
-  const sessions = [];
-  const seenSessions = new Set();
-
-  [...logs].sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(log => {
-    const key = `${log.date}-${log.workout}`;
-    if (!seenSessions.has(key)) {
-      sessions.push({ date: log.date, workout: log.workout });
-      seenSessions.add(key);
-    }
-  });
-
-  const lastSessions = sessions.slice(0, 3);
-  let historyHtml =
-    `<div style="margin-bottom: 10px; font-size: 0.85rem; color: var(--text-muted);">Deine letzten Trainings:</div>`;
-
-  lastSessions.forEach((s, i) => {
-    const dateStr = new Date(s.date).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
-    historyHtml += `<div style="opacity: ${1 - i * 0.2}; margin-bottom: 4px;">
-      ${i === 0 ? 'zuletzt: ' : 'davor: '} 
-      <strong>FB ${s.workout}</strong> (${dateStr})
-    </div>`;
-  });
-
-  const lastWorkoutId = lastSessions[0].workout;
-  let nextId = lastWorkoutId + 1;
-  if (nextId > 3) nextId = 1;
-
-  nextWorkoutHint.innerHTML = `
-    ${historyHtml}
-    <div style="margin-top: 15px; padding: 10px; background: rgba(16, 185, 129, 0.1); border-radius: 8px; border: 1px solid var(--accent-color);">
-      Heute dran: <strong style="color: var(--accent-color)">Full Body ${nextId}</strong>
-    </div>
-  `;
-
-  workoutSelect.value = nextId;
-}
-
-
-// ---------------- TIMER & VOLUME ----------------
-let timerInterval;
-let startTime;
-
-function startTimer() {
-  if (timerInterval) clearInterval(timerInterval);
-  startTime = Date.now();
-  timerInterval = setInterval(updateTimer, 1000);
-}
-
-function updateTimer() {
-  const elapsed = Math.floor((Date.now() - startTime) / 1000);
-  const mins = Math.floor(elapsed / 60).toString().padStart(2, '0');
-  const secs = (elapsed % 60).toString().padStart(2, '0');
-  motivationEl.innerHTML =
-    `⏱ Zeit: ${mins}:${secs} | ⚖️ Volumen: <span id="volume-val">0</span> kg`;
-  updateVolume();
-}
-
-function updateVolume() {
-  let totalVolume = 0;
-  document.querySelectorAll(".exercise-card").forEach(card => {
-    const weights = card.querySelectorAll(".weight");
-    const reps = card.querySelectorAll(".reps");
-    weights.forEach((w, i) => {
-      const v = Number(w.value) || 0;
-      const r = Number(reps[i].value) || 0;
-      totalVolume += v * r;
+        for (let i = 1; i <= ex.sets; i++) {
+          const row = document.createElement("div");
+          row.className = "set-container";
+          const draft = draftEntries?.find(d => d.ex === ex.exercise && d.set === i);
+          row.innerHTML = `
+                        <div class="set-row" style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">
+                            <label style="min-width: 55px; font-size: 0.75rem;">SATZ_${i}</label>
+                            <input type="number" step="0.5" placeholder="KG" class="weight" data-ex="${ex.exercise}" data-set="${i}" value="${draft ? draft.weight : ""}" style="width: 50px; margin: 0; padding: 4px;">
+                            <input type="number" placeholder="WDH" class="reps" data-ex="${ex.exercise}" data-set="${i}" value="${draft ? draft.reps : ""}" style="width: 45px; margin: 0; padding: 4px;">
+                            <button class="start-rest-btn" data-ex="${ex.exercise}" data-set="${i}" data-rest="${ex.rest_time || 60}" style="width: auto; padding: 4px 6px; font-size: 0.65rem;">PAUSE</button>
+                            <div class="rest-zone" id="rest-${ex.exercise.replace(/\s+/g, '-')}-${i}" style="font-size: 0.6rem; color: var(--text-muted); display: none; overflow: hidden; text-overflow: ellipsis;"></div>
+                        </div>
+                    `;
+          card.appendChild(row);
+        }
+      }
+      contentArea.appendChild(card);
     });
-  });
-  const volEl = document.getElementById("volume-val");
-  if (volEl) volEl.textContent = totalVolume.toLocaleString('de-DE');
-}
-
-
-// ---------------- WORKOUT UI ----------------
-function loadWorkout(draftEntries = null) {
-  const workoutId = Number(workoutSelect.value);
-  if (!workoutId) return;
-
-  workoutContainer.innerHTML = "";
-  saveBtn.disabled = false;
-
-  const exs = plan.filter(p => p.workout === workoutId);
-
-  if (exs.length === 0) {
-    workoutContainer.innerHTML =
-      `<p style="text-align: center; color: var(--text-muted);">
-        Keine Übungen für Workout ${workoutId} gefunden.
-      </p>`;
-    return;
+  } catch (err) {
+    contentArea.innerHTML += `<p style="color:red; text-align:center;">RENDER ERROR: ${err.message}</p>`;
+    console.error(err);
   }
-
-  exs.forEach(ex => {
-    const card = document.createElement("div");
-    card.className = "exercise-card";
-
-    const header = `
-      <h3>${ex.exercise}</h3>
-      <div class="exercise-info">${ex.sets} Sätze · ${ex.reps_min}-${ex.reps_max} Wdh.</div>
-    `;
-
-    const lastLogs = getLastExerciseLogs(workoutId, ex.exercise, ex.sets);
-    const lastLogsHtml = `
-      <div class="last-logs">
-        <strong>Letztes Mal:</strong>
-        ${lastLogs.map((s, i) =>
-          `<div>Satz ${i + 1}: ${s.weight !== null ? s.weight + " kg × " + s.reps : "–"}</div>`
-        ).join("")}
-      </div>
-    `;
-
-    card.innerHTML = header + lastLogsHtml;
-
-    for (let i = 1; i <= ex.sets; i++) {
-      const row = document.createElement("div");
-      row.className = "set-row";
-
-      let currentWeight = draftEntries?.find(d => d.ex === ex.exercise && d.set === i)?.weight;
-      if (currentWeight === undefined)
-        currentWeight = lastLogs[i - 1]?.weight || "";
-
-      let currentReps =
-        draftEntries?.find(d => d.ex === ex.exercise && d.set === i)?.reps || "";
-
-      row.innerHTML = `
-        <label>Satz ${i}</label>
-        <input type="number" step="0.5" placeholder="kg"
-          value="${currentWeight}"
-          data-ex="${ex.exercise}" data-set="${i}"
-          class="weight">
-
-        <input type="number" placeholder="Wdh."
-          value="${currentReps}"
-          data-ex="${ex.exercise}" data-set="${i}"
-          class="reps">
-      `;
-
-      card.appendChild(row);
-    }
-
-    workoutContainer.appendChild(card);
-  });
+  // Ensure safe-spacer at the end of Training page
+  const trainingSpacer = document.createElement("div");
+  trainingSpacer.className = "safe-spacer";
+  contentArea.appendChild(trainingSpacer);
 
   document.querySelectorAll("input").forEach(input => {
     input.addEventListener("input", () => {
@@ -334,121 +651,333 @@ function loadWorkout(draftEntries = null) {
     });
   });
 
-  startTimer();
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-
-// ---------------- DRAFT SAVE ----------------
-function saveDraft() {
-  const workoutId = workoutSelect.value;
-  const entries = [];
-
-  document.querySelectorAll(".exercise-card").forEach(card => {
-    const weights = card.querySelectorAll(".weight");
-    const reps = card.querySelectorAll(".reps");
-
-    weights.forEach((w, i) => {
-      if (w.value || reps[i].value) {
-        entries.push({
-          ex: w.dataset.ex,
-          set: Number(w.dataset.set),
-          weight: w.value,
-          reps: reps[i].value
-        });
-      }
+  document.querySelectorAll(".start-rest-btn").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      const ex = e.target.dataset.ex;
+      const set = e.target.dataset.set;
+      startRestTimer(ex, set);
     });
   });
 
-  localStorage.setItem("workout_draft", JSON.stringify({ workoutId, entries }));
+  updateVolume();
+  startTimer();
 }
 
+function startRestTimer(exName, setNum, customRest = null) {
+  let duration = customRest || 60;
 
-// ---------------- LETZTE LOGS ----------------
-function getLastExerciseLogs(workoutId, exercise, sets) {
-  const filtered = logs
-    .filter(l => l.workout === workoutId && l.exercise === exercise)
-    .sort((a, b) => new Date(b.date) - new Date(a.date));
-
-  if (filtered.length === 0)
-    return Array.from({ length: sets }, () => ({ reps: null, weight: null }));
-
-  const lastDate = filtered[0].date;
-
-  const sameWorkoutData = filtered
-    .filter(l => l.date === lastDate)
-    .sort((a, b) => a.set - b.set);
-
-  const result = [];
-  for (let i = 1; i <= sets; i++) {
-    const s = sameWorkoutData.find(x => x.set === i);
-    result.push(s ? { reps: s.reps, weight: s.weight } : { reps: null, weight: null });
+  // Check if event target has specific rest
+  if (!customRest) {
+    const btn = document.querySelector(`.start-rest-btn[data-ex="${exName}"][data-set="${setNum}"]`);
+    if (btn && btn.dataset.rest) duration = Number(btn.dataset.rest);
   }
 
-  return result;
+  let millisLeft = duration * 1000;
+  const total = duration * 1000;
+  const safeName = exName.replace(/\s+/g, '-');
+  const zoneId = `rest-${safeName}-${setNum}`;
+  const zone = document.getElementById(zoneId);
+  const frames = ["/", "-", "\\", "|"];
+  let frame = 0;
+
+  if (!zone) return;
+  zone.style.display = "block";
+
+  const timer = setInterval(() => {
+    millisLeft -= 100;
+    frame++;
+
+    const secondsLeft = Math.max(0, Math.ceil(millisLeft / 1000));
+    const totalSteps = 8;
+    const filledSteps = Math.floor(((total - millisLeft) / total) * totalSteps);
+    const bar = "█".repeat(Math.max(0, filledSteps)) + ".".repeat(Math.max(0, totalSteps - filledSteps));
+    const spinner = frames[frame % frames.length];
+
+    zone.innerHTML = `${spinner} [${bar}] ${secondsLeft}s`;
+
+    if (millisLeft <= 0) {
+      clearInterval(timer);
+      zone.innerHTML = `<span style="color: var(--primary-color);">READY</span>`;
+      setTimeout(() => { if (zone.innerHTML.includes("READY")) zone.style.display = "none"; }, 4000);
+    }
+  }, 100);
 }
 
+function getLastExerciseLogs(exerciseName) {
+  const filtered = logs.filter(l => l.exercise === exerciseName).slice(0, 3);
+  if (filtered.length === 0) return "KEINE DATEN";
+  return filtered.map(l => `${l.weight}KG x ${l.reps}`).join(" | ");
+}
 
-// ---------------- SPEICHERN ----------------
-async function saveWorkout() {
-  const workoutId = Number(workoutSelect.value);
-  const today = new Date().toISOString().slice(0, 10);
+function updateVolume() {
+  let total = 0;
+  document.querySelectorAll(".exercise-card .set-row").forEach(row => {
+    total += (Number(row.querySelector(".weight").value) || 0) * (Number(row.querySelector(".reps").value) || 0);
+  });
 
-  const workoutData = [];
-  const weightInputs = document.querySelectorAll(".weight");
+  const volEl = document.getElementById("volume-val");
+  const timerEl = document.getElementById("timer-val");
 
-  weightInputs.forEach(wInput => {
-    const exercise = wInput.dataset.ex;
-    const set = Number(wInput.dataset.set);
-    const weight = wInput.value ? Number(wInput.value) : null;
+  if (volEl && timerEl) {
+    // Elements exist, just update volume text
+    volEl.textContent = total.toLocaleString();
+  } else {
+    // Elements missing (likely overwritten), rebuild structure
+    // Preserve time if timer was running
+    const currentTime = timerEl ? timerEl.textContent : "00:00";
+    motivationEl.innerHTML = `ZEIT: <span id="timer-val">${currentTime}</span> | VOLUMEN: <span id="volume-val">${total.toLocaleString()}</span> KG`;
+  }
+}
 
-    const rInput = document.querySelector(
-      `.reps[data-ex="${exercise}"][data-set="${set}"]`
-    );
+let timerInterval;
+let workoutStartTime;
 
-    const reps = rInput.value ? Number(rInput.value) : null;
+function startTimer(reset = true) {
+  if (timerInterval) clearInterval(timerInterval);
+  if (reset) workoutStartTime = Date.now();
 
-    if (reps !== null || weight !== null) {
-      workoutData.push({
-        date: today,
-        workout: workoutId,
-        exercise,
-        set,
-        reps,
-        weight
+  timerInterval = setInterval(() => {
+    const elapsed = Math.floor((Date.now() - workoutStartTime) / 1000);
+    const m = Math.floor(elapsed / 60).toString().padStart(2, '0');
+    const s = (elapsed % 60).toString().padStart(2, '0');
+    const el = document.getElementById("timer-val");
+    if (el) el.textContent = `${m}:${s}`;
+  }, 1000);
+}
+
+function saveDraft() {
+  const entries = [];
+  document.querySelectorAll(".exercise-card .set-row").forEach(row => {
+    const w = row.querySelector(".weight");
+    const r = row.querySelector(".reps");
+    if (w.value || r.value) {
+      entries.push({
+        ex: w.dataset.ex,
+        set: Number(w.dataset.set || 1),
+        weight: w.value,
+        reps: r.value,
+        isCardio: w.dataset.iscardio === "true"
       });
     }
   });
+  localStorage.setItem("workout_draft", JSON.stringify({ workout: workoutSelect.value, entries }));
+}
 
-  if (workoutData.length === 0) {
-    alert("Bitte gib mindestens einen Satz ein.");
-    return;
-  }
+saveBtn.addEventListener("click", saveWorkout);
 
+async function saveWorkout() {
+  const workoutId = workoutSelect.value;
+  const workoutObj = availableWorkouts.find(w => w.id == workoutId);
+  const workoutName = workoutObj ? workoutObj.name : "UNBEKANNT";
+
+  const { data: { user } } = await client.auth.getUser();
+  const today = new Date().toISOString().slice(0, 10);
+  const dataToSave = [];
+
+  document.querySelectorAll(".exercise-card .set-row").forEach(row => {
+    const wInput = row.querySelector(".weight");
+    const rInput = row.querySelector(".reps");
+    const weightVal = wInput.value;
+    const repsVal = rInput.value;
+
+    if (weightVal || repsVal) {
+      const isCardio = wInput.dataset.iscardio === "true";
+      dataToSave.push({
+        user_id: user.id,
+        date: today,
+        workout: workoutId,
+        workout_name: workoutName,
+        exercise: wInput.dataset.ex,
+        set: isCardio ? 1 : Number(wInput.dataset.set || 1),
+        weight: isCardio ? 0 : Number(weightVal || 0),
+        reps: isCardio ? 0 : Number(repsVal || 0),
+        duration: isCardio ? Number(weightVal || 0) : null,
+        calories: isCardio ? Number(repsVal || 0) : null
+      });
+    }
+  });
+  if (dataToSave.length === 0) return notify("KEINE_DATEN_ZUM_SPEICHERN", "error");
   saveBtn.disabled = true;
-  saveBtn.textContent = "Speichere...";
-
- const { data: auth } = await client.auth.getUser();
-const userId = auth.user?.id;
-
-// jedem Eintrag user_id hinzufügen
-workoutData.forEach(d => d.user_id = userId);
-
-const { error } = await client
-  .from("logs")
-  .insert(workoutData);
-
-  if (error) {
-    console.error(error);
-    alert("Fehler beim Speichern");
-  } else {
+  const { error } = await client.from("logs").insert(dataToSave);
+  if (!error) {
+    notify("DATEN_ARCHIVIERT");
     localStorage.removeItem("workout_draft");
-    alert("Workout gespeichert");
-
-    await loadLogs();
-    loadWorkout();
+    document.querySelector(".bottom-nav").style.display = "flex";
+    document.querySelector(".selection-area").style.display = "block";
+    document.getElementById("next-workout-hint").style.display = "block";
+    document.getElementById("workout-actions").style.display = "none";
+    contentArea.innerHTML = "";
+    init();
   }
-
-  saveBtn.textContent = "Workout speichern";
   saveBtn.disabled = false;
 }
+
+// Abbrechen Button Logik
+document.getElementById("abort-workout-btn").addEventListener("click", () => {
+  if (confirm("TRAINING WIRKLICH ABBRECHEN?")) {
+    document.querySelector(".bottom-nav").style.display = "flex";
+    document.querySelector(".selection-area").style.display = "block";
+    document.getElementById("next-workout-hint").style.display = "block";
+    document.getElementById("workout-actions").style.display = "none";
+    contentArea.innerHTML = "";
+    localStorage.removeItem("workout_draft");
+    init();
+    showPage("home");
+    notify("PROZESS_ABGEBROCHEN");
+  }
+});
+
+// Pause/Resume Toggle
+document.getElementById("pause-btn")?.addEventListener("click", (e) => {
+  const btn = e.target;
+  if (btn.textContent === "TR. PAUSIEREN") {
+    // PAUSE MODE
+    if (timerInterval) clearInterval(timerInterval);
+    document.querySelector(".bottom-nav").style.display = "flex";
+    btn.textContent = "TR. FORTSETZEN";
+    btn.style.borderStyle = "dashed";
+    notify("TRAINING PAUSIERT");
+  } else {
+    // RESUME MODE
+    document.querySelector(".bottom-nav").style.display = "none";
+    btn.textContent = "TR. PAUSIEREN";
+    btn.style.borderStyle = "solid";
+    startTimer(false); // Don't reset start time
+    notify("TRAINING FORTGESETZT");
+  }
+});
+
+function renderHistory() {
+  const historyList = document.getElementById("history-list");
+  historyList.innerHTML = "";
+  if (logs.length === 0) return;
+  const grouped = {};
+  logs.forEach(log => {
+    if (!grouped[log.date]) grouped[log.date] = [];
+    grouped[log.date].push(log);
+  });
+
+  Object.keys(grouped).sort((a, b) => new Date(b) - new Date(a)).forEach(date => {
+    const item = document.createElement("div");
+    item.className = "history-item";
+
+    const firstEntry = grouped[date][0];
+    const displayName = firstEntry.workout_name || availableWorkouts.find(w => w.id == firstEntry.workout)?.name || firstEntry.workout;
+
+    // Calculate Stats
+    let totalVol = 0;
+    let totalSets = 0;
+    let totalReps = 0;
+    let cardioDur = 0;
+    let cardioKcal = 0;
+
+    grouped[date].forEach(l => {
+      if (l.duration || l.calories) {
+        cardioDur += Number(l.duration || 0);
+        cardioKcal += Number(l.calories || 0);
+      } else {
+        totalVol += (Number(l.weight) || 0) * (Number(l.reps) || 0);
+        totalSets++;
+        totalReps += Number(l.reps) || 0;
+      }
+    });
+
+    const avgRep = totalSets > 0 ? Math.round(totalReps / totalSets) : 0;
+
+    item.innerHTML = `
+            <div class="history-header">
+                <div style="display:flex; gap:10px; align-items:center;">
+                    <span>DATUM: ${date}</span>
+                    <span style="color:var(--text-muted)">|</span>
+                    <span>PLAN: ${displayName.toUpperCase()}</span>
+                </div>
+                <button onclick="deleteLogSession('${date}')" style="width:auto; padding:2px 6px; font-size:0.6rem; color:var(--error-color); border-color:var(--error-color); background:rgba(255, 62, 62, 0.1);">LÖSCHEN</button>
+            </div>
+            <div class="history-stats">
+                <span>VOLUMEN: ${totalVol.toLocaleString()} KG</span>
+                <span>SÄTZE: ${totalSets}</span>
+                <span>Ø WDH: ${avgRep}</span>
+                ${cardioDur > 0 ? `<span>CARDIO: ${cardioDur} MIN | ${cardioKcal} KCAL</span>` : ''}
+            </div>
+            <div class="history-content">
+                <div class="history-table-header">
+                    <div style="width: 40%">UEBUNG</div>
+                    <div style="width: 15%">SATZ</div>
+                    <div style="width: 25%">LAST / MIN</div>
+                    <div style="width: 20%; text-align:right;">WDH / KCAL</div>
+                </div>
+                ${grouped[date].map(l => `
+                    <div class="history-row">
+                        <div style="width: 40%">${l.exercise.toUpperCase()}</div>
+                        <div style="width: 15%">${l.set}</div>
+                        <div style="width: 25%">${l.duration ? l.duration + ' MIN' : l.weight + ' KG'}</div>
+                        <div style="width: 20%; text-align:right;">${l.calories ? l.calories : l.reps}</div>
+                    </div>
+                `).join("")}
+            </div>
+        `;
+    historyList.appendChild(item);
+  });
+
+  // Ensure safe-spacer at the end of History page
+  const historySpacer = document.createElement("div");
+  historySpacer.className = "safe-spacer";
+  historyList.appendChild(historySpacer);
+}
+
+// ---------------- EXPORT ----------------
+document.getElementById("load-all-logs-btn")?.addEventListener("click", async () => {
+  await loadLogs(true);
+  renderHistory();
+});
+
+document.getElementById("export-csv-btn").addEventListener("click", () => {
+  if (logs.length === 0) return notify("KEINE_DATEN_ZUR_EXTRAKTION", "error");
+
+  const header = ["DATUM", "PLAN", "UEBUNG", "SATZ", "GEWICHT_KG", "WDH", "DAUER_MIN", "KCAL"];
+  const rows = logs.map(l => {
+    const displayName = l.workout_name || availableWorkouts.find(w => w.id == l.workout)?.name || l.workout;
+    return [
+      l.date,
+      displayName.toUpperCase(),
+      l.exercise.toUpperCase(),
+      l.set,
+      l.weight || 0,
+      l.reps || 0,
+      l.duration || "",
+      l.calories || ""
+    ].join(",");
+  });
+
+  const csvContent = "data:text/csv;charset=utf-8," + [header.join(","), ...rows].join("\n");
+  const encodedUri = encodeURI(csvContent);
+  const link = document.createElement("a");
+  link.setAttribute("href", encodedUri);
+  link.setAttribute("download", `WEYLAND_YUTANI_LOG_${new Date().toISOString().slice(0, 10)}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  notify("EXTRAKTION_ERFOLGREICH");
+});
+
+window.deleteLogSession = async (date) => {
+  if (!confirm(`PROTOKOLL VOM ${date} WIRKLICH LÖSCHEN?`)) return;
+
+  const { data: { user } } = await client.auth.getUser();
+  if (!user) return notify("FEHLER: NICHT ANGEMELDET", "error");
+
+  console.log(`Attempting to delete logs for user ${user.id} on date ${date}...`);
+
+  const { error } = await client.from("logs").delete().eq("user_id", user.id).eq("date", date);
+
+  if (error) {
+    console.error("Delete Error:", error);
+    notify(`LÖSCH-FEHLER: ${error.message} (${error.code})`, "error");
+    alert(`DEBUG INFO:\nMessage: ${error.message}\nCode: ${error.code}\nHint: ${error.hint}`);
+  } else {
+    notify("EINTRAEGE DAUERHAFT GELÖSCHT");
+    await loadLogs();
+  }
+};
+
+handleAuthState();

@@ -3,68 +3,183 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fitness Tracker</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>WEYLAND-YUTANI | PERFORMANCE INTERFACE</title>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
 <body>
-
-    <!-- AUTH BEREICH -->
-    <div id="auth" style="padding: 20px; border-bottom: 1px solid #ccc;">
-        <h3>Login</h3>
-        <input id="email" placeholder="Email">
-        <input id="password" placeholder="Passwort" type="password">
-        <button id="login-btn">Login</button>
-
-        <h3>Registrieren</h3>
-        <input id="reg-email" placeholder="Email">
-        <input id="reg-password" placeholder="Passwort" type="password">
-        <button id="register-btn">Registrieren</button>
-
-        <button id="logout-btn">Logout</button>
+    <!-- AUTHENTIFIZIERUNG -->
+    <div id="auth-overlay" class="overlay">
+        <div class="auth-card">
+            <h1 id="auth-title">FITNESS_LOGIN</h1>
+            <div id="login-form">
+                <input type="email" id="email" placeholder="EMAIL-ADRESSE" autocomplete="email">
+                <input type="password" id="password" placeholder="PASSWORT" autocomplete="current-password">
+                <button id="login-btn">ANMELDEN</button>
+                <div style="margin-top: 20px; font-size: 0.75rem; text-align: center;">
+                    KEIN ZUGANG? <a href="#" id="show-register" style="color: var(--primary-color);">REGISTRIEREN</a>
+                </div>
+            </div>
+            <div id="register-form" style="display: none;">
+                <input type="email" id="reg-email" placeholder="NEUE EMAIL-ADRESSE">
+                <input type="password" id="reg-password" placeholder="NEUES PASSWORT">
+                <button id="register-btn">KONTO ERSTELLEN</button>
+                <div style="margin-top: 20px; font-size: 0.75rem; text-align: center;">
+                    VORHANDEN? <a href="#" id="show-login" style="color: var(--primary-color);">LOGIN</a>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div class="container">
+    <div id="main-app" class="container" style="display: none;">
         <header>
-            <h1>Fitness Tracker</h1>
-            <p class="subtitle">Übersicht über dein Training.</p>
+            <div class="user-info">
+                <span id="user-display">OPERATOR_ID: --</span>
+                <button id="logout-btn" class="text-btn">LOGOUT</button>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <h1>TRAINING_LOG</h1>
+            </div>
         </header>
 
-        <section class="selection-area">
-            <div class="control-group">
-                <select id="workout-select">
-                    <option value="" disabled selected>Workout wählen...</option>
-                    <option value="1">Full Body 1</option>
-                    <option value="2">Full Body 2</option>
-                    <option value="3">Full Body 3</option>
+        <!-- PAGE: TRAINING -->
+        <div id="page-home" class="page">
+            <p id="next-workout-hint" class="subtitle" style="margin: 0; margin-bottom: 20px;">SYSTEM_BEREIT</p>
+            <div class="selection-area">
+                <div class="editor-header">ROUTINE_AUSWAHL:</div>
+                <select id="routine-select">
+                    <option value="">-- ALLE ROUTINEN --</option>
                 </select>
-                <button id="load-workout-btn">Laden</button>
+
+                <div class="editor-header">PROTOKOLL_AUSWAHL:</div>
+                <div class="control-group">
+                    <select id="workout-select">
+                        <option value="">-- KEINE AUSWAHL --</option>
+                    </select>
+                    <button id="load-workout-btn">START</button>
+                </div>
             </div>
 
-            <h2 id="next-workout-hint"
-                style="text-align: center; margin-bottom: 20px; font-size: 1rem; color: var(--accent-color);">
-            </h2>
-        </section>
+            <div id="motivation">
+                STATUS: WARTE AUF PROTOKOLL_START
+            </div>
 
-        <main id="workout-container">
-            <div class="loading-spinner" id="main-loader"></div>
-        </main>
+            <div id="content-area">
+                <!-- Training Cards -->
+            </div>
 
-        <section class="actions">
-            <button id="save-btn" disabled>Workout speichern</button>
-            <div id="motivation"></div>
-        </section>
+            <div id="workout-actions"
+                style="display: none; margin-top: 30px; border-top: 1px solid var(--primary-color); padding-top: 20px; flex-direction: column; gap: 10px;">
+                <button id="pause-btn" class="secondary" style="margin-bottom: 10px;">TR. PAUSIEREN</button>
+                <button id="save-btn">TRAINING ABSCHLIESSEN</button>
+                <button id="abort-workout-btn" class="secondary">TR. ABBRECHEN</button>
+                <div class="safe-spacer"></div>
+            </div>
+        </div>
+
+        <!-- PAGE: HISTORIE -->
+        <div id="page-history" class="page" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <div class="editor-header" style="margin: 0;">DATEN-ARCHIV:</div>
+                <div style="display:flex; gap:5px;">
+                    <button id="load-all-logs-btn" class="secondary"
+                        style="width: auto; padding: 5px 12px; font-size: 0.7rem;">ALLE LADEN</button>
+                    <button id="export-csv-btn" class="secondary"
+                        style="width: auto; padding: 5px 12px; font-size: 0.7rem;">EXPORT_CSV</button>
+                </div>
+            </div>
+            <div id="history-list"></div>
+        </div>
+
+        <!-- PAGE: PLÄNE -->
+        <div id="page-create" class="page" style="display: none;">
+            <div id="workouts-list-container">
+                <div class="editor-header">SYSTEM_VORLAGEN:</div>
+                <div id="system-templates-list" style="margin-bottom: 30px;"></div>
+
+                <div class="editor-header">MEINE_PROTOKOLLE:</div>
+                <div id="my-workouts-list"></div>
+                <button id="show-create-form-btn" class="secondary" style="margin-top: 10px;">+ PROTOKOLL
+                    ERSTELLEN</button>
+                <div class="safe-spacer"></div>
+            </div>
+
+            <div id="workout-form-container" style="display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <h3 id="form-title">NEUER PLAN</h3>
+                    <button id="cancel-form-btn" class="text-btn" style="color: var(--error-color);">ABBRUCH</button>
+                </div>
+                <input type="hidden" id="edit-workout-id">
+                <input type="text" id="new-routine-name" placeholder="ROUTINE_NAME (Z.B. MEIN_SPLIT)">
+                <input type="text" id="new-workout-name" placeholder="PLAN_NAME (Z.B. OBERKÖRPER)">
+                <div class="editor-header">PARAMETER_FESTLEGEN:</div>
+                <div id="exercise-list-editor"></div>
+                <!-- Editor Headers -->
+                <div id="editor-headers-row"
+                    style="display: grid; grid-template-columns: 2fr 1fr 1fr 1.2fr 40px; gap: 10px; margin-bottom: 5px; font-size: 0.6rem; color: var(--text-muted); padding: 0 15px;">
+                    <div>UEBUNG</div>
+                    <div id="header-col-2">SÄTZE</div>
+                    <div id="header-col-3">WDH</div>
+                    <div>PAUSE(S)</div>
+                    <div>CAT</div>
+                </div>
+                <button id="add-exercise-field-btn" class="secondary">+ EINTRAG HINZUFÜGEN</button>
+                <button id="save-new-workout-btn" style="margin-top: 20px;">SICHERN</button>
+                <div class="safe-spacer"></div>
+            </div>
+        </div>
+
+        <!-- PAGE: HILFE -->
+        <div id="page-info" class="page" style="display: none;">
+            <div class="info-section">
+                <h2>[ SCHRITT_FÜR_SCHRITT ]</h2>
+                <ul class="steplist">
+                    <li><strong>1. PLÄNE ERSTELLEN:</strong> Gehe auf den Reiter <strong>PLÄNE</strong>. Klicke auf "+
+                        NEUER PLAN". Gib einen Namen (z.B. "Oberkörper") und eine ROUTINE (z.B. "Ganzkörper") ein.</li>
+                    <li><strong>2. ÜBUNGEN HINZUFÜGEN:</strong> Klicke "+ EINTRAG HINZUFÜGEN". Name, Sätze, Wdh und
+                        Pause eintragen. <strong>WICHTIG:</strong> Für Cardio aktiviere die Checkbox unter
+                        <strong>CAT</strong> – dann kannst du Minuten und Kcal eintragen.
+                    </li>
+                    <li><strong>3. TRAINING STARTEN:</strong> Gehe auf den Reiter <strong>TRAINING</strong>. Wähle
+                        deinen Plan aus dem Menü. Das System schlägt dir automatisch den nächsten Plan deiner Routine
+                        vor.</li>
+                    <li><strong>4. DATEN EINTRAGEN:</strong> Trage während des Sports deine Gewichte (KG) und
+                        Wiederholungen (WDH) ein. Das System speichert deine Entwürfe automatisch im Hintergrund.</li>
+                    <li><strong>5. SPEICHERN:</strong> Wenn du fertig bist, scrolle ganz nach unten und klicke auf
+                        <strong>TRAINING SPEICHERN</strong>. Deine Daten sind nun sicher im Reiter
+                        <strong>VERLAUF</strong> archiviert.
+                    </li>
+                </ul>
+            </div>
+            <div class="safe-spacer"></div>
+        </div>
+
+        <!-- NAVIGATION -->
+        <nav class="bottom-nav">
+            <button class="nav-item active" data-page="home">
+                <span class="nav-label">TRAINING</span>
+            </button>
+            <button class="nav-item" data-page="history">
+                <span class="nav-label">VERLAUF</span>
+            </button>
+            <button class="nav-item" data-page="create">
+                <span class="nav-label">PLÄNE</span>
+            </button>
+            <button class="nav-item" data-page="info">
+                <span class="nav-label">HILFE</span>
+            </button>
+        </nav>
     </div>
 
-    <!-- Supabase zuerst -->
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <div id="main-loader" class="loading-spinner"
+        style="display:none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 5000;">
+    </div>
 
-    <!-- dann dein Script -->
+    <div id="toast-container"></div>
     <script src="script.js"></script>
-
 </body>
+
 </html>
