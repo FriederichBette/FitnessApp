@@ -407,6 +407,10 @@ document.getElementById("save-new-workout-btn").addEventListener("click", async 
   if (steps.length > 0) await client.from("workout_exercises").insert(steps);
   notify("PLAN_GESPEICHERT");
   toggleWorkoutForm(false);
+
+  // Ensure Nav is visible (user stays on Plans page)
+  document.querySelector(".bottom-nav").style.display = "flex";
+
   await init();
   renderMyWorkouts();
 });

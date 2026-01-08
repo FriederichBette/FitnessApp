@@ -312,7 +312,7 @@ button,
     background: #000 !important;
     display: flex;
     border-top: 1px solid var(--primary-color);
-    height: 55px;
+    height: 70px;
     z-index: 9999;
 }
 
