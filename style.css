@@ -638,6 +638,31 @@ button,
     border-bottom: 1px solid rgba(0, 59, 0, 0.2);
 }
 
+/* Expand/Collapse UI */
+.history-header {
+    cursor: pointer;
+    user-select: none;
+}
+
+.history-header:hover {
+    background: rgba(0, 255, 65, 0.1);
+}
+
+.collapsed {
+    display: none !important;
+}
+
+.history-toggle-icon {
+    display: inline-block;
+    width: 12px;
+    margin-right: 5px;
+    transition: transform 0.2s;
+}
+
+.collapsed-icon {
+    transform: rotate(-90deg);
+}
+
 .history-row>div {
     display: table-cell;
     padding: 8px 5px;

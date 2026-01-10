@@ -1037,7 +1037,8 @@ function renderHistory() {
     let cardioDur = 0;
     let cardioKcal = 0;
 
-    grouped[date].forEach(l => {
+    // FIX: use grouped[key] here instead of grouped[date] which was causing the bug
+    grouped[key].forEach(l => {
       if (l.duration || l.calories) {
         cardioDur += Number(l.duration || 0);
         cardioKcal += Number(l.calories || 0);
@@ -1049,23 +1050,27 @@ function renderHistory() {
     });
 
     const avgRep = totalSets > 0 ? Math.round(totalReps / totalSets) : 0;
+    // Create unique ID for toggling
+    const contentId = `hist-content-${key.replace(/[^a-zA-Z0-9]/g, '')}`;
 
     item.innerHTML = `
-            <div class="history-header">
+            <div class="history-header" onclick="toggleHistory('${contentId}', this)">
                 <div style="display:flex; gap:10px; align-items:center;">
-                    <span>DATUM: ${date}</span>
+                    <span class="history-toggle-icon collapsed-icon">▼</span>
+                    <span>${date}</span>
                     <span style="color:var(--text-muted)">|</span>
-                    <span>PLAN: ${displayName.toUpperCase()}</span>
+                    <span>${displayName.toUpperCase()}</span>
                 </div>
-                <button onclick="deleteLogSession('${date}')" style="width:auto; padding:2px 6px; font-size:0.6rem; color:var(--error-color); border-color:var(--error-color); background:rgba(255, 62, 62, 0.1);">LÖSCHEN</button>
+                <!-- Delete Button requires stopPropagation to not trigger collapse -->
+                <button onclick="event.stopPropagation(); deleteLogSession('${date}')" style="width:auto; padding:2px 6px; font-size:0.6rem; color:var(--error-color); border-color:var(--error-color); background:rgba(255, 62, 62, 0.1);">LÖSCHEN</button>
             </div>
             <div class="history-stats">
-                <span>VOLUMEN: ${totalVol.toLocaleString()} KG</span>
+                <span>VOL: ${totalVol.toLocaleString()} KG</span>
                 <span>SÄTZE: ${totalSets}</span>
                 <span>Ø WDH: ${avgRep}</span>
                 ${cardioDur > 0 ? `<span>CARDIO: ${cardioDur} MIN | ${cardioKcal} KCAL</span>` : ''}
             </div>
-            <div class="history-content">
+            <div id="${contentId}" class="history-content collapsed">
                 <div class="history-table-header">
                     <div style="width: 40%">UEBUNG</div>
                     <div style="width: 15%">SATZ</div>
