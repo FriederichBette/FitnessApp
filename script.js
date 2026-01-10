@@ -169,8 +169,7 @@ async function handleAuthState() {
     init(); // Load Data
     showPage("home");
 
-    init(); // Load Data
-    showPage("home");
+
   } else {
     authOverlay.style.display = "flex";
     mainApp.style.display = "none";
