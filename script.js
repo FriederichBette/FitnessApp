@@ -1144,6 +1144,5 @@ function initPenguin() {
     }, 700);
   }, 20000);
 }
-}
 
 initPenguin();
