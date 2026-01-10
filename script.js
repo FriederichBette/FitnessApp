@@ -265,11 +265,21 @@ async function renderMyWorkouts() {
     const header = document.createElement("div");
     header.className = "editor-header";
     header.style.cssText = "margin-top: 20px; border-bottom: 1px solid var(--secondary-color); padding-bottom: 5px; color: var(--primary-color); display: flex; justify-content: space-between; align-items: center;";
+    const headerId = `routine-header-${routine.replace(/[^a-zA-Z0-9]/g, '')}`;
+    const contentId = `routine-content-${routine.replace(/[^a-zA-Z0-9]/g, '')}`;
+
     header.innerHTML = `
-            <span>${routine}</span>
+            <div style="display:flex; align-items:center; gap:10px; cursor:pointer;" onclick="toggleHistory('${contentId}', this)">
+                 <span class="history-toggle-icon collapsed-icon">▼</span>
+                 <span>${routine}</span>
+            </div>
             <button onclick="deleteRoutine('${routine}')" style="width: auto; padding: 2px 8px; font-size: 0.6rem; color: var(--error-color); border-color: var(--error-color);">X_ROUTINE_LÖSCHEN</button>
         `;
     myWorkoutsList.appendChild(header);
+
+    const groupContent = document.createElement("div");
+    groupContent.id = contentId;
+    groupContent.className = "routine-group-content collapsed"; // Default collapsed
 
     groups[routine].forEach(w => {
       const item = document.createElement("div");
@@ -281,8 +291,9 @@ async function renderMyWorkouts() {
                     <button class="btn-delete" onclick="deleteWorkout('${w.id}')">LÖSCHEN</button>
                 </div>
             `;
-      myWorkoutsList.appendChild(item);
+      groupContent.appendChild(item);
     });
+    myWorkoutsList.appendChild(groupContent);
   });
 
   // Add safe spacer to avoid bottom nav overlap at the very end
