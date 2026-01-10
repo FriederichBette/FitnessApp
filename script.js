@@ -942,15 +942,23 @@ function renderHistory() {
   historyList.appendChild(statsDiv);
   const grouped = {};
   logs.forEach(log => {
-    if (!grouped[log.date]) grouped[log.date] = [];
-    grouped[log.date].push(log);
+    // Group by Date AND Workout ID to separate distinct sessions on the same day
+    const key = `${log.date}___${log.workout}`;
+    if (!grouped[key]) grouped[key] = [];
+    grouped[key].push(log);
   });
 
-  Object.keys(grouped).sort((a, b) => new Date(b) - new Date(a)).forEach(date => {
+  Object.keys(grouped).sort((a, b) => {
+    // Extract date part for sorting (key format: YYYY-MM-DD___ID)
+    const dateA = a.split("___")[0];
+    const dateB = b.split("___")[0];
+    return new Date(dateB) - new Date(dateA); // Descending date
+  }).forEach(key => {
     const item = document.createElement("div");
     item.className = "history-item";
 
-    const firstEntry = grouped[date][0];
+    const firstEntry = grouped[key][0];
+    const date = key.split("___")[0]; // Display Date
     const displayName = firstEntry.workout_name || availableWorkouts.find(w => w.id == firstEntry.workout)?.name || firstEntry.workout;
 
     // Calculate Stats
