@@ -671,3 +671,8 @@ button,
         padding: 15px;
     }
 }
+
+/* Ensure Penguin is on TOP of everything */
+.pixel-penguin {
+    z-index: 10000 !important;
+}
