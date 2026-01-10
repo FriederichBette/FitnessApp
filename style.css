@@ -721,6 +721,7 @@ button,
 /* Ensure Penguin is on TOP of everything */
 /* Ensure Penguin is on TOP of everything */
 /* Ensure Penguin is on TOP of everything */
+/* Ensure Penguin is on TOP of everything */
 .pixel-penguin {
     z-index: 10000 !important;
     position: fixed;
@@ -728,11 +729,19 @@ button,
     /* Hidden default */
     right: 20px;
     /* Bottom Right Corner */
-    width: 40px;
-    height: 40px;
+    width: 32px;
+    /* Klein auf Mobile */
+    height: 32px;
     image-rendering: pixelated;
     pointer-events: none;
     transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@media (min-width: 600px) {
+    .pixel-penguin {
+        width: 45px;
+        height: 45px;
+    }
 }
 
 @keyframes peekCorner {
@@ -742,11 +751,11 @@ button,
     }
 
     10% {
-        bottom: 80px;
+        bottom: 65px;
         transform: rotate(-10deg);
     }
 
-    /* Pop up above nav */
+    /* Mobile Height (~Nav is 50px) */
     20% {
         transform: rotate(10deg);
     }
@@ -764,15 +773,12 @@ button,
     }
 
     80% {
-        bottom: 80px;
+        bottom: 65px;
     }
 
-    /* Stay */
     100% {
         bottom: -50px;
     }
-
-    /* Hide */
 }
 
 /* Cute Speech Bubble (Retro Terminal Style) */
