@@ -1115,37 +1115,35 @@ function initPenguin() {
     "ZEIT FÜR NEN SCHLUCK!"
   ];
 
-  // Higher Frequency: Check every 15s
+  // CONSISTENT Frequency: Walk every 20s (no RNG check)
   setInterval(() => {
-    if (Math.random() > 0.5) { // 50% chance
+    // 1. Pick Message
+    const msg = messages[Math.floor(Math.random() * messages.length)];
+    const bubble = document.getElementById("penguin-bubble");
+    if (bubble) bubble.textContent = msg;
 
-      // 1. Pick Message
-      const msg = messages[Math.floor(Math.random() * messages.length)];
-      const bubble = document.getElementById("penguin-bubble");
-      if (bubble) bubble.textContent = msg;
+    // 2. Dance! (Tiny Wiggle)
+    penguin.style.transform = "rotate(-10deg) translateY(-5px)";
+    setTimeout(() => penguin.style.transform = "rotate(10deg) translateY(-5px)", 200);
+    setTimeout(() => penguin.style.transform = "rotate(-10deg) translateY(-5px)", 400);
+    setTimeout(() => penguin.style.transform = "rotate(0deg)", 600);
 
-      // 2. Dance! (Tiny Wiggle)
-      penguin.style.transform = "rotate(-10deg) translateY(-5px)";
-      setTimeout(() => penguin.style.transform = "rotate(10deg) translateY(-5px)", 200);
-      setTimeout(() => penguin.style.transform = "rotate(-10deg) translateY(-5px)", 400);
-      setTimeout(() => penguin.style.transform = "rotate(0deg)", 600);
+    // 3. Walk
+    setTimeout(() => {
+      penguin.style.animation = "none";
+      penguin.offsetHeight; /* trigger reflow */
+      penguin.style.animation = "waddleWalk 8s linear";
 
-      // 3. Walk
+      // Show Bubble mid-walk
       setTimeout(() => {
-        penguin.style.animation = "none";
-        penguin.offsetHeight; /* trigger reflow */
-        penguin.style.animation = "waddleWalk 8s linear"; // Slightly faster waddle
-
-        // Show Bubble mid-walk
-        setTimeout(() => {
-          if (bubble) {
-            bubble.style.opacity = "1";
-            setTimeout(() => bubble.style.opacity = "0", 3000);
-          }
-        }, 2000);
-      }, 700);
-    }
-  }, 15000);
+        if (bubble) {
+          bubble.style.opacity = "1";
+          setTimeout(() => bubble.style.opacity = "0", 3000);
+        }
+      }, 2000);
+    }, 700);
+  }, 20000);
+}
 }
 
 initPenguin();
