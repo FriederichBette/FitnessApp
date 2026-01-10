@@ -522,7 +522,7 @@ function suggestNextWorkout() {
     return;
   }
 
-  // Global suggestion or Routine-specific?
+  // 1. Filter Pool based on selection OR all (if nothing selected)
   const sourcePool = currentRoutine
     ? personalWorkouts.filter(w => w.routine_name === currentRoutine)
     : personalWorkouts;
@@ -532,28 +532,40 @@ function suggestNextWorkout() {
     return;
   }
 
-  // Find last log from THIS POOL
-  const lastLogFromPool = logs.find(l => {
-    return sourcePool.some(w => w.id == l.workout);
+  // 2. Sort sourcePool by name to ensure consistent rotation (Body 1 -> Body 2 -> Body 3)
+  sourcePool.sort((a, b) => a.name.localeCompare(b.name));
+
+  // 3. Find the VERY LAST log entry that matches ANY workout in this specific pool
+  // This ensures we resume THIS routine where we left off, ignoring other routines interleaved
+  const lastLogForThisRoutine = logs.find(l => {
+    return sourcePool.some(w => w.id === l.workout);
   });
 
   let nextId;
-  if (!lastLogFromPool) {
-    nextId = sourcePool[0].id; // Default to first in list
+  if (!lastLogForThisRoutine) {
+    // Never trained this routine? Start with first alphabetical
+    nextId = sourcePool[0].id;
   } else {
-    const lastWId = lastLogFromPool.workout;
+    const lastWId = lastLogForThisRoutine.workout;
     const ids = sourcePool.map(w => w.id);
-    let nextIndex = ids.indexOf(lastWId) + 1;
-    if (nextIndex >= ids.length || nextIndex === -1) nextIndex = 0;
+    let lastIndex = ids.indexOf(lastWId);
+
+    // Safety if workout was deleted
+    if (lastIndex === -1) lastIndex = 0;
+
+    let nextIndex = lastIndex + 1;
+    if (nextIndex >= ids.length) nextIndex = 0; // Loop back to start
     nextId = ids[nextIndex];
   }
 
   const nextW = sourcePool.find(w => w.id === nextId);
-  nextWorkoutHint.innerHTML = `VORSCHLAG: <span style="color: var(--primary-color)">${nextW.name.toUpperCase()}</span>`;
+  if (nextW) {
+    nextWorkoutHint.innerHTML = `VORSCHLAG: <span style="color: var(--primary-color)">${nextW.name.toUpperCase()}</span>`;
 
-  // Auto-select ONLY if it matches filter
-  if (!currentRoutine || nextW.routine_name === currentRoutine) {
-    workoutSelect.value = nextId;
+    // Auto-select ONLY if we are in the matching routine view
+    if (!currentRoutine || nextW.routine_name === currentRoutine) {
+      workoutSelect.value = nextId;
+    }
   }
 }
 
@@ -859,6 +871,37 @@ function renderHistory() {
   const historyList = document.getElementById("history-list");
   historyList.innerHTML = "";
   if (logs.length === 0) return;
+
+  // --- WEEKLY STATS CALCULATION ---
+  const weeks = {};
+  logs.forEach(l => {
+    const d = new Date(l.date);
+    // Rough ISO Week (simple version)
+    const onejan = new Date(d.getFullYear(), 0, 1);
+    const weekNum = Math.ceil((((d - onejan) / 86400000) + onejan.getDay() + 1) / 7);
+    const key = `${d.getFullYear()}-KW${weekNum}`;
+
+    if (!weeks[key]) weeks[key] = { vol: 0, sets: 0 };
+    weeks[key].vol += (Number(l.weight) || 0) * (Number(l.reps) || 0);
+    weeks[key].sets++;
+  });
+
+  // Render Weekly Stats Header
+  const statsDiv = document.createElement("div");
+  statsDiv.className = "info-section";
+  statsDiv.innerHTML = `<div class="editor-header">WOCHENSTATISTIK</div>`;
+
+  // Show last 3 weeks
+  Object.keys(weeks).sort().reverse().slice(0, 3).forEach(w => {
+    statsDiv.innerHTML += `
+        <div style="display:flex; justify-content:space-between; font-size:0.75rem; border-bottom:1px dashed var(--secondary-color); padding:5px 0;">
+            <span>${w}</span>
+            <span>VOL: ${(weeks[w].vol / 1000).toFixed(1)}k KG | SÄTZE: ${weeks[w].sets}</span>
+        </div>
+      `;
+  });
+  statsDiv.innerHTML += `<div class="safe-spacer" style="height:20px;"></div>`;
+  historyList.appendChild(statsDiv);
   const grouped = {};
   logs.forEach(log => {
     if (!grouped[log.date]) grouped[log.date] = [];
@@ -989,3 +1032,47 @@ window.deleteLogSession = async (date) => {
 };
 
 handleAuthState();
+
+// --- PENGUIN LOGIC ---
+function initPenguin() {
+  const existing = document.getElementById("pixel-penguin");
+  if (existing) existing.remove();
+
+  const penguin = document.createElement("div");
+  penguin.id = "pixel-penguin";
+  penguin.className = "pixel-penguin";
+  penguin.innerHTML = `
+      <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%; fill:var(--primary-color);">
+          <rect x="5" y="1" width="6" height="1" opacity="0.8"/>
+          <rect x="4" y="2" width="8" height="1" opacity="0.8"/>
+          <rect x="4" y="3" width="2" height="1"/>
+          <rect x="7" y="3" width="2" height="1"/>
+          <rect x="3" y="4" width="10" height="8"/> 
+          <rect x="2" y="6" width="1" height="4"/>
+          <rect x="13" y="6" width="1" height="4"/>
+          <rect x="4" y="12" width="3" height="1" fill="var(--error-color)"/>
+          <rect x="9" y="12" width="3" height="1" fill="var(--error-color)"/>
+      </svg>
+      <div class="penguin-bubble" id="penguin-bubble">TRINK WASSER!</div>
+  `;
+  document.body.appendChild(penguin);
+
+  // Random Appearance
+  setInterval(() => {
+    if (Math.random() > 0.7) {
+      penguin.style.animation = "none";
+      penguin.offsetHeight;
+      penguin.style.animation = "waddleWalk 10s linear";
+
+      setTimeout(() => {
+        const bubble = document.getElementById("penguin-bubble");
+        if (bubble) {
+          bubble.style.opacity = "1";
+          setTimeout(() => bubble.style.opacity = "0", 4000);
+        }
+      }, 4000);
+    }
+  }, 30000);
+}
+
+initPenguin();
