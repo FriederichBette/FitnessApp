@@ -78,42 +78,40 @@ function initPenguin() {
     "MASCHINE!", "BLEIB DRAN!", "FOKUS!"
   ];
 
-  // Loop: Peek every 20s
-  setInterval(() => {
+  // Click to Talk
+  penguin.addEventListener("click", () => {
     const msg = messages[Math.floor(Math.random() * messages.length)];
     const bubble = document.getElementById("penguin-bubble");
 
-    // 1. Pop Up Animation
-    penguin.style.animation = "peekCorner 5s ease-in-out";
+    // Jump a little
+    penguin.style.animation = "none";
+    penguin.offsetHeight;
+    penguin.style.animation = "idleBounce 0.5s ease-out"; // Fast bounce
 
-    // 2. Show Message mid-animation
-    setTimeout(() => {
-      if (bubble) {
-        bubble.textContent = msg + "_";
-        bubble.style.opacity = "1";
-      }
-    }, 1000);
+    if (bubble) {
+      bubble.textContent = msg + "_";
+      bubble.style.opacity = "1";
 
-    // 3. Hide Message before hiding penguin
-    setTimeout(() => {
-      if (bubble) bubble.style.opacity = "0";
-    }, 4000);
-
-    // 4. Reset Animation
-    setTimeout(() => {
-      penguin.style.animation = "none";
-    }, 5000);
-
-  }, 20000); // Every 20s
+      // Hide Bubble after 3s
+      setTimeout(() => {
+        bubble.style.opacity = "0";
+        penguin.style.animation = "idleBounce 3s infinite ease-in-out"; // Back to idle
+      }, 3000);
+    }
+  });
 
   // VICTORY DANCE FUNCTION
   window.penguinDance = () => {
     penguin.style.animation = "none";
     penguin.offsetHeight;
-    penguin.style.bottom = "50%"; // Jump to middle
-    penguin.style.left = "50%";
-    penguin.style.transform = "translate(-50%, -50%) scale(2)"; // Bigger!
-    penguin.style.animation = "victoryDance 0.5s infinite"; // Dance!
+
+    // Center Screen
+    penguin.style.bottom = "50%";
+    penguin.style.right = "50%"; // Center X
+    penguin.style.transform = "translate(50%, 50%) scale(2)";
+    penguin.style.zIndex = "10001";
+
+    penguin.style.animation = "victoryDance 0.5s infinite";
 
     // Bubble
     const bubble = document.getElementById("penguin-bubble");
@@ -125,9 +123,16 @@ function initPenguin() {
     // Reset after 3s
     setTimeout(() => {
       penguin.style.animation = "none";
-      penguin.style.bottom = "80px";
-      penguin.style.left = "-60px";
+      penguin.offsetHeight; // Reflow
+
+      // Back to Corner
+      penguin.style.bottom = "70px"; // Mobile safe
+      penguin.style.right = "20px";
       penguin.style.transform = "none";
+      penguin.style.zIndex = "10000";
+
+      penguin.style.animation = "idleBounce 3s infinite ease-in-out";
+
       if (bubble) bubble.style.opacity = "0";
     }, 3000);
   };

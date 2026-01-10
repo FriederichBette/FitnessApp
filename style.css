@@ -725,60 +725,50 @@ button,
 .pixel-penguin {
     z-index: 10000 !important;
     position: fixed;
-    bottom: -50px;
-    /* Hidden default */
+    bottom: 70px;
+    /* Always visible above bottom nav */
     right: 20px;
     /* Bottom Right Corner */
-    width: 32px;
-    /* Klein auf Mobile */
-    height: 32px;
+    width: 35px;
+    /* Mobile Size */
+    height: 35px;
     image-rendering: pixelated;
-    pointer-events: none;
-    transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    pointer-events: auto;
+    /* CLICKABLE! */
+    cursor: pointer;
+    transition: transform 0.2s ease;
+    animation: idleBounce 3s infinite ease-in-out;
+}
+
+.pixel-penguin:active {
+    transform: scale(0.9);
+    /* Click effect */
 }
 
 @media (min-width: 600px) {
     .pixel-penguin {
-        width: 45px;
-        height: 45px;
+        width: 50px;
+        height: 50px;
+        bottom: 30px;
+        /* Desktop can be lower */
     }
 }
 
-@keyframes peekCorner {
-    0% {
-        bottom: -50px;
-        transform: rotate(0deg);
-    }
+@keyframes idleBounce {
 
-    10% {
-        bottom: 65px;
-        transform: rotate(-10deg);
-    }
-
-    /* Mobile Height (~Nav is 50px) */
-    20% {
-        transform: rotate(10deg);
-    }
-
-    30% {
-        transform: rotate(-10deg);
-    }
-
-    40% {
-        transform: rotate(10deg);
+    0%,
+    100% {
+        transform: translateY(0);
     }
 
     50% {
-        transform: rotate(0deg);
+        transform: translateY(-5px);
     }
+}
 
-    80% {
-        bottom: 65px;
-    }
-
-    100% {
-        bottom: -50px;
-    }
+100% {
+    bottom: -50px;
+}
 }
 
 /* Cute Speech Bubble (Retro Terminal Style) */
