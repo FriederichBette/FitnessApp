@@ -908,7 +908,17 @@ async function loadWorkout(draftEntries = null) {
     const { data: specificExercises } = await client.from("workout_exercises").select("*").eq("workout_id", workoutId);
 
     if (!specificExercises || specificExercises.length === 0) {
-      contentArea.innerHTML = "<p style='text-align:center;'>FEHLER: KEINE ÜBUNGEN GEFUNDEN</p>";
+      contentArea.innerHTML = `
+        <div style="text-align:center; margin-top: 50px;">
+            <div class="crt-text" style="color:red; margin-bottom: 20px;">SYSTEM FEHLER: LEERER PLAN</div>
+            <p style="font-size: 0.8rem; margin-bottom: 20px;">Dieser Plan enthält keine Übungen.</p>
+            <button onclick="window.location.reload()" class="secondary">NEU LADEN</button>
+        </div>
+      `;
+      // Reset UI to allow navigation
+      document.querySelector(".bottom-nav").style.display = "flex";
+      document.querySelector(".selection-area").style.display = "block";
+      document.getElementById("workout-actions").style.display = "none";
       return;
     }
     exercisesInWorkout.push(...specificExercises);
