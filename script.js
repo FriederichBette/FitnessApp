@@ -1031,47 +1031,71 @@ async function saveWorkout() {
   const workoutObj = availableWorkouts.find(w => w.id == workoutId);
   const workoutName = workoutObj ? workoutObj.name : "UNBEKANNT";
 
-  const { data: { user } } = await client.auth.getUser();
-  const today = new Date().toISOString().slice(0, 10);
-  const dataToSave = [];
+  saveBtn.disabled = true; // Sperren zu Beginn
 
-  document.querySelectorAll(".exercise-card .set-row").forEach(row => {
-    const wInput = row.querySelector(".weight");
-    const rInput = row.querySelector(".reps");
-    const weightVal = wInput.value;
-    const repsVal = rInput.value;
+  try {
+    const { data: { user } } = await client.auth.getUser();
+    if (!user) throw new Error("Nicht eingeloggt");
 
-    if (weightVal || repsVal) {
-      const isCardio = wInput.dataset.iscardio === "true";
-      dataToSave.push({
-        user_id: user.id,
-        date: today,
-        workout: workoutId,
-        workout_name: workoutName,
-        exercise: wInput.dataset.ex,
-        set: isCardio ? 1 : Number(wInput.dataset.set || 1),
-        weight: isCardio ? 0 : Number(weightVal || 0),
-        reps: isCardio ? 0 : Number(repsVal || 0),
-        duration: isCardio ? Number(weightVal || 0) : null,
-        calories: isCardio ? Number(repsVal || 0) : null
-      });
+    const today = new Date().toISOString().slice(0, 10);
+    const dataToSave = [];
+
+    document.querySelectorAll(".exercise-card .set-row").forEach(row => {
+      const wInput = row.querySelector(".weight");
+      const rInput = row.querySelector(".reps");
+      const weightVal = wInput.value;
+      const repsVal = rInput.value;
+
+      if (weightVal || repsVal) {
+        const isCardio = wInput.dataset.iscardio === "true";
+        dataToSave.push({
+          user_id: user.id,
+          date: today,
+          workout: workoutId,
+          workout_name: workoutName,
+          exercise: wInput.dataset.ex,
+          set: isCardio ? 1 : Number(wInput.dataset.set || 1),
+          weight: isCardio ? 0 : Number(weightVal || 0),
+          reps: isCardio ? 0 : Number(repsVal || 0),
+          duration: isCardio ? Number(weightVal || 0) : null,
+          calories: isCardio ? Number(repsVal || 0) : null
+        });
+      }
+    });
+
+    if (dataToSave.length === 0) {
+      notify("KEINE_DATEN_ZUM_SPEICHERN", "error");
+      saveBtn.disabled = false;
+      return;
     }
-  });
-  if (dataToSave.length === 0) return notify("KEINE_DATEN_ZUM_SPEICHERN", "error");
-  saveBtn.disabled = true;
-  const { error } = await client.from("logs").insert(dataToSave);
-  if (!error) {
+
+    const { error } = await client.from("logs").insert(dataToSave);
+    if (error) throw error;
+
+    // Success Sequence
     notify("DATEN_ARCHIVIERT");
     localStorage.removeItem("workout_draft");
-    if (window.penguinDance) window.penguinDance(); // Trigger Happy Dance
+
+    // UI Reset
     document.querySelector(".bottom-nav").style.display = "flex";
     document.querySelector(".selection-area").style.display = "block";
     document.getElementById("next-workout-hint").style.display = "block";
     document.getElementById("workout-actions").style.display = "none";
     contentArea.innerHTML = "";
-    init();
+
+    // Gamification (Safe Call)
+    try {
+      if (window.penguinDance) window.penguinDance();
+    } catch (e) { console.warn("Penguin Error:", e); }
+
+    await init();
+
+  } catch (error) {
+    console.error("Save Error:", error);
+    notify(`FEHLER: ${error.message}`, "error");
+  } finally {
+    saveBtn.disabled = false; // Immer entsperren
   }
-  saveBtn.disabled = false;
 }
 
 // Abbrechen Button Logik
