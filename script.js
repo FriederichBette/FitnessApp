@@ -32,29 +32,39 @@ function initPenguin() {
   const penguin = document.createElement("div");
   penguin.id = "pixel-penguin";
   penguin.className = "pixel-penguin";
-  // Monochromer 8-Bit Stil: Nur Primary Color
-  // Ein einfacherer Pixel-Pinguin
+  // Besserer Pixel-Pinguin (16x16 Grid)
   penguin.innerHTML = `
-      <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%; fill:var(--primary-color); image-rendering: pixelated;">
-         <!-- Kopf -->
-         <rect x="5" y="2" width="6" height="4" />
-         <!-- Augen (Schwarz/Transparent) -->
-         <rect id="p-eye-l" x="6" y="3" width="1" height="1" fill="#000" />
-         <rect id="p-eye-r" x="9" y="3" width="1" height="1" fill="#000" />
-         <!-- Schnabel -->
-         <rect x="7" y="4" width="2" height="1" fill="var(--secondary-color)" opacity="0.8"/>
-         <!-- Körper -->
-         <rect x="4" y="6" width="8" height="7" />
-         <!-- Bauch -->
-         <rect x="6" y="7" width="4" height="5" fill="#000" opacity="0.3"/> 
-         <!-- Füße -->
-         <rect x="4" y="13" width="2" height="1" />
-         <rect x="10" y="13" width="2" height="1" />
-         <!-- Flügel (Winken) -->
-         <rect x="2" y="7" width="2" height="3" /> 
-         <rect x="12" y="7" width="2" height="3" />
+      <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges" style="width:100%; height:100%;">
+         <!-- Body (Black/Primary) -->
+         <rect x="4" y="2" width="8" height="12" fill="var(--primary-color)" />
+         <rect x="3" y="4" width="1" height="8" fill="var(--primary-color)" />
+         <rect x="12" y="4" width="1" height="8" fill="var(--primary-color)" />
+         
+         <!-- Belly (Transparent/Black to show "White" contrast) -->
+         <!-- In terminal theme: Using black/dark opacity to mimic white belly against the green body -->
+         <rect x="5" y="5" width="6" height="8" fill="#000" opacity="0.8" />
+         
+         <!-- Eyes (White/Green) -->
+         <rect id="p-eye-l" x="5" y="3" width="2" height="2" fill="#000" />
+         <rect x="6" y="4" width="1" height="1" fill="var(--primary-color)" /> <!-- Pupil -->
+         
+         <rect id="p-eye-r" x="9" y="3" width="2" height="2" fill="#000" />
+         <rect x="10" y="4" width="1" height="1" fill="var(--primary-color)" /> <!-- Pupil -->
+
+         <!-- Beak (Secondary Color) -->
+         <rect x="7" y="5" width="2" height="1" fill="var(--secondary-color)" />
+         <rect x="8" y="6" width="1" height="1" fill="var(--secondary-color)" />
+
+         <!-- Feet -->
+         <rect x="4" y="14" width="3" height="1" fill="var(--secondary-color)" />
+         <rect x="9" y="14" width="3" height="1" fill="var(--secondary-color)" />
+         
+         <!-- Flippers (Arms) -->
+         <rect x="2" y="6" width="1" height="4" fill="var(--primary-color)" />
+         <rect x="13" y="6" width="1" height="4" fill="var(--primary-color)" />
+         
+         <div class="penguin-bubble" id="penguin-bubble"></div>
       </svg>
-      <div class="penguin-bubble" id="penguin-bubble"></div>
   `;
   document.body.appendChild(penguin);
 
