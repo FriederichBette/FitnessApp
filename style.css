@@ -672,6 +672,101 @@ button,
 }
 
 /* Ensure Penguin is on TOP of everything */
+/* Ensure Penguin is on TOP of everything */
 .pixel-penguin {
     z-index: 10000 !important;
+    position: fixed;
+    bottom: 80px;
+    /* Above nav bar */
+    left: -60px;
+    /* Start slightly off screen */
+    width: 40px;
+    /* Klein und süß */
+    height: 40px;
+    image-rendering: pixelated;
+    pointer-events: none;
+    /* Animation controlled by JS mostly, but base styles here */
+}
+
+/* Cute Speech Bubble */
+.penguin-bubble {
+    position: absolute;
+    bottom: 45px;
+    /* Directly above head */
+    left: 50%;
+    transform: translateX(-50%);
+    background: #fff;
+    color: #000;
+    padding: 3px 8px;
+    border-radius: 8px;
+    font-size: 0.6rem;
+    font-weight: bold;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.3s;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    font-family: sans-serif;
+    /* Readable */
+    pointer-events: none;
+}
+
+/* Triangle for bubble */
+.penguin-bubble::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 4px 4px 0;
+    border-style: solid;
+    border-color: #fff transparent transparent transparent;
+}
+
+@keyframes waddleWalk {
+    0% {
+        left: -60px;
+        transform: rotate(0deg);
+    }
+
+    10% {
+        transform: rotate(-10deg);
+    }
+
+    20% {
+        transform: rotate(10deg);
+    }
+
+    30% {
+        transform: rotate(-10deg);
+    }
+
+    40% {
+        transform: rotate(10deg);
+    }
+
+    50% {
+        left: 50%;
+        transform: rotate(0deg);
+    }
+
+    60% {
+        transform: rotate(-10deg);
+    }
+
+    70% {
+        transform: rotate(10deg);
+    }
+
+    80% {
+        transform: rotate(-10deg);
+    }
+
+    90% {
+        transform: rotate(10deg);
+    }
+
+    100% {
+        left: 110%;
+        transform: rotate(0deg);
+    }
 }
