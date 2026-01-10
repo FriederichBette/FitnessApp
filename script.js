@@ -644,7 +644,7 @@ async function loadWorkout(draftEntries = null) {
 
       const card = document.createElement("div");
       card.className = "exercise-card";
-      const lastLogs = getLastExerciseLogs(ex.exercise);
+      const lastLogs = getLastExerciseLogs(ex.exercise, workoutId);
 
       if (ex.is_cardio) {
         card.innerHTML = `
@@ -750,8 +750,15 @@ function startRestTimer(exName, setNum, customRest = null) {
   }, 100);
 }
 
-function getLastExerciseLogs(exerciseName) {
-  const filtered = logs.filter(l => l.exercise === exerciseName).slice(0, 3);
+function getLastExerciseLogs(exerciseName, filterWorkoutId = null) {
+  let filtered = logs.filter(l => l.exercise === exerciseName);
+
+  if (filterWorkoutId) {
+    filtered = filtered.filter(l => l.workout === filterWorkoutId);
+  }
+
+  filtered = filtered.slice(0, 3);
+
   if (filtered.length === 0) return "KEINE DATEN";
   return filtered.map(l => `${l.weight}KG x ${l.reps}`).join(" | ");
 }
