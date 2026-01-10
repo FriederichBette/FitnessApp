@@ -470,7 +470,11 @@ async function loadPlan() {
 
 async function loadLogs(fetchAll = false) {
   const { data: { user } } = await client.auth.getUser();
-  let query = client.from("logs").select("*").eq("user_id", user.id).order("date", { ascending: false });
+  let query = client.from("logs")
+    .select("*")
+    .eq("user_id", user.id)
+    .order("date", { ascending: false })
+    .order("created_at", { ascending: false });
 
   if (!fetchAll) {
     query = query.limit(50);
