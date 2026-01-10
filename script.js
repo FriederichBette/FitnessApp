@@ -192,7 +192,15 @@ async function handleAuthState() {
   }
 }
 
-client.auth.onAuthStateChange((event, session) => {
+client.auth.onAuthStateChange(async (event, session) => {
+  if (event === "PASSWORD_RECOVERY") {
+    const newPw = prompt("NEUES PASSWORT EINGEBEN:");
+    if (newPw) {
+      const { error } = await client.auth.updateUser({ password: newPw });
+      if (!error) notify("PASSWORT ERFOLGREICH GEÄNDERT");
+      else notify("FEHLER BEIM ÄNDERN: " + error.message, "error");
+    }
+  }
   handleAuthState();
 });
 
