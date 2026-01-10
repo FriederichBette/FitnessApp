@@ -73,7 +73,7 @@ function initPenguin() {
   }, 4000);
 
   const messages = [
-    "TRINK WASSER!", "STARKER ARM!", "SIEHST GUT AUS!",
+    "TRINK WASSER!", "SIEHST GUT AUS!",
     "LEICHTES GEWICHT!", "H2O!", "DURST?", "WEITER SO!",
     "MASCHINE!", "BLEIB DRAN!", "FOKUS!"
   ];
