@@ -122,47 +122,44 @@ function initPenguin() {
       }, 2000);
     }
   });
-  penguin.style.animation = "idleBounce 3s infinite ease-in-out"; // Back to idle
-}, 3000);
-    }
-  });
 
-// VICTORY DANCE FUNCTION
-window.penguinDance = () => {
-  penguin.style.animation = "none";
-  penguin.offsetHeight;
 
-  // Center Screen
-  penguin.style.bottom = "50%";
-  penguin.style.right = "50%"; // Center X
-  penguin.style.transform = "translate(50%, 50%) scale(2)";
-  penguin.style.zIndex = "10001";
-
-  penguin.style.animation = "victoryDance 0.5s infinite";
-
-  // Bubble
-  const bubble = document.getElementById("penguin-bubble");
-  if (bubble) {
-    bubble.textContent = "TRAINING COMPLETE!_";
-    bubble.style.opacity = "1";
-  }
-
-  // Reset after 3s
-  setTimeout(() => {
+  // VICTORY DANCE FUNCTION
+  window.penguinDance = () => {
     penguin.style.animation = "none";
-    penguin.offsetHeight; // Reflow
+    penguin.offsetHeight;
 
-    // Back to Corner
-    penguin.style.bottom = "70px"; // Mobile safe
-    penguin.style.right = "20px";
-    penguin.style.transform = "none";
-    penguin.style.zIndex = "10000";
+    // Center Screen
+    penguin.style.bottom = "50%";
+    penguin.style.right = "50%"; // Center X
+    penguin.style.transform = "translate(50%, 50%) scale(2)";
+    penguin.style.zIndex = "10001";
 
-    penguin.style.animation = "idleBounce 3s infinite ease-in-out";
+    penguin.style.animation = "victoryDance 0.5s infinite";
 
-    if (bubble) bubble.style.opacity = "0";
-  }, 3000);
-};
+    // Bubble
+    const bubble = document.getElementById("penguin-bubble");
+    if (bubble) {
+      bubble.textContent = "TRAINING COMPLETE!_";
+      bubble.style.opacity = "1";
+    }
+
+    // Reset after 3s
+    setTimeout(() => {
+      penguin.style.animation = "none";
+      penguin.offsetHeight; // Reflow
+
+      // Back to Corner
+      penguin.style.bottom = "70px"; // Mobile safe
+      penguin.style.right = "20px";
+      penguin.style.transform = "none";
+      penguin.style.zIndex = "10000";
+
+      penguin.style.animation = "idleBounce 3s infinite ease-in-out";
+
+      if (bubble) bubble.style.opacity = "0";
+    }, 3000);
+  };
 }
 // Run immediately
 initPenguin();
