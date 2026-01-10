@@ -1159,10 +1159,11 @@ function renderHistory() {
 
   // Show last 3 weeks
   Object.keys(weeks).sort().reverse().slice(0, 3).forEach(w => {
+    const vol = Math.round(weeks[w].vol);
     statsDiv.innerHTML += `
         <div style="display:flex; justify-content:space-between; font-size:0.75rem; border-bottom:1px dashed var(--secondary-color); padding:5px 0;">
             <span>${w}</span>
-            <span>VOL: ${(weeks[w].vol / 1000).toFixed(1)}k KG | SÄTZE: ${weeks[w].sets}</span>
+            <span>VOL: ${vol.toLocaleString()} KG | SÄTZE: ${weeks[w].sets}</span>
         </div>
       `;
   });
