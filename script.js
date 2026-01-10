@@ -1077,7 +1077,7 @@ function renderHistory() {
                     <div style="width: 25%">LAST / MIN</div>
                     <div style="width: 20%; text-align:right;">WDH / KCAL</div>
                 </div>
-                ${grouped[date].map(l => `
+                ${grouped[key].map(l => `
                     <div class="history-row">
                         <div style="width: 40%">${l.exercise.toUpperCase()}</div>
                         <div style="width: 15%">${l.set}</div>
@@ -1148,6 +1148,20 @@ window.deleteLogSession = async (date) => {
   } else {
     notify("EINTRAEGE DAUERHAFT GELÖSCHT");
     await loadLogs();
+  }
+};
+
+// Toggle History Content
+window.toggleHistory = (id, headerElement) => {
+  const content = document.getElementById(id);
+  const icon = headerElement.querySelector(".history-toggle-icon");
+
+  if (content.classList.contains("collapsed")) {
+    content.classList.remove("collapsed");
+    icon.classList.remove("collapsed-icon");
+  } else {
+    content.classList.add("collapsed");
+    icon.classList.add("collapsed-icon");
   }
 };
 
