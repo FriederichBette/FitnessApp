@@ -35,23 +35,26 @@ function initPenguin() {
   // Besserer Pixel-Pinguin (16x16 Grid)
   penguin.innerHTML = `
       <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges" style="width:100%; height:100%;">
-         <!-- Body (Black/Primary) -->
+         <!-- Body -->
          <rect x="4" y="2" width="8" height="12" fill="var(--primary-color)" />
          <rect x="3" y="4" width="1" height="8" fill="var(--primary-color)" />
          <rect x="12" y="4" width="1" height="8" fill="var(--primary-color)" />
          
-         <!-- Belly (Transparent/Black to show "White" contrast) -->
-         <!-- In terminal theme: Using black/dark opacity to mimic white belly against the green body -->
+         <!-- Belly (Darker for contrast) -->
          <rect x="5" y="5" width="6" height="8" fill="#000" opacity="0.8" />
          
-         <!-- Eyes (White/Green) -->
+         <!-- Eyes -->
          <rect id="p-eye-l" x="5" y="3" width="2" height="2" fill="#000" />
-         <rect x="6" y="4" width="1" height="1" fill="var(--primary-color)" /> <!-- Pupil -->
+         <rect x="6" y="4" width="1" height="1" fill="var(--primary-color)" />
          
          <rect id="p-eye-r" x="9" y="3" width="2" height="2" fill="#000" />
-         <rect x="10" y="4" width="1" height="1" fill="var(--primary-color)" /> <!-- Pupil -->
+         <rect x="10" y="4" width="1" height="1" fill="var(--primary-color)" />
 
-         <!-- Beak (Secondary Color) -->
+         <!-- Cheeks (Blush) - CUTE FACTOR -->
+         <rect x="4" y="5" width="2" height="1" fill="#ff9999" opacity="0.6" />
+         <rect x="10" y="5" width="2" height="1" fill="#ff9999" opacity="0.6" />
+
+         <!-- Beak -->
          <rect x="7" y="5" width="2" height="1" fill="var(--secondary-color)" />
          <rect x="8" y="6" width="1" height="1" fill="var(--secondary-color)" />
 
@@ -59,7 +62,7 @@ function initPenguin() {
          <rect x="4" y="14" width="3" height="1" fill="var(--secondary-color)" />
          <rect x="9" y="14" width="3" height="1" fill="var(--secondary-color)" />
          
-         <!-- Flippers (Arms) -->
+         <!-- Flippers -->
          <rect x="2" y="6" width="1" height="4" fill="var(--primary-color)" />
          <rect x="13" y="6" width="1" height="4" fill="var(--primary-color)" />
          
