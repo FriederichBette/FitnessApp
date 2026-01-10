@@ -32,25 +32,35 @@ function initPenguin() {
   const penguin = document.createElement("div");
   penguin.id = "pixel-penguin";
   penguin.className = "pixel-penguin";
+  // Monochromer 8-Bit Stil: Nur Primary Color
+  // Ein einfacherer Pixel-Pinguin
   penguin.innerHTML = `
-      <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%; fill:var(--primary-color);">
-          <rect x="5" y="1" width="6" height="1" opacity="0.8"/>
-          <rect x="4" y="2" width="8" height="1" opacity="0.8"/>
-          <rect x="4" y="3" width="2" height="1"/>
-          <rect x="7" y="3" width="2" height="1"/>
-          <rect x="3" y="4" width="10" height="8"/> 
-          <rect x="2" y="6" width="1" height="4"/>
-          <rect x="13" y="6" width="1" height="4"/>
-          <rect x="4" y="12" width="3" height="1" fill="var(--error-color)"/>
-          <rect x="9" y="12" width="3" height="1" fill="var(--error-color)"/>
+      <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%; fill:var(--primary-color); image-rendering: pixelated;">
+         <!-- Kopf -->
+         <rect x="5" y="2" width="6" height="4" />
+         <!-- Augen (Schwarz/Transparent) -->
+         <rect x="6" y="3" width="1" height="1" fill="#000" />
+         <rect x="9" y="3" width="1" height="1" fill="#000" />
+         <!-- Schnabel -->
+         <rect x="7" y="4" width="2" height="1" fill="var(--secondary-color)" opacity="0.8"/>
+         <!-- Körper -->
+         <rect x="4" y="6" width="8" height="7" />
+         <!-- Bauch (Leer bzw. Outline-Look durch Lücke? Nein, Solid ist besser für Retro) -->
+         <rect x="6" y="7" width="4" height="5" fill="#000" opacity="0.3"/> 
+         <!-- Füße -->
+         <rect x="4" y="13" width="2" height="1" />
+         <rect x="10" y="13" width="2" height="1" />
+         <!-- Flügel (Winken) -->
+         <rect x="2" y="7" width="2" height="3" /> 
+         <rect x="12" y="7" width="2" height="3" />
       </svg>
       <div class="penguin-bubble" id="penguin-bubble"></div>
   `;
   document.body.appendChild(penguin);
 
   const messages = [
-    "TRINK WASSER!", "HYDRATE OR DIEDRATE!", "WASSER MARSCH!",
-    "SCHLUCK SCHLUCK!", "H2O FOR THE WIN!", "DURST IST DER FEIND!"
+    "TRINK WASSER!", "HYDRATE!", "WASSER MARSCH!",
+    "SCHLUCK!", "H2O!", "DURST?"
   ];
 
   // Start with a little hello after 2s

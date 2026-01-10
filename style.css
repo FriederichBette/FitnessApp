@@ -389,49 +389,71 @@ button,
     font-weight: normal;
 }
 
-/* --- MINIMAL CARDS --- */
+/* --- MINIMAL CARDS (MOBILE OPTIMIZED) --- */
 .exercise-card {
-    border-bottom: 1px solid var(--secondary-color);
-    padding: 15px 0;
-    margin-bottom: 10px;
+    border-bottom: 1px dashed var(--secondary-color);
+    padding: 10px 0;
+    /* Reduced padding */
+    margin-bottom: 5px;
     background: transparent;
-    border-left: none;
-    border-top: none;
-    border-right: none;
 }
 
 .exercise-card h3 {
-    font-size: 1.1rem;
-    margin-bottom: 8px;
+    font-size: 1.0rem;
+    /* Slightly smaller header */
+    margin-bottom: 4px;
     color: var(--primary-color);
+    display: flex;
+    justify-content: space-between;
 }
 
 .exercise-info {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     color: var(--text-muted);
-    margin-bottom: 12px;
-    text-transform: uppercase;
+    margin-bottom: 8px;
+    /* Compact */
+    display: flex;
+    gap: 10px;
+}
+
+.last-logs {
+    font-size: 0.7rem;
+    color: var(--secondary-color);
+    margin-bottom: 8px;
+    font-style: italic;
 }
 
 .set-row {
-    display: flex;
+    display: grid;
+    grid-template-columns: 40px 1fr 1fr;
+    /* Label | Input | Input */
+    gap: 10px;
     align-items: center;
-    gap: 12px;
-    margin-bottom: 8px;
-    padding: 4px 0;
+    margin-bottom: 6px;
 }
 
 .set-row label {
-    font-size: 0.7rem;
-    min-width: 55px;
+    font-size: 0.65rem;
     color: var(--text-muted);
+    text-align: right;
 }
 
 .set-row input {
     margin: 0 !important;
-    padding: 6px;
-    width: 55px;
+    padding: 10px;
+    /* Larger touch target */
+    width: 100%;
+    font-size: 1rem;
+    /* Readable font */
     border-color: var(--secondary-color);
+    text-align: center;
+    background: rgba(0, 59, 0, 0.1);
+    /* Subtle input background */
+}
+
+.set-row input:focus {
+    background: #000;
+    border-color: var(--primary-color);
 }
 
 /* --- NAVIGATION --- */
