@@ -237,18 +237,52 @@ async function renderMyWorkouts() {
   const personal = availableWorkouts.filter(w => !w.is_template);
 
   // Render Templates
+  // Render Templates Grouped by Routine
   if (templatesList) {
     if (templates.length === 0) {
       templatesList.innerHTML = "<p style='font-size:0.7rem; color:var(--text-muted);'>KEINE SYSTEM_VORLAGEN GEFUNDEN</p>";
     } else {
+      // Group Templates
+      const tempGroups = {};
       templates.forEach(w => {
-        const item = document.createElement("div");
-        item.className = "plan-manage-item";
-        item.innerHTML = `
-                    <span>${w.name.toUpperCase()}</span>
-                    <button class="secondary" style="width:auto; padding:5px 10px; font-size:0.6rem;" onclick="copyWorkout('${w.id}')">KOPIEREN</button>
-                `;
-        templatesList.appendChild(item);
+        const r = (w.routine_name || "SYSTEM").toUpperCase();
+        if (!tempGroups[r]) tempGroups[r] = [];
+        tempGroups[r].push(w);
+      });
+
+      Object.keys(tempGroups).sort().forEach(routine => {
+        // Create Header for Template Routine
+        const headerId = `temp-header-${routine.replace(/[^a-zA-Z0-9]/g, '')}`;
+        const contentId = `temp-content-${routine.replace(/[^a-zA-Z0-9]/g, '')}`;
+
+        const header = document.createElement("div");
+        header.className = "editor-header";
+        header.style.cssText = "margin-bottom: 5px; border-bottom: 1px dashed var(--secondary-color); padding-bottom: 5px; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center;";
+
+        // COPY WHOLE ROUTINE BUTTON
+        header.innerHTML = `
+            <div style="display:flex; align-items:center; gap:10px; cursor:pointer;" onclick="toggleHistory('${contentId}', this)">
+                 <span class="history-toggle-icon collapsed-icon">▼</span>
+                 <span>${routine}</span>
+            </div>
+            <button class="secondary" style="width: auto; padding: 2px 8px; font-size: 0.6rem;" onclick="copyWholeRoutine('${routine}')">GANZE ROUTINE KOPIEREN</button>
+        `;
+        templatesList.appendChild(header);
+
+        const groupContent = document.createElement("div");
+        groupContent.id = contentId;
+        groupContent.className = "routine-group-content collapsed";
+
+        tempGroups[routine].forEach(w => {
+          const item = document.createElement("div");
+          item.className = "plan-manage-item";
+          item.innerHTML = `
+                <span>${w.name.toUpperCase()}</span>
+                <button class="secondary" style="width:auto; padding:5px 10px; font-size:0.6rem;" onclick="copyWorkout('${w.id}')">KOPIEREN</button>
+           `;
+          groupContent.appendChild(item);
+        });
+        templatesList.appendChild(groupContent);
       });
     }
   }
@@ -335,6 +369,54 @@ window.copyWorkout = async (id) => {
   }
 
   notify("PLAN_SYNCHRONISIERT");
+  await init();
+  renderMyWorkouts();
+};
+
+window.copyWholeRoutine = async (routineName) => {
+  const targetName = prompt(`NAME FÜR KOPIE VON "${routineName}"?`, routineName);
+  if (!targetName) return;
+
+  notify(`KOPIERE ROUTINE "${routineName}"...`);
+  const { data: { user } } = await client.auth.getUser();
+
+  // Find all templates in this routine
+  const templates = availableWorkouts.filter(w => w.is_template && w.routine_name === routineName);
+
+  if (templates.length === 0) return notify("KEINE VORLAGEN GEFUNDEN", "error");
+
+  for (const tpl of templates) {
+    // 1. Create Workout Copy
+    const { data: newW, error: wErr } = await client.from("workouts")
+      .insert({
+        name: tpl.name,
+        user_id: user.id,
+        is_template: false,
+        routine_name: targetName.trim().toUpperCase()
+      })
+      .select().single();
+
+    if (wErr) {
+      console.error(wErr);
+      continue;
+    }
+
+    // 2. Load and Copy Exercises
+    const { data: steps } = await client.from("workout_exercises").select("*").eq("workout_id", tpl.id);
+    if (steps && steps.length > 0) {
+      const newSteps = steps.map(s => ({
+        workout_id: newW.id,
+        exercise: s.exercise,
+        sets: s.sets,
+        reps: s.reps || s.reps_max,
+        rest_time: s.rest_time || 60,
+        is_cardio: s.is_cardio // Ensure cardio flag is copied
+      }));
+      await client.from("workout_exercises").insert(newSteps);
+    }
+  }
+
+  notify("ROUTINE ERFOLGREICH KOPIERT");
   await init();
   renderMyWorkouts();
 };
