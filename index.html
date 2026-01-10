@@ -23,6 +23,9 @@
                 <input type="email" id="email" placeholder="EMAIL-ADRESSE" autocomplete="email">
                 <input type="password" id="password" placeholder="PASSWORT" autocomplete="current-password">
                 <button id="login-btn">ANMELDEN</button>
+                <div style="margin-top: 10px; font-size: 0.7rem; text-align: center;">
+                    <a href="#" id="forgot-password-link" style="color: var(--text-muted);">PASSWORT VERGESSEN?</a>
+                </div>
                 <div style="margin-top: 20px; font-size: 0.75rem; text-align: center;">
                     KEIN ZUGANG? <a href="#" id="show-register" style="color: var(--primary-color);">REGISTRIEREN</a>
                 </div>
@@ -30,6 +33,18 @@
             <div id="register-form" style="display: none;">
                 <input type="email" id="reg-email" placeholder="EMAIL-ADRESSE">
                 <input type="password" id="reg-password" placeholder="PASSWORT">
+
+                <div
+                    style="display:flex; gap:10px; align-items:start; margin: 10px 0; font-size: 0.65rem; color: var(--text-muted); text-align: left;">
+                    <input type="checkbox" id="reg-consent" style="width:auto; margin-top:2px;">
+                    <label for="reg-consent" style="line-height:1.2;">
+                        Ich stimme der Speicherung meiner Trainingsdaten gemäß der <span class="nav-item"
+                            data-page="info"
+                            style="text-decoration:underline; cursor:pointer; color:var(--primary-color);">Datenschutzerklärung</span>
+                        zu.
+                    </label>
+                </div>
+
                 <button id="register-btn">KONTO ERSTELLEN</button>
                 <div style="margin-top: 20px; font-size: 0.75rem; text-align: center;">
                     VORHANDEN? <a href="#" id="show-login" style="color: var(--primary-color);">LOGIN</a>

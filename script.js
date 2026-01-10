@@ -196,6 +196,7 @@ client.auth.onAuthStateChange((event, session) => {
   handleAuthState();
 });
 
+// Auth Listeners
 document.getElementById("login-btn").addEventListener("click", async () => {
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
@@ -203,9 +204,26 @@ document.getElementById("login-btn").addEventListener("click", async () => {
   if (error) notify("FEHLER: " + error.message, "error");
 });
 
+document.getElementById("forgot-password-link").addEventListener("click", async (e) => {
+  e.preventDefault();
+  const email = document.getElementById("email").value;
+  if (!email) return notify("BITTE EMAIL EINGEBEN", "error");
+
+  const { error } = await client.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.href, // Redirect back here
+  });
+
+  if (error) notify("FEHLER: " + error.message, "error");
+  else notify(`RESET-LINK AN ${email} GESENDET`);
+});
+
 document.getElementById("register-btn").addEventListener("click", async () => {
   const email = document.getElementById("reg-email").value;
   const password = document.getElementById("reg-password").value;
+  const consent = document.getElementById("reg-consent").checked;
+
+  if (!consent) return notify("BITTE DATENSCHUTZ AKZEPTIEREN", "error");
+
   const { error } = await client.auth.signUp({ email, password });
   if (error) notify("FEHLER: " + error.message, "error");
   else notify("REGISTRIERUNG ERFOLGREICH: BITTE EMAIL BESTÄTIGEN");
