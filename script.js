@@ -611,6 +611,33 @@ async function loadWorkout(draftEntries = null) {
     exercisesInWorkout.push(...specificExercises);
   }
 
+  // --- PROGRESSIVE OVERLOAD FIX ---
+  // Fetch last logs specifically for these exercises to ensure we show history
+  // even if it's older than the default loaded history limit.
+  const uniqueExercises = [...new Set(exercisesInWorkout.map(e => e.exercise))];
+  if (uniqueExercises.length > 0) {
+    // We fetch the last 10 entries for each exercise to be safe (simplified via one query with adequate limit)
+    // Note: A smarter way would be per-exercise RPC, but 'in' query sorted by date is good enough for now.
+    const { data: historyData } = await client
+      .from("logs")
+      .select("*")
+      .in("exercise", uniqueExercises)
+      .eq("user_id", (await client.auth.getUser()).data.user.id)
+      .order("date", { ascending: false })
+      .limit(200); // Fetch enough recent context for these specific moves
+
+    if (historyData) {
+      // Merge into global logs if not present, so getLastExerciseLogs finds them
+      historyData.forEach(hLog => {
+        if (!logs.find(existing => existing.id === hLog.id)) {
+          logs.push(hLog);
+        }
+      });
+      // Re-sort global logs just in case
+      logs.sort((a, b) => new Date(b.date) - new Date(a.date));
+    }
+  }
+
   try {
     exercisesInWorkout.forEach((ex) => {
       if (!ex.exercise) return; // Skip invalid entries
