@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>WEYLAND-YUTANI | PERFORMANCE INTERFACE</title>
     <!-- iOS / PWA Optimization -->
+    <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="format-detection" content="telephone=no">
@@ -157,34 +158,42 @@
         <!-- PAGE: HILFE -->
         <div id="page-info" class="page" style="display: none;">
             <div class="info-section">
-                <h2>[ SCHRITT_FÜR_SCHRITT ]</h2>
-                <ul class="steplist">
-                    <li><strong>1. PLÄNE ERSTELLEN:</strong> Gehe auf den Reiter <strong>PLÄNE</strong>. Klicke auf "+
-                        NEUER PLAN". Gib einen Namen (z.B. "Oberkörper") und eine ROUTINE (z.B. "Ganzkörper") ein.</li>
-                    <li><strong>2. ÜBUNGEN HINZUFÜGEN:</strong> Klicke "+ EINTRAG HINZUFÜGEN". Name, Sätze, Wdh und
-                        Pause eintragen. <strong>WICHTIG:</strong> Für Cardio aktiviere die Checkbox unter
-                        <strong>CAT</strong> – dann kannst du Minuten und Kcal eintragen.
+                <h2>[ ERSTE SCHRITTE ]</h2>
+                <div style="font-size: 0.8rem; margin-bottom: 20px;">WILLKOMMEN bei WEYLAND. So startest du durch:</div>
+
+                <ul class="steplist" style="list-style: none; padding: 0;">
+                    <li style="margin-bottom: 15px; border-left: 2px solid var(--primary-color); padding-left: 10px;">
+                        <strong>1. APP INSTALLIEREN (Optional)</strong><br>
+                        <span style="font-size: 0.7rem; color: var(--text-muted);">
+                            Für das beste Erlebnis: Tippe im Browser auf "Teilen" (iOS) oder Menü (Android) und wähle
+                            <strong>"Zum Home-Bildschirm"</strong>. So hast du Vollbild & Offline-Modus.
+                        </span>
                     </li>
-                    <li><strong>3. TRAINING STARTEN:</strong> Gehe auf den Reiter <strong>TRAINING</strong>. Wähle
-                        deinen Plan aus dem Menü. Das System schlägt dir automatisch den nächsten Plan deiner Routine
-                        vor.</li>
-                    <li><strong>4. DATEN EINTRAGEN:</strong> Trage während des Sports deine Gewichte (KG) und
-                        Wiederholungen (WDH) ein. Das System speichert deine Entwürfe automatisch im Hintergrund.</li>
-                    <li><strong>5. SPEICHERN:</strong> Wenn du fertig bist, scrolle ganz nach unten und klicke auf
-                        <strong>TRAINING SPEICHERN</strong>. Deine Daten sind nun sicher im Reiter
-                        <strong>VERLAUF</strong> archiviert.
+                    <li style="margin-bottom: 15px; border-left: 2px solid var(--primary-color); padding-left: 10px;">
+                        <strong>2. DEIN ERSTER PLAN</strong><br>
+                        <span style="font-size: 0.7rem; color: var(--text-muted);">
+                            Gehe auf <strong>PLÄNE</strong>, klicke <strong>+ NEUER PLAN</strong>.
+                            Gib ihm einen Namen (z.B. "Ganzkörper A") und füge deine Übungen hinzu.
+                            Oder nutze eine [SYSTEM] Vorlage, falls vorhanden.
+                        </span>
+                    </li>
+                    <li style="margin-bottom: 15px; border-left: 2px solid var(--primary-color); padding-left: 10px;">
+                        <strong>3. TRAINING STARTEN</strong><br>
+                        <span style="font-size: 0.7rem; color: var(--text-muted);">
+                            Gehe auf <strong>TRAINING</strong>, wähle deinen Plan aus der Liste und drücke
+                            <strong>START</strong>.
+                            Trage bei jedem Satz dein Gewicht und die Wiederholungen ein.
+                        </span>
+                    </li>
+                    <li style="margin-bottom: 15px; border-left: 2px solid var(--primary-color); padding-left: 10px;">
+                        <strong>4. SPEICHERN & FORTSCHRITT</strong><br>
+                        <span style="font-size: 0.7rem; color: var(--text-muted);">
+                            Fertig? Scrolle runter und klicke <strong>TRAINING SPEICHERN</strong>.
+                            Deine Erfolge siehst du dann im <strong>VERLAUF</strong>.
+                            Der Pinguin feiert mit dir! 🐧
+                        </span>
                     </li>
                 </ul>
-            </div>
-            <div class="info-section">
-                <div class="editor-header">SYSTEM_HILFE:</div>
-                <div class="step-list">
-                    <div class="step-item">1. <span>ROUTINE</span> wählen (Filter).</div>
-                    <div class="step-item">2. <span>PROTOKOLL</span> wählen.</div>
-                    <div class="step-item">3. <span>START</span> für Tracking.</div>
-                    <div class="step-item">4. Werte erfassen & <span>PAUSIEREN</span> bei Bedarf.</div>
-                    <div class="step-item">5. <span>ABSCHLIESSEN</span> zum Speichern.</div>
-                </div>
             </div>
 
             <div class="info-section">
@@ -256,6 +265,13 @@
 
     <div id="toast-container"></div>
     <script src="script.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').then(reg => console.log('SW ready', reg)).catch(err => console.log('SW fail', err));
+            });
+        }
+    </script>
 </body>
 
 </html>

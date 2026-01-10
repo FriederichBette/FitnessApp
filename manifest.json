@@ -1,0 +1,16 @@
+{
+    "name": "WEYLAND FITNESS",
+    "short_name": "WEYLAND",
+    "start_url": "/index.html",
+    "display": "standalone",
+    "background_color": "#000000",
+    "theme_color": "#00ff41",
+    "orientation": "portrait-primary",
+    "icons": [
+        {
+            "src": "icon-large.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}
