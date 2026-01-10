@@ -92,63 +92,77 @@ function initPenguin() {
   ];
 
   // Click to Talk
+  // Click to Talk
   penguin.addEventListener("click", () => {
-    const msg = messages[Math.floor(Math.random() * messages.length)];
+    // 30% Chance für ❤️
+    const isLove = Math.random() > 0.7;
+    const msg = isLove ? "❤️" : messages[Math.floor(Math.random() * messages.length)];
     const bubble = document.getElementById("penguin-bubble");
 
     // Jump a little
     penguin.style.animation = "none";
     penguin.offsetHeight;
-    penguin.style.animation = "idleBounce 0.5s ease-out"; // Fast bounce
+    penguin.style.animation = isLove ? "peekCorner 0.5s ease-out" : "idleBounce 0.5s ease-out";
 
     if (bubble) {
-      bubble.textContent = msg + "_";
+      bubble.textContent = msg + (isLove ? "" : "_");
+      bubble.style.color = isLove ? "#ff5555" : "var(--primary-color)"; // Red heart
+      bubble.style.borderColor = isLove ? "#ff5555" : "var(--primary-color)";
       bubble.style.opacity = "1";
 
       // Hide Bubble after 3s
       setTimeout(() => {
         bubble.style.opacity = "0";
+        // Reset Style
+        setTimeout(() => {
+          bubble.style.color = "var(--primary-color)";
+          bubble.style.borderColor = "var(--primary-color)";
+        }, 500);
         penguin.style.animation = "idleBounce 3s infinite ease-in-out"; // Back to idle
-      }, 3000);
+      }, 2000);
+    }
+  });
+  penguin.style.animation = "idleBounce 3s infinite ease-in-out"; // Back to idle
+}, 3000);
     }
   });
 
-  // VICTORY DANCE FUNCTION
-  window.penguinDance = () => {
+// VICTORY DANCE FUNCTION
+window.penguinDance = () => {
+  penguin.style.animation = "none";
+  penguin.offsetHeight;
+
+  // Center Screen
+  penguin.style.bottom = "50%";
+  penguin.style.right = "50%"; // Center X
+  penguin.style.transform = "translate(50%, 50%) scale(2)";
+  penguin.style.zIndex = "10001";
+
+  penguin.style.animation = "victoryDance 0.5s infinite";
+
+  // Bubble
+  const bubble = document.getElementById("penguin-bubble");
+  if (bubble) {
+    bubble.textContent = "TRAINING COMPLETE!_";
+    bubble.style.opacity = "1";
+  }
+
+  // Reset after 3s
+  setTimeout(() => {
     penguin.style.animation = "none";
-    penguin.offsetHeight;
+    penguin.offsetHeight; // Reflow
 
-    // Center Screen
-    penguin.style.bottom = "50%";
-    penguin.style.right = "50%"; // Center X
-    penguin.style.transform = "translate(50%, 50%) scale(2)";
-    penguin.style.zIndex = "10001";
+    // Back to Corner
+    penguin.style.bottom = "70px"; // Mobile safe
+    penguin.style.right = "20px";
+    penguin.style.transform = "none";
+    penguin.style.zIndex = "10000";
 
-    penguin.style.animation = "victoryDance 0.5s infinite";
+    penguin.style.animation = "idleBounce 3s infinite ease-in-out";
 
-    // Bubble
-    const bubble = document.getElementById("penguin-bubble");
-    if (bubble) {
-      bubble.textContent = "TRAINING COMPLETE!_";
-      bubble.style.opacity = "1";
-    }
-
-    // Reset after 3s
-    setTimeout(() => {
-      penguin.style.animation = "none";
-      penguin.offsetHeight; // Reflow
-
-      // Back to Corner
-      penguin.style.bottom = "70px"; // Mobile safe
-      penguin.style.right = "20px";
-      penguin.style.transform = "none";
-      penguin.style.zIndex = "10000";
-
-      penguin.style.animation = "idleBounce 3s infinite ease-in-out";
-
-      if (bubble) bubble.style.opacity = "0";
-    }, 3000);
-  };
+    if (bubble) bubble.style.opacity = "0";
+  }, 3000);
+};
 }
 // Run immediately
 initPenguin();

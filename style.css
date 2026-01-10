@@ -68,6 +68,33 @@ body {
     /* Stable numbers */
 }
 
+input,
+select,
+button {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 16px;
+    /* Prevents iOS Zoom on focus */
+}
+
+/* Mobile Optimierungen */
+@media (max-width: 600px) {
+    .container {
+        padding: 5px;
+        padding-bottom: 80px;
+        /* Space for Navbar */
+    }
+
+    /* Bigger Touch Targets */
+    button {
+        min-height: 44px;
+        /* Apple Human Interface Guidelines */
+    }
+
+    .set-row input {
+        height: 40px;
+    }
+}
+
 /* CRT Turn Off Animation */
 body.crt-off {
     animation: turnOff 0.55s cubic-bezier(0.23, 1, 0.32, 1) forwards;
