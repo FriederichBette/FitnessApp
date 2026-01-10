@@ -24,6 +24,64 @@ const routineSelect = document.getElementById("routine-select");
 // Creation Elements
 const exerciseListEditor = document.getElementById("exercise-list-editor");
 
+// --- PENGUIN LOGIC (INITIALIZED EARLY) ---
+function initPenguin() {
+  const existing = document.getElementById("pixel-penguin");
+  if (existing) existing.remove();
+
+  const penguin = document.createElement("div");
+  penguin.id = "pixel-penguin";
+  penguin.className = "pixel-penguin";
+  penguin.innerHTML = `
+      <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%; fill:var(--primary-color);">
+          <rect x="5" y="1" width="6" height="1" opacity="0.8"/>
+          <rect x="4" y="2" width="8" height="1" opacity="0.8"/>
+          <rect x="4" y="3" width="2" height="1"/>
+          <rect x="7" y="3" width="2" height="1"/>
+          <rect x="3" y="4" width="10" height="8"/> 
+          <rect x="2" y="6" width="1" height="4"/>
+          <rect x="13" y="6" width="1" height="4"/>
+          <rect x="4" y="12" width="3" height="1" fill="var(--error-color)"/>
+          <rect x="9" y="12" width="3" height="1" fill="var(--error-color)"/>
+      </svg>
+      <div class="penguin-bubble" id="penguin-bubble"></div>
+  `;
+  document.body.appendChild(penguin);
+
+  const messages = [
+    "TRINK WASSER!", "HYDRATE OR DIEDRATE!", "WASSER MARSCH!",
+    "SCHLUCK SCHLUCK!", "H2O FOR THE WIN!", "DURST IST DER FEIND!"
+  ];
+
+  // Start with a little hello after 2s
+  setTimeout(() => {
+    penguin.style.animation = "waddleWalk 8s linear";
+  }, 2000);
+
+  // Then loop every 15s
+  setInterval(() => {
+    const msg = messages[Math.floor(Math.random() * messages.length)];
+    const bubble = document.getElementById("penguin-bubble");
+    if (bubble) bubble.textContent = msg;
+
+    penguin.style.transform = "rotate(-10deg) translateY(-5px)";
+    setTimeout(() => penguin.style.transform = "rotate(10deg) translateY(-5px)", 200);
+    setTimeout(() => penguin.style.transform = "rotate(-10deg) translateY(-5px)", 400);
+    setTimeout(() => penguin.style.transform = "rotate(0deg)", 600);
+
+    setTimeout(() => {
+      penguin.style.animation = "none";
+      penguin.offsetHeight;
+      penguin.style.animation = "waddleWalk 8s linear";
+      setTimeout(() => {
+        if (bubble) { bubble.style.opacity = "1"; setTimeout(() => bubble.style.opacity = "0", 3000); }
+      }, 2000);
+    }, 700);
+  }, 15000);
+}
+// Run immediately
+initPenguin();
+
 // Notification System
 // Notification System (Toast)
 function notify(msg, type = "info") {
@@ -942,17 +1000,28 @@ function renderHistory() {
   historyList.appendChild(statsDiv);
   const grouped = {};
   logs.forEach(log => {
+    // Safety: If workout is missing, use "unknown" to prevent crash
+    const wId = log.workout || "unknown";
     // Group by Date AND Workout ID to separate distinct sessions on the same day
-    const key = `${log.date}___${log.workout}`;
+    const key = `${log.date}___${wId}`;
     if (!grouped[key]) grouped[key] = [];
     grouped[key].push(log);
   });
 
   Object.keys(grouped).sort((a, b) => {
-    // Extract date part for sorting (key format: YYYY-MM-DD___ID)
-    const dateA = a.split("___")[0];
-    const dateB = b.split("___")[0];
-    return new Date(dateB) - new Date(dateA); // Descending date
+    try {
+      const dateA = a.split("___")[0];
+      const dateB = b.split("___")[0];
+      // If dates are equal, sort by created_at of the first item (if available)
+      if (dateA === dateB) {
+        const itemA = grouped[a][0];
+        const itemB = grouped[b][0];
+        if (itemA.created_at && itemB.created_at) {
+          return new Date(itemB.created_at) - new Date(itemA.created_at);
+        }
+      }
+      return new Date(dateB) - new Date(dateA);
+    } catch (e) { return 0; }
   }).forEach(key => {
     const item = document.createElement("div");
     item.className = "history-item";
@@ -1079,70 +1148,4 @@ window.deleteLogSession = async (date) => {
 
 handleAuthState();
 
-// --- PENGUIN LOGIC ---
-function initPenguin() {
-  const existing = document.getElementById("pixel-penguin");
-  if (existing) existing.remove();
 
-  const penguin = document.createElement("div");
-  penguin.id = "pixel-penguin";
-  penguin.className = "pixel-penguin";
-  penguin.innerHTML = `
-      <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%; fill:var(--primary-color);">
-          <rect x="5" y="1" width="6" height="1" opacity="0.8"/>
-          <rect x="4" y="2" width="8" height="1" opacity="0.8"/>
-          <rect x="4" y="3" width="2" height="1"/>
-          <rect x="7" y="3" width="2" height="1"/>
-          <rect x="3" y="4" width="10" height="8"/> 
-          <rect x="2" y="6" width="1" height="4"/>
-          <rect x="13" y="6" width="1" height="4"/>
-          <rect x="4" y="12" width="3" height="1" fill="var(--error-color)"/>
-          <rect x="9" y="12" width="3" height="1" fill="var(--error-color)"/>
-      </svg>
-      <div class="penguin-bubble" id="penguin-bubble"></div>
-  `;
-  document.body.appendChild(penguin);
-
-  const messages = [
-    "TRINK WASSER!",
-    "HYDRATE OR DIEDRATE!",
-    "WASSER MARSCH!",
-    "KEIN WASSER = KEIN GAINS!",
-    "SCHLUCK SCHLUCK!",
-    "H2O FOR THE WIN!",
-    "DURST IST DER FEIND!",
-    "DEINE MUSKELN DURSTEN!",
-    "ZEIT FÜR NEN SCHLUCK!"
-  ];
-
-  // CONSISTENT Frequency: Walk every 20s (no RNG check)
-  setInterval(() => {
-    // 1. Pick Message
-    const msg = messages[Math.floor(Math.random() * messages.length)];
-    const bubble = document.getElementById("penguin-bubble");
-    if (bubble) bubble.textContent = msg;
-
-    // 2. Dance! (Tiny Wiggle)
-    penguin.style.transform = "rotate(-10deg) translateY(-5px)";
-    setTimeout(() => penguin.style.transform = "rotate(10deg) translateY(-5px)", 200);
-    setTimeout(() => penguin.style.transform = "rotate(-10deg) translateY(-5px)", 400);
-    setTimeout(() => penguin.style.transform = "rotate(0deg)", 600);
-
-    // 3. Walk
-    setTimeout(() => {
-      penguin.style.animation = "none";
-      penguin.offsetHeight; /* trigger reflow */
-      penguin.style.animation = "waddleWalk 8s linear";
-
-      // Show Bubble mid-walk
-      setTimeout(() => {
-        if (bubble) {
-          bubble.style.opacity = "1";
-          setTimeout(() => bubble.style.opacity = "0", 3000);
-        }
-      }, 2000);
-    }, 700);
-  }, 20000);
-}
-
-initPenguin();
