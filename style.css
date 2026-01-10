@@ -720,19 +720,59 @@ button,
 
 /* Ensure Penguin is on TOP of everything */
 /* Ensure Penguin is on TOP of everything */
+/* Ensure Penguin is on TOP of everything */
 .pixel-penguin {
     z-index: 10000 !important;
     position: fixed;
-    bottom: 80px;
-    /* Above nav bar */
-    left: -60px;
-    /* Start slightly off screen */
+    bottom: -50px;
+    /* Hidden default */
+    right: 20px;
+    /* Bottom Right Corner */
     width: 40px;
-    /* Klein und süß */
     height: 40px;
     image-rendering: pixelated;
     pointer-events: none;
-    /* Animation controlled by JS mostly, but base styles here */
+    transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes peekCorner {
+    0% {
+        bottom: -50px;
+        transform: rotate(0deg);
+    }
+
+    10% {
+        bottom: 80px;
+        transform: rotate(-10deg);
+    }
+
+    /* Pop up above nav */
+    20% {
+        transform: rotate(10deg);
+    }
+
+    30% {
+        transform: rotate(-10deg);
+    }
+
+    40% {
+        transform: rotate(10deg);
+    }
+
+    50% {
+        transform: rotate(0deg);
+    }
+
+    80% {
+        bottom: 80px;
+    }
+
+    /* Stay */
+    100% {
+        bottom: -50px;
+    }
+
+    /* Hide */
 }
 
 /* Cute Speech Bubble (Retro Terminal Style) */
@@ -771,54 +811,7 @@ button,
 
 /* Mask for triangle to make it outlined (simulate hollow arrow) - optional, simplified to solid for stability */
 
-@keyframes waddleWalk {
-    0% {
-        left: -60px;
-        transform: rotate(0deg);
-    }
 
-    10% {
-        transform: rotate(-5deg);
-    }
-
-    20% {
-        transform: rotate(5deg);
-    }
-
-    30% {
-        transform: rotate(-5deg);
-    }
-
-    40% {
-        transform: rotate(5deg);
-    }
-
-    50% {
-        left: 50%;
-        transform: rotate(0deg);
-    }
-
-    60% {
-        transform: rotate(-5deg);
-    }
-
-    70% {
-        transform: rotate(5deg);
-    }
-
-    80% {
-        transform: rotate(-5deg);
-    }
-
-    90% {
-        transform: rotate(5deg);
-    }
-
-    100% {
-        left: 110%;
-        transform: rotate(0deg);
-    }
-}
 
 @keyframes victoryDance {
     0% {

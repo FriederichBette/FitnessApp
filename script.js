@@ -63,47 +63,48 @@ function initPenguin() {
     const l = document.getElementById("p-eye-l");
     const r = document.getElementById("p-eye-r");
     if (l && r) {
-      // Close eyes
       l.setAttribute("height", "0.2"); l.setAttribute("y", "3.4");
       r.setAttribute("height", "0.2"); r.setAttribute("y", "3.4");
       setTimeout(() => {
-        // Open eyes
         l.setAttribute("height", "1"); l.setAttribute("y", "3");
         r.setAttribute("height", "1"); r.setAttribute("y", "3");
       }, 200);
     }
-  }, 4000); // Blink every 4s
+  }, 4000);
 
   const messages = [
-    "TRINK WASSER!", "HYDRATE!", "WASSER MARSCH!",
-    "SCHLUCK!", "H2O!", "DURST?"
+    "TRINK WASSER!", "STARKER ARM!", "SIEHST GUT AUS!",
+    "LEICHTES GEWICHT!", "H2O!", "DURST?", "WEITER SO!",
+    "MASCHINE!", "BLEIB DRAN!", "FOKUS!"
   ];
 
-  // Start with a little hello after 2s
-  setTimeout(() => {
-    penguin.style.animation = "waddleWalk 8s linear";
-  }, 2000);
-
-  // Then loop every 15s
+  // Loop: Peek every 20s
   setInterval(() => {
     const msg = messages[Math.floor(Math.random() * messages.length)];
     const bubble = document.getElementById("penguin-bubble");
-    if (bubble) bubble.textContent = msg + "_"; // Add blinking cursor check
 
-    penguin.style.transform = "rotate(-10deg) translateY(-5px)";
-    setTimeout(() => penguin.style.transform = "rotate(10deg) translateY(-5px)", 200);
-    setTimeout(() => penguin.style.transform = "rotate(-10deg) translateY(-5px)", 400);
-    setTimeout(() => penguin.style.transform = "rotate(0deg)", 600);
+    // 1. Pop Up Animation
+    penguin.style.animation = "peekCorner 5s ease-in-out";
 
+    // 2. Show Message mid-animation
+    setTimeout(() => {
+      if (bubble) {
+        bubble.textContent = msg + "_";
+        bubble.style.opacity = "1";
+      }
+    }, 1000);
+
+    // 3. Hide Message before hiding penguin
+    setTimeout(() => {
+      if (bubble) bubble.style.opacity = "0";
+    }, 4000);
+
+    // 4. Reset Animation
     setTimeout(() => {
       penguin.style.animation = "none";
-      penguin.offsetHeight;
-      penguin.style.animation = "waddleWalk 8s linear";
-      setTimeout(() => {
-        if (bubble) { bubble.style.opacity = "1"; setTimeout(() => bubble.style.opacity = "0", 3000); }
-      }, 2000);
-    }, 700);
-  }, 15000);
+    }, 5000);
+
+  }, 20000); // Every 20s
 
   // VICTORY DANCE FUNCTION
   window.penguinDance = () => {
