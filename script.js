@@ -197,17 +197,38 @@ client.auth.onAuthStateChange((event, session) => {
 });
 
 // Auth Listeners
-document.getElementById("login-btn").addEventListener("click", async () => {
+// Auth Listeners
+document.getElementById("login-btn").addEventListener("click", async (e) => {
+  const btn = e.target;
+  if (btn.disabled) return;
+
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
-  const { error } = await client.auth.signInWithPassword({ email, password });
-  if (error) notify("FEHLER: " + error.message, "error");
+
+  btn.disabled = true;
+  btn.textContent = "LÄDT...";
+
+  try {
+    const { error } = await client.auth.signInWithPassword({ email, password });
+    if (error) notify("FEHLER: " + error.message, "error");
+  } finally {
+    setTimeout(() => {
+      btn.disabled = false;
+      btn.textContent = "ANMELDEN";
+    }, 500);
+  }
 });
 
 document.getElementById("forgot-password-link").addEventListener("click", async (e) => {
   e.preventDefault();
+  const link = e.target;
+  if (link.style.pointerEvents === "none") return;
+
   const email = document.getElementById("email").value;
   if (!email) return notify("BITTE EMAIL EINGEBEN", "error");
+
+  link.style.pointerEvents = "none";
+  link.textContent = "SENDE...";
 
   const { error } = await client.auth.resetPasswordForEmail(email, {
     redirectTo: window.location.href, // Redirect back here
@@ -215,18 +236,34 @@ document.getElementById("forgot-password-link").addEventListener("click", async 
 
   if (error) notify("FEHLER: " + error.message, "error");
   else notify(`RESET-LINK AN ${email} GESENDET`);
+
+  setTimeout(() => {
+    link.style.pointerEvents = "auto";
+    link.textContent = "PASSWORT VERGESSEN?";
+  }, 2000);
 });
 
-document.getElementById("register-btn").addEventListener("click", async () => {
+document.getElementById("register-btn").addEventListener("click", async (e) => {
+  const btn = e.target;
+  if (btn.disabled) return;
+
   const email = document.getElementById("reg-email").value;
   const password = document.getElementById("reg-password").value;
   const consent = document.getElementById("reg-consent").checked;
 
   if (!consent) return notify("BITTE DATENSCHUTZ AKZEPTIEREN", "error");
 
-  const { error } = await client.auth.signUp({ email, password });
-  if (error) notify("FEHLER: " + error.message, "error");
-  else notify("REGISTRIERUNG ERFOLGREICH: BITTE EMAIL BESTÄTIGEN");
+  btn.disabled = true;
+  btn.textContent = "ERSTELLE...";
+
+  try {
+    const { error } = await client.auth.signUp({ email, password });
+    if (error) notify("FEHLER: " + error.message, "error");
+    else notify("REGISTRIERUNG ERFOLGREICH");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "KONTO ERSTELLEN";
+  }
 });
 
 document.getElementById("logout-btn").addEventListener("click", async () => {
