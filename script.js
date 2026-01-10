@@ -1063,6 +1063,7 @@ async function saveWorkout() {
   if (!error) {
     notify("DATEN_ARCHIVIERT");
     localStorage.removeItem("workout_draft");
+    if (window.penguinDance) window.penguinDance(); // Trigger Happy Dance
     document.querySelector(".bottom-nav").style.display = "flex";
     document.querySelector(".selection-area").style.display = "block";
     document.getElementById("next-workout-hint").style.display = "block";
@@ -1296,25 +1297,7 @@ window.deleteLogSession = async (date) => {
   }
 };
 
-// This is a placeholder for the actual saveWorkout function, as it was not provided in the original document.
-// The instruction implies that such a function exists elsewhere in the codebase.
-// For the purpose of demonstrating the change, I'm adding a dummy saveWorkout function.
-// In a real scenario, you would locate the existing saveWorkout function and apply the change there.
-async function saveWorkout(workoutName) {
-  // Dummy implementation for demonstration
-  console.log(`Saving workout: ${workoutName}`);
-  const success = true; // Simulate success
-  if (success) {
-    notify(`WORKOUT "${workoutName}" GESPEICHERT!`);
-    localStorage.removeItem("workout_draft");
-    if (window.penguinDance) window.penguinDance(); // Trigger Dance!
-    // init(); // Reload logs - assuming init() is defined elsewhere
-    // showPage("home"); // Assuming showPage() is defined elsewhere
-  } else {
-    console.error("Save Error: Dummy error");
-    notify(`FEHLER: Dummy error`, "error");
-  }
-}
+
 
 // Toggle History Content
 window.toggleHistory = (id, headerElement) => {
