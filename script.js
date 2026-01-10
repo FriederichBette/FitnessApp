@@ -165,19 +165,9 @@ async function handleAuthState() {
     authOverlay.style.display = "none";
     mainApp.style.display = "block";
 
-    // Render User Info + Logout Button
-    userDisplay.innerHTML = `
-        ID: <span style="color:var(--primary-color)">${session.user.email.split('@')[0].toUpperCase()}</span> 
-        <span id="dynamic-logout" style="cursor:pointer; color:var(--error-color); margin-left:10px;">[ABMELDEN]</span>
-    `;
-
-    // Dynamic Logout Listener
-    document.getElementById("dynamic-logout").addEventListener("click", async () => {
-      if (confirm("ABMELDEN?")) {
-        await client.auth.signOut();
-        location.reload();
-      }
-    });
+    userDisplay.textContent = `ID: ${session.user.email.toUpperCase()}`;
+    init(); // Load Data
+    showPage("home");
 
     init(); // Load Data
     showPage("home");
