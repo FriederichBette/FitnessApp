@@ -1099,26 +1099,53 @@ function initPenguin() {
           <rect x="4" y="12" width="3" height="1" fill="var(--error-color)"/>
           <rect x="9" y="12" width="3" height="1" fill="var(--error-color)"/>
       </svg>
-      <div class="penguin-bubble" id="penguin-bubble">TRINK WASSER!</div>
+      <div class="penguin-bubble" id="penguin-bubble"></div>
   `;
   document.body.appendChild(penguin);
 
-  // Random Appearance
-  setInterval(() => {
-    if (Math.random() > 0.7) {
-      penguin.style.animation = "none";
-      penguin.offsetHeight;
-      penguin.style.animation = "waddleWalk 10s linear";
+  const messages = [
+    "TRINK WASSER!",
+    "HYDRATE OR DIEDRATE!",
+    "WASSER MARSCH!",
+    "KEIN WASSER = KEIN GAINS!",
+    "SCHLUCK SCHLUCK!",
+    "H2O FOR THE WIN!",
+    "DURST IST DER FEIND!",
+    "DEINE MUSKELN DURSTEN!",
+    "ZEIT FÜR NEN SCHLUCK!"
+  ];
 
+  // Higher Frequency: Check every 15s
+  setInterval(() => {
+    if (Math.random() > 0.5) { // 50% chance
+
+      // 1. Pick Message
+      const msg = messages[Math.floor(Math.random() * messages.length)];
+      const bubble = document.getElementById("penguin-bubble");
+      if (bubble) bubble.textContent = msg;
+
+      // 2. Dance! (Tiny Wiggle)
+      penguin.style.transform = "rotate(-10deg) translateY(-5px)";
+      setTimeout(() => penguin.style.transform = "rotate(10deg) translateY(-5px)", 200);
+      setTimeout(() => penguin.style.transform = "rotate(-10deg) translateY(-5px)", 400);
+      setTimeout(() => penguin.style.transform = "rotate(0deg)", 600);
+
+      // 3. Walk
       setTimeout(() => {
-        const bubble = document.getElementById("penguin-bubble");
-        if (bubble) {
-          bubble.style.opacity = "1";
-          setTimeout(() => bubble.style.opacity = "0", 4000);
-        }
-      }, 4000);
+        penguin.style.animation = "none";
+        penguin.offsetHeight; /* trigger reflow */
+        penguin.style.animation = "waddleWalk 8s linear"; // Slightly faster waddle
+
+        // Show Bubble mid-walk
+        setTimeout(() => {
+          if (bubble) {
+            bubble.style.opacity = "1";
+            setTimeout(() => bubble.style.opacity = "0", 3000);
+          }
+        }, 2000);
+      }, 700);
     }
-  }, 30000);
+  }, 15000);
 }
 
 initPenguin();
