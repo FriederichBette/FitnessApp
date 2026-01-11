@@ -3,8 +3,7 @@ const ASSETS = [
     '/',
     '/index.html',
     '/style.css',
-    '/script.js',
-    '/icon-large.png'
+    '/script.js'
 ];
 
 self.addEventListener('install', (e) => {
