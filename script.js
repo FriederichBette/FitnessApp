@@ -300,6 +300,28 @@ function showPage(pageId) {
     loadWorkouts().then(() => {
       populateRoutineSelect();
       populateWorkoutSelect();
+
+      // Inject Resume Button if Draft Exists and we are NOT already showing a workout
+      const savedDraft = JSON.parse(localStorage.getItem("workout_draft"));
+      const contentArea = document.getElementById("content-area");
+
+      if (savedDraft && savedDraft.workout && contentArea.innerHTML === "") {
+        const w = availableWorkouts.find(x => x.id === savedDraft.workout);
+        if (w) {
+          const resumeBtn = document.createElement("button");
+          resumeBtn.className = "secondary";
+          resumeBtn.style.cssText = "margin-bottom: 20px; border-color: var(--primary-color); border-style: dashed; animation: terminalPulse 2s infinite;";
+          resumeBtn.innerHTML = `> SESSION FORTSETZEN: ${w.name.toUpperCase()}`;
+          resumeBtn.onclick = () => {
+            workoutSelect.value = savedDraft.workout;
+            loadWorkout(savedDraft);
+          };
+
+          // Insert after subtitle
+          const hint = document.getElementById("next-workout-hint");
+          if (hint) hint.parentNode.insertBefore(resumeBtn, hint.nextSibling);
+        }
+      }
     });
   }
   if (pageId === "history") renderHistory();
@@ -701,23 +723,30 @@ async function init() {
     populateRoutineSelect();
 
     const savedDraft = JSON.parse(localStorage.getItem("workout_draft"));
+
+    // Check for Resume
     if (savedDraft && savedDraft.workout) {
       const w = availableWorkouts.find(x => x.id === savedDraft.workout);
       if (w) {
-        routineSelect.value = w.routine_name;
+        // Auto-Resume or Show Button logic
+        // We will Auto-Resume to fix "Black Screen Bug" directly
+        notify("TRAINING WIEDERHERGESTELLT");
+        routineSelect.value = w.routine_name || "";
         populateWorkoutSelect();
         workoutSelect.value = savedDraft.workout;
-        loadWorkout(savedDraft.entries);
+        loadWorkout(savedDraft);
+        return; // Skip normal suggestion
       }
-    } else {
-      // Pick most recent routine from logs
-      if (logs.length > 0) {
-        const lastW = availableWorkouts.find(w => w.id == logs[0].workout);
-        if (lastW) routineSelect.value = lastW.routine_name;
-      }
-      populateWorkoutSelect();
-      suggestNextWorkout();
     }
+
+    // Normal Flow
+    if (logs.length > 0) {
+      const lastW = availableWorkouts.find(w => w.id == logs[0].workout);
+      if (lastW) routineSelect.value = lastW.routine_name;
+    }
+    populateWorkoutSelect();
+    suggestNextWorkout();
+
   } catch (err) {
     console.error("Ladefehler:", err);
   } finally {
@@ -847,9 +876,11 @@ document.getElementById("load-workout-btn").addEventListener("click", async () =
   saveDraft();
 });
 
-async function loadWorkout(draftEntries = null) {
+async function loadWorkout(draftData = null) {
   const workoutId = workoutSelect.value;
   if (!workoutId) return;
+
+  const draftEntries = draftData ? draftData.entries : null;
 
   // Safety: Reload plan if empty (can happen on refresh/auth race condition)
   if (!plan || plan.length === 0) {
@@ -1055,8 +1086,31 @@ async function loadWorkout(draftEntries = null) {
     });
   });
 
+  contentArea.appendChild(trainingSpacer);
+
+  document.querySelectorAll("input").forEach(input => {
+    input.addEventListener("input", () => {
+      saveDraft();
+      updateVolume();
+    });
+  });
+
+  document.querySelectorAll(".start-rest-btn").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      const ex = e.target.dataset.ex;
+      const set = e.target.dataset.set;
+      startRestTimer(ex, set);
+    });
+  });
+
   updateVolume();
-  startTimer();
+
+  // Restore Timer if draft exists
+  if (draftEntries && draftEntries.startTime) {
+    startTimer(false, draftEntries.startTime);
+  } else {
+    startTimer(true);
+  }
 }
 
 function startRestTimer(exName, setNum, customRest = null) {
@@ -1144,11 +1198,18 @@ function updateVolume() {
 let timerInterval;
 let workoutStartTime;
 
-function startTimer(reset = true) {
+function startTimer(reset = true, savedStartTime = null) {
   if (timerInterval) clearInterval(timerInterval);
-  if (reset) workoutStartTime = Date.now();
+
+  if (savedStartTime) {
+    workoutStartTime = savedStartTime;
+  } else if (reset) {
+    workoutStartTime = Date.now();
+  }
+  // If neither (resume from pause without reload), keep existing workoutStartTime
 
   timerInterval = setInterval(() => {
+    if (!workoutStartTime) return;
     const elapsed = Math.floor((Date.now() - workoutStartTime) / 1000);
     const m = Math.floor(elapsed / 60).toString().padStart(2, '0');
     const s = (elapsed % 60).toString().padStart(2, '0');
@@ -1172,8 +1233,22 @@ function saveDraft() {
       });
     }
   });
-  localStorage.setItem("workout_draft", JSON.stringify({ workout: workoutSelect.value, entries }));
+
+  const draftData = {
+    workout: workoutSelect.value,
+    entries,
+    startTime: workoutStartTime,
+    lastModified: Date.now()
+  };
+  localStorage.setItem("workout_draft", JSON.stringify(draftData));
 }
+
+// Global Auto-Save on Visibility Change (Mobile Screen Off)
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "hidden") {
+    saveDraft();
+  }
+});
 
 saveBtn.addEventListener("click", saveWorkout);
 
