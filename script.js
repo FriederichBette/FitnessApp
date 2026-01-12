@@ -44,11 +44,11 @@ function initPenguin() {
          <rect x="5" y="5" width="6" height="8" fill="#000" opacity="0.8" />
          
          <!-- Eyes -->
-         <rect id="p-eye-l" x="5" y="3" width="2" height="2" fill="#000" />
-         <rect x="6" y="4" width="1" height="1" fill="var(--primary-color)" />
+         <rect id="p-eye-l" x="4" y="3" width="3" height="3" fill="#000" />
+         <rect id="pupil-l" x="5" y="4" width="1" height="1" fill="#fff" />
          
-         <rect id="p-eye-r" x="9" y="3" width="2" height="2" fill="#000" />
-         <rect x="10" y="4" width="1" height="1" fill="var(--primary-color)" />
+         <rect id="p-eye-r" x="9" y="3" width="3" height="3" fill="#000" />
+         <rect id="pupil-r" x="10" y="4" width="1" height="1" fill="#fff" />
 
          <!-- Cheeks (Blush) - CUTE FACTOR -->
          <rect x="4" y="5" width="2" height="1" fill="#ff9999" opacity="0.6" />
@@ -68,6 +68,7 @@ function initPenguin() {
          
          <div class="penguin-bubble" id="penguin-bubble"></div>
       </svg>
+// Run immediately
   `;
   document.body.appendChild(penguin);
 
@@ -79,8 +80,8 @@ function initPenguin() {
       l.setAttribute("height", "0.2"); l.setAttribute("y", "3.4");
       r.setAttribute("height", "0.2"); r.setAttribute("y", "3.4");
       setTimeout(() => {
-        l.setAttribute("height", "1"); l.setAttribute("y", "3");
-        r.setAttribute("height", "1"); r.setAttribute("y", "3");
+        l.setAttribute("height", "3"); l.setAttribute("y", "3");
+        r.setAttribute("height", "3"); r.setAttribute("y", "3");
       }, 200);
     }
   }, 4000);
@@ -88,10 +89,10 @@ function initPenguin() {
   const messages = [
     "TRINK WASSER!", "SIEHST GUT AUS!",
     "LEICHTES GEWICHT!", "H2O!", "DURST?", "WEITER SO!",
-    "MASCHINE!", "BLEIB DRAN!", "FOKUS!"
+    "MASCHINE!", "BLEIB DRAN!", "FOKUS!", "DU SCHAFFST DAS!",
+    "HOPP HOPP!", "KEINE GNADE!", "WASSER MARSCH", "ICH LIEBE DICH", "KNUDDEL MICH"
   ];
 
-  // Click to Talk
   // Click to Talk
   penguin.addEventListener("click", () => {
     // 30% Chance für ❤️
@@ -102,7 +103,7 @@ function initPenguin() {
     // Jump a little
     penguin.style.animation = "none";
     penguin.offsetHeight;
-    penguin.style.animation = isLove ? "peekCorner 0.5s ease-out" : "idleBounce 0.5s ease-out";
+    penguin.style.animation = isLove ? "peekCorner 0.5s ease-out" : "happyDance 0.5s ease-out";
 
     if (bubble) {
       bubble.textContent = msg + (isLove ? "" : "_");
@@ -135,7 +136,7 @@ function initPenguin() {
     penguin.style.transform = "translate(50%, 50%) scale(2)";
     penguin.style.zIndex = "10001";
 
-    penguin.style.animation = "victoryDance 0.5s infinite";
+    penguin.style.animation = "happyDance 0.5s infinite";
 
     // Bubble
     const bubble = document.getElementById("penguin-bubble");
@@ -511,6 +512,7 @@ window.copyWorkout = async (id) => {
       exercise: s.exercise,
       sets: s.sets,
       reps: s.reps || s.reps_max,
+      weight: s.weight || 0,
       rest_time: s.rest_time || 60
     }));
     await client.from("workout_exercises").insert(newSteps);
@@ -557,6 +559,7 @@ window.copyWholeRoutine = async (routineName) => {
         exercise: s.exercise,
         sets: s.sets,
         reps: s.reps || s.reps_max,
+        weight: s.weight || 0,
         rest_time: s.rest_time || 60,
         is_cardio: s.is_cardio // Ensure cardio flag is copied
       }));
@@ -593,12 +596,13 @@ window.editWorkout = async (id) => {
 function addExerciseWithData(data) {
   const div = document.createElement("div");
   div.className = "exercise-edit-row";
-  div.style.cssText = "display: grid; grid-template-columns: 2fr 1fr 1fr 1.2fr 40px; gap: 10px; align-items: center; margin-bottom: 10px;";
+  div.style.cssText = "display: grid; grid-template-columns: 2fr 0.8fr 0.8fr 0.8fr 1fr 40px; gap: 5px; align-items: center; margin-bottom: 10px;";
   const isCardio = data.is_cardio || false;
   div.innerHTML = `
         <input type="text" placeholder="ÜBUNG" class="edit-name" value="${data.exercise}" style="margin:0;">
         <input type="number" placeholder="${isCardio ? 'DAUER' : 'SÄTZE'}" title="${isCardio ? 'MINUTEN' : 'SÄTZE'}" class="edit-sets" value="${data.sets}" style="margin:0;">
         <input type="number" placeholder="${isCardio ? 'KCAL' : 'WDH'}" title="${isCardio ? 'KCAL' : 'WDH'}" class="edit-reps" value="${data.reps || data.reps_max || ""}" style="margin:0;">
+        <input type="number" placeholder="KG" class="edit-weight" value="${data.weight || ""}" style="margin:0;">
         <input type="number" placeholder="PAUSE" class="edit-rest" value="${data.rest_time || 60}" style="margin:0;">
         <div style="display:flex; flex-direction:column; gap:4px; align-items:center;">
             <input type="checkbox" class="edit-cardio" ${isCardio ? 'checked' : ''} style="width:20px; height:20px; margin:0;" onchange="toggleRowLabels(this)">
@@ -611,11 +615,12 @@ function addExerciseWithData(data) {
 function addExerciseField() {
   const div = document.createElement("div");
   div.className = "exercise-edit-row";
-  div.style.cssText = "display: grid; grid-template-columns: 2fr 1fr 1fr 1.2fr 40px; gap: 10px; align-items: center; margin-bottom: 10px;";
+  div.style.cssText = "display: grid; grid-template-columns: 2fr 0.8fr 0.8fr 0.8fr 1fr 40px; gap: 5px; align-items: center; margin-bottom: 10px;";
   div.innerHTML = `
         <input type="text" placeholder="ÜBUNG" class="edit-name" style="margin:0;">
         <input type="number" placeholder="SÄTZE" class="edit-sets" style="margin:0;">
         <input type="number" placeholder="WDH" class="edit-reps" style="margin:0;">
+        <input type="number" placeholder="KG" class="edit-weight" style="margin:0;">
         <input type="number" placeholder="PAUSE" class="edit-rest" value="60" style="margin:0;">
         <div style="display:flex; flex-direction:column; gap:4px; align-items:center;">
             <input type="checkbox" class="edit-cardio" style="width:20px; height:20px; margin:0;" onchange="toggleRowLabels(this)">
@@ -701,6 +706,7 @@ document.getElementById("save-new-workout-btn").addEventListener("click", async 
         exercise: exName,
         sets: Number(sets),
         reps: Number(reps) || null,
+        weight: Number(row.querySelector(".edit-weight").value) || 0,
         rest_time: Number(rest) || 60,
         is_cardio: is_cardio
       });
@@ -891,8 +897,8 @@ async function loadWorkout(draftEntries = null) {
 
 
   contentArea.innerHTML = "";
-  // Dynamische Navigation: Verstecken für mehr Platz
-  document.querySelector(".bottom-nav").style.display = "none";
+  // Dynamische Navigation: IMMER ANZEIGEN (USER REQUEST)
+  // document.querySelector(".bottom-nav").style.display = "none";
   document.querySelector(".selection-area").style.display = "none";
   document.getElementById("next-workout-hint").style.display = "none";
 
@@ -981,10 +987,19 @@ async function loadWorkout(draftEntries = null) {
           const row = document.createElement("div");
           row.className = "set-container";
           const draft = draftEntries?.find(d => d.ex === ex.exercise && d.set === i);
+
+          let defaultWeight = "";
+          if (draft) {
+            defaultWeight = draft.weight;
+          } else if (lastLogs === "KEINE DATEN" && ex.weight) {
+            // Use Start Weight from Template ONLY if no history exists
+            defaultWeight = ex.weight;
+          }
+
           row.innerHTML = `
                         <div class="set-row" style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">
                             <label style="min-width: 55px; font-size: 0.75rem;">SATZ_${i}</label>
-                            <input type="number" step="0.5" placeholder="KG" class="weight" data-ex="${ex.exercise}" data-set="${i}" value="${draft ? draft.weight : ""}" style="width: 50px; margin: 0; padding: 4px;">
+                            <input type="number" step="0.5" placeholder="KG" class="weight" data-ex="${ex.exercise}" data-set="${i}" value="${defaultWeight}" style="width: 50px; margin: 0; padding: 4px;">
                             <input type="number" placeholder="WDH" class="reps" data-ex="${ex.exercise}" data-set="${i}" value="${draft ? draft.reps : ""}" style="width: 45px; margin: 0; padding: 4px;">
                             <button class="start-rest-btn" data-ex="${ex.exercise}" data-set="${i}" data-rest="${ex.rest_time || 60}" style="width: auto; padding: 4px 6px; font-size: 0.65rem;">PAUSE</button>
                             <div class="rest-zone" id="rest-${ex.exercise.replace(/\s+/g, '-')}-${i}" style="font-size: 0.6rem; color: var(--text-muted); display: none; overflow: hidden; text-overflow: ellipsis;"></div>
@@ -995,6 +1010,65 @@ async function loadWorkout(draftEntries = null) {
       }
       contentArea.appendChild(card);
     });
+
+    // --- BUTTON: ADD DYNAMIC EXERCISE ---
+    // Allows user to add exercises during training
+    const addExContainer = document.createElement("div");
+    addExContainer.style.textAlign = "center";
+    addExContainer.style.marginTop = "20px";
+
+    const addExBtn = document.createElement("button");
+    addExBtn.textContent = "+ WEITERE ÜBUNG HINZUFÜGEN";
+    addExBtn.className = "secondary";
+    addExBtn.onclick = () => {
+      const exName = prompt("NAME DER ÜBUNG:", "");
+      if (exName && exName.trim().length > 0) {
+        // Append Card
+        const card = document.createElement("div");
+        card.className = "exercise-card";
+        card.innerHTML = `
+                 <h3>${exName.toUpperCase()} (ZUSATZ)</h3>
+                 <div class="exercise-info">EXTRA HINZUGEFÜGT</div>
+            `;
+        for (let i = 1; i <= 3; i++) {
+          const row = document.createElement("div");
+          row.className = "set-container";
+          row.innerHTML = `
+                    <div class="set-row" style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">
+                        <label style="min-width: 55px; font-size: 0.75rem;">SATZ_${i}</label>
+                        <input type="number" step="0.5" placeholder="KG" class="weight" data-ex="${exName}" data-set="${i}" style="width: 50px; margin: 0; padding: 4px;">
+                        <input type="number" placeholder="WDH" class="reps" data-ex="${exName}" data-set="${i}" style="width: 45px; margin: 0; padding: 4px;">
+                        <button class="start-rest-btn" data-ex="${exName}" data-set="${i}" data-rest="60" style="width: auto; padding: 4px 6px; font-size: 0.65rem;">PAUSE</button>
+                        <div class="rest-zone" id="rest-${exName.replace(/\s+/g, '-')}-${i}" style="font-size: 0.6rem; color: var(--text-muted); display: none; overflow: hidden; text-overflow: ellipsis;"></div>
+                    </div>
+                `;
+          card.appendChild(row);
+        }
+        // Add before the button itself or at end of content? 
+        // Better to append to contentArea before spacer.
+        // But we are at end of function.
+        // Just insert before this container.
+        contentArea.insertBefore(card, addExContainer);
+
+        // Re-attach listeners for new inputs
+        card.querySelectorAll("input").forEach(input => {
+          input.addEventListener("input", () => {
+            saveDraft();
+            updateVolume();
+          });
+        });
+        card.querySelectorAll(".start-rest-btn").forEach(btn => {
+          btn.addEventListener("click", (e) => {
+            const ex = e.target.dataset.ex;
+            const set = e.target.dataset.set;
+            startRestTimer(ex, set);
+          });
+        });
+      }
+    };
+    addExContainer.appendChild(addExBtn);
+    contentArea.appendChild(addExContainer);
+
   } catch (err) {
     contentArea.innerHTML += `<p style="color:red; text-align:center;">RENDER ERROR: ${err.message}</p>`;
     console.error(err);
@@ -1231,7 +1305,7 @@ document.getElementById("pause-btn")?.addEventListener("click", (e) => {
     notify("TRAINING PAUSIERT");
   } else {
     // RESUME MODE
-    document.querySelector(".bottom-nav").style.display = "none";
+    // document.querySelector(".bottom-nav").style.display = "none";
     btn.textContent = "TR. PAUSIEREN";
     btn.style.borderStyle = "solid";
     startTimer(false); // Don't reset start time
@@ -1347,6 +1421,15 @@ function renderHistory() {
                 <span>Ø WDH: ${avgRep}</span>
                 ${cardioDur > 0 ? `<span>CARDIO: ${cardioDur} MIN | ${cardioKcal} KCAL</span>` : ''}
             </div>
+                <div id="editor-headers-row"
+                    style="display: grid; grid-template-columns: 2fr 0.8fr 0.8fr 0.8fr 1fr 40px; gap: 5px; margin-bottom: 5px; font-size: 0.6rem; color: var(--text-muted); padding: 0 15px;">
+                    <div>UEBUNG</div>
+                    <div id="header-col-2">SÄTZE</div>
+                    <div id="header-col-3">WDH</div>
+                    <div>KG(START)</div>
+                    <div>PAUSE(S)</div>
+                    <div>CAT</div>
+                </div>
             <div id="${contentId}" class="history-content collapsed">
                 <div class="history-table-header">
                     <div style="width: 40%">UEBUNG</div>

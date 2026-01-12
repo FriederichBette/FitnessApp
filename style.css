@@ -360,9 +360,46 @@ h1 {
 }
 
 .safe-spacer {
-    height: 40px;
+    height: 90px;
     width: 100%;
 }
+
+@keyframes wiggle {
+
+    0%,
+    100% {
+        transform: rotate(0deg);
+    }
+
+    25% {
+        transform: rotate(-10deg);
+    }
+
+    75% {
+        transform: rotate(10deg);
+    }
+}
+
+@keyframes happyDance {
+
+    0%,
+    100% {
+        transform: translateY(0) scale(1);
+    }
+
+    25% {
+        transform: translateY(-10px) scale(1.1) rotate(-5deg);
+    }
+
+    50% {
+        transform: translateY(0) scale(0.9) rotate(5deg);
+    }
+
+    75% {
+        transform: translateY(-5px) scale(1.05) rotate(-5deg);
+    }
+}
+
 
 /* --- MINIMAL INPUTS --- */
 input,
