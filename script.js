@@ -898,7 +898,7 @@ async function loadWorkout(draftEntries = null) {
 
   contentArea.innerHTML = "";
   // Dynamische Navigation: IMMER ANZEIGEN (USER REQUEST)
-  // document.querySelector(".bottom-nav").style.display = "none";
+  document.querySelector(".bottom-nav").style.display = "flex";
   document.querySelector(".selection-area").style.display = "none";
   document.getElementById("next-workout-hint").style.display = "none";
 
