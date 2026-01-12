@@ -47,9 +47,7 @@ function initPenguin() {
          <rect id="p-eye-l" x="5" y="4" width="1" height="1" fill="#000" />
          <rect id="p-eye-r" x="9" y="4" width="1" height="1" fill="#000" />
 
-         <!-- Cheeks (Blush) - CUTE FACTOR -->
-         <rect x="4" y="5" width="2" height="1" fill="#ff9999" opacity="0.6" />
-         <rect x="10" y="5" width="2" height="1" fill="#ff9999" opacity="0.6" />
+
 
          <!-- Beak -->
          <rect x="7" y="5" width="2" height="1" fill="var(--secondary-color)" />
@@ -81,19 +79,72 @@ function initPenguin() {
   }, 4000);
 
   const messages = [
-    "Noot Noot!", "Fisch?", "Watschel...",
-    "Eiswürfel?", "Brrr...", "Cool bleiben!",
-    "Rutschpartie!", "Huiiii!", "Platsch!",
-    "Schlitter..."
+    // Wasser Reminder
+    "Zeit für Wasser. Ja, schon wieder. Tragisch.",
+    "Hydration-Check. Du fällst gerade durch.",
+    "Trink Wasser. Dein Körper ist kein Kaktus.",
+    "Nein, Kaffee zählt nicht. Versuch’s nochmal.",
+    "Wasser ist kein optionales DLC.",
+    "Ein Schluck Verantwortung, bitte.",
+    "Deine Zellen verdursten leise. Romantisch.",
+    "Du willst Leistung? Dann trink wie ein Erwachsener.",
+    "Ich bin ein Pinguin. Ich weiß, was Wasser ist. Du offenbar nicht.",
+    "Hydration ist sexy. Leider merkt das keiner.",
+
+    // Nach dem Trinken
+    "Wow. Flüssige Reife.",
+    "Siehst direkt 3 % funktionaler aus.",
+    "Dein Körper: endlich ein kompetenter Manager.",
+    "Stark. Verantwortung in flüssiger Form.",
+    "Nicht schlecht. Wiederholbar.",
+
+    // Training – allgemein sarkastisch
+    "Nicht schön. Aber effektiv.",
+    "Das war kein Chaos. Das war Charakterbildung.",
+    "Siehst aus wie kurz vor Aufgabe. Solide Leistung.",
+    "Elegant war’s nicht. Stark war’s schon.",
+    "Wenn das leicht wäre, wärst du enttäuscht.",
+
+    // Nach schweren Sets
+    "Ah. Du hast dein Gesicht wieder. Glückwunsch.",
+    "Das war Schmerz mit Mehrwert.",
+    "Sieht anstrengend aus. Ist Wachstum.",
+    "Respekt. Widerwilliger Respekt, aber trotzdem.",
+
+    // Beim Weitermachen
+    "Du bist noch hier? Interessant.",
+    "Offenbar hast du Prinzipien.",
+    "Nicht motiviert. Aber diszipliniert. Gefährlich gut.",
+
+    // Wenn man struggelt
+    "Langsam ist immer noch vorwärts. Leider.",
+    "Atmen hilft. Meistens.",
+    "Das ist kein Scheitern. Das ist ein Umweg mit Schweiß.",
+
+    // Nach dem Training
+    "Glückwunsch. Du hast dich nicht gedrückt.",
+    "Du bist offiziell besser als dein Sofa.",
+    "Das war Selbstrespekt. Sah unbequem aus.",
+    "Nicht perfekt. Aber erledigt.",
+
+    // Meta-Pinguin
+    "Ich bin nur ein Pinguin. Aber ich urteile leise.",
+    "Wenn ich klatschen könnte, würde ich es nicht tun. Innerlich vielleicht.",
+    "Wir beide wissen: Du kannst mehr. Morgen."
   ];
 
   // Click to Talk
   penguin.addEventListener("click", () => {
     const msg = messages[Math.floor(Math.random() * messages.length)];
     showPenguinBubble(msg);
+
+    // Random Animation on Click
+    const anims = ["wiggle", "spin", "slide", "happyDance"];
+    const chosen = anims[Math.floor(Math.random() * anims.length)];
+
     penguin.style.animation = "none";
     penguin.offsetHeight;
-    penguin.style.animation = "wiggle 0.5s ease-out";
+    penguin.style.animation = `${chosen} 0.5s ease-out`;
     setTimeout(() => { penguin.style.animation = "idleBounce 3s infinite ease-in-out"; }, 500);
   });
 
