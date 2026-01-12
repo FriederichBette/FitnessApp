@@ -87,10 +87,10 @@ function initPenguin() {
   }, 4000);
 
   const messages = [
-    "TRINK WASSER!", "SIEHST GUT AUS!",
-    "LEICHTES GEWICHT!", "H2O!", "DURST?", "WEITER SO!",
-    "MASCHINE!", "BLEIB DRAN!", "FOKUS!", "DU SCHAFFST DAS!",
-    "HOPP HOPP!", "KEINE GNADE!", "WASSER MARSCH", "ICH LIEBE DICH", "KNUDDEL MICH"
+    "TRINK WASSER!", "GUTER SATZ!",
+    "LEICHTES GEWICHT!", "ATMEN!", "STARK!", "WEITER SO!",
+    "MASCHINE!", "BLEIB DRAN!", "FOKUS!", "SAUBERE TECHNIK!",
+    "GUT SO!", "NEXT ONE!", "LÄUFT!", "STABIL!", "PAUSE NUTZEN!"
   ];
 
   // Click to Talk
