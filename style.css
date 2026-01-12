@@ -832,30 +832,64 @@ button,
 
 
 
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes slide {
+    0% {
+        transform: translateX(0);
+    }
+
+    50% {
+        transform: translateX(-20px) scaleX(-1);
+    }
+
+    100% {
+        transform: translateX(0) scaleX(1);
+    }
+}
+
 /* Cute Speech Bubble (Retro Terminal Style) */
 .penguin-bubble {
     position: absolute;
-    bottom: 45px;
-    /* Above Penguin */
+    bottom: 50px;
     right: 0;
-    /* Align with right edge of penguin */
-    background: #000;
+    background: transparent;
     color: var(--primary-color);
-    padding: 6px 10px;
-    border: 1px solid var(--primary-color);
-    border-radius: 0;
+    padding: 4px 8px;
+    border: none;
     font-size: 0.7rem;
-    /* Slightly larger text */
     font-weight: bold;
-    font-family: 'Courier New', monospace;
+    font-family: var(--terminal-font);
     white-space: nowrap;
-    /* Keep single line */
     opacity: 0;
     transition: opacity 0.3s;
     pointer-events: none;
-    box-shadow: 2px 2px 0px rgba(0, 255, 65, 0.2);
+    text-shadow: 1px 1px 0 #000;
     z-index: 10002;
 }
+
+/* Rest Bar Styling */
+.rest-zone {
+    font-size: 0.7rem;
+    color: var(--bg-color);
+    background: var(--text-muted);
+    padding: 2px 4px;
+    margin-top: 5px;
+    border-radius: 2px;
+    overflow: hidden;
+    text-align: center;
+    font-weight: bold;
+    box-shadow: 0 0 5px var(--primary-color);
+}
+
 
 /* Triangle for bubble */
 .penguin-bubble::after {

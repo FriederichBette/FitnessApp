@@ -32,7 +32,7 @@ function initPenguin() {
   const penguin = document.createElement("div");
   penguin.id = "pixel-penguin";
   penguin.className = "pixel-penguin";
-  // Besserer Pixel-Pinguin (16x16 Grid)
+  // Besserer Pixel-Pinguin (16x16 Grid) - OLD STYLE simple eyes
   penguin.innerHTML = `
       <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges" style="width:100%; height:100%;">
          <!-- Body -->
@@ -43,12 +43,9 @@ function initPenguin() {
          <!-- Belly (Darker for contrast) -->
          <rect x="5" y="5" width="6" height="8" fill="#000" opacity="0.8" />
          
-         <!-- Eyes -->
-         <rect id="p-eye-l" x="4" y="3" width="3" height="3" fill="#000" />
-         <rect id="pupil-l" x="5" y="4" width="1" height="1" fill="#fff" />
-         
-         <rect id="p-eye-r" x="9" y="3" width="3" height="3" fill="#000" />
-         <rect id="pupil-r" x="10" y="4" width="1" height="1" fill="#fff" />
+         <!-- Eyes (SIMPLE) -->
+         <rect id="p-eye-l" x="5" y="4" width="1" height="1" fill="#000" />
+         <rect id="p-eye-r" x="9" y="4" width="1" height="1" fill="#000" />
 
          <!-- Cheeks (Blush) - CUTE FACTOR -->
          <rect x="4" y="5" width="2" height="1" fill="#ff9999" opacity="0.6" />
@@ -68,7 +65,6 @@ function initPenguin() {
          
          <div class="penguin-bubble" id="penguin-bubble"></div>
       </svg>
-// Run immediately
   `;
   document.body.appendChild(penguin);
 
@@ -77,89 +73,55 @@ function initPenguin() {
     const l = document.getElementById("p-eye-l");
     const r = document.getElementById("p-eye-r");
     if (l && r) {
-      l.setAttribute("height", "0.2"); l.setAttribute("y", "3.4");
-      r.setAttribute("height", "0.2"); r.setAttribute("y", "3.4");
+      l.style.opacity = "0"; r.style.opacity = "0";
       setTimeout(() => {
-        l.setAttribute("height", "3"); l.setAttribute("y", "3");
-        r.setAttribute("height", "3"); r.setAttribute("y", "3");
+        l.style.opacity = "1"; r.style.opacity = "1";
       }, 200);
     }
   }, 4000);
 
   const messages = [
-    "TRINK WASSER!", "GUTER SATZ!",
-    "LEICHTES GEWICHT!", "ATMEN!", "STARK!", "WEITER SO!",
-    "MASCHINE!", "BLEIB DRAN!", "FOKUS!", "SAUBERE TECHNIK!",
-    "GUT SO!", "NEXT ONE!", "LÄUFT!", "STABIL!", "PAUSE NUTZEN!"
+    "Noot Noot!", "Fisch?", "Watschel...",
+    "Eiswürfel?", "Brrr...", "Cool bleiben!",
+    "Rutschpartie!", "Huiiii!", "Platsch!",
+    "Schlitter..."
   ];
 
   // Click to Talk
   penguin.addEventListener("click", () => {
-    // 30% Chance für ❤️
-    const isLove = Math.random() > 0.7;
-    const msg = isLove ? "❤️" : messages[Math.floor(Math.random() * messages.length)];
-    const bubble = document.getElementById("penguin-bubble");
-
-    // Jump a little
+    const msg = messages[Math.floor(Math.random() * messages.length)];
+    showPenguinBubble(msg);
     penguin.style.animation = "none";
     penguin.offsetHeight;
-    penguin.style.animation = isLove ? "peekCorner 0.5s ease-out" : "happyDance 0.5s ease-out";
-
-    if (bubble) {
-      bubble.textContent = msg + (isLove ? "" : "_");
-      bubble.style.color = isLove ? "#ff5555" : "var(--primary-color)"; // Red heart
-      bubble.style.borderColor = isLove ? "#ff5555" : "var(--primary-color)";
-      bubble.style.opacity = "1";
-
-      // Hide Bubble after 3s
-      setTimeout(() => {
-        bubble.style.opacity = "0";
-        // Reset Style
-        setTimeout(() => {
-          bubble.style.color = "var(--primary-color)";
-          bubble.style.borderColor = "var(--primary-color)";
-        }, 500);
-        penguin.style.animation = "idleBounce 3s infinite ease-in-out"; // Back to idle
-      }, 2000);
-    }
+    penguin.style.animation = "wiggle 0.5s ease-out";
+    setTimeout(() => { penguin.style.animation = "idleBounce 3s infinite ease-in-out"; }, 500);
   });
 
+  // Animation Trigger
+  window.triggerPenguinAnim = (type) => {
+    penguin.style.animation = "none";
+    penguin.offsetHeight;
+    if (type === "spin") penguin.style.animation = "spin 0.5s ease-out";
+    else if (type === "slide") penguin.style.animation = "slide 0.5s ease-out";
+    else penguin.style.animation = "happyDance 0.5s ease-out";
+
+    setTimeout(() => {
+      penguin.style.animation = "idleBounce 3s infinite ease-in-out";
+    }, 500);
+  };
+
+  function showPenguinBubble(text) {
+    const bubble = document.getElementById("penguin-bubble");
+    if (!bubble) return;
+    bubble.textContent = text;
+    bubble.style.opacity = "1";
+    setTimeout(() => { bubble.style.opacity = "0"; }, 2000);
+  }
 
   // VICTORY DANCE FUNCTION
   window.penguinDance = () => {
-    penguin.style.animation = "none";
-    penguin.offsetHeight;
-
-    // Center Screen
-    penguin.style.bottom = "50%";
-    penguin.style.right = "50%"; // Center X
-    penguin.style.transform = "translate(50%, 50%) scale(2)";
-    penguin.style.zIndex = "10001";
-
-    penguin.style.animation = "happyDance 0.5s infinite";
-
-    // Bubble
-    const bubble = document.getElementById("penguin-bubble");
-    if (bubble) {
-      bubble.textContent = "TRAINING COMPLETE!_";
-      bubble.style.opacity = "1";
-    }
-
-    // Reset after 3s
-    setTimeout(() => {
-      penguin.style.animation = "none";
-      penguin.offsetHeight; // Reflow
-
-      // Back to Corner
-      penguin.style.bottom = "70px"; // Mobile safe
-      penguin.style.right = "20px";
-      penguin.style.transform = "none";
-      penguin.style.zIndex = "10000";
-
-      penguin.style.animation = "idleBounce 3s infinite ease-in-out";
-
-      if (bubble) bubble.style.opacity = "0";
-    }, 3000);
+    window.triggerPenguinAnim("happyDance");
+    showPenguinBubble("VICTORY!");
   };
 }
 // Run immediately
@@ -1100,6 +1062,12 @@ async function loadWorkout(draftEntries = null) {
 function startRestTimer(exName, setNum, customRest = null) {
   let duration = customRest || 60;
 
+  // Trigger funny penguin animation
+  if (window.triggerPenguinAnim) {
+    const anims = ["spin", "slide", "happyDance"];
+    window.triggerPenguinAnim(anims[Math.floor(Math.random() * anims.length)]);
+  }
+
   // Check if event target has specific rest
   if (!customRest) {
     const btn = document.querySelector(`.start-rest-btn[data-ex="${exName}"][data-set="${setNum}"]`);
@@ -1111,28 +1079,31 @@ function startRestTimer(exName, setNum, customRest = null) {
   const safeName = exName.replace(/\s+/g, '-');
   const zoneId = `rest-${safeName}-${setNum}`;
   const zone = document.getElementById(zoneId);
-  const frames = ["/", "-", "\\", "|"];
-  let frame = 0;
 
   if (!zone) return;
   zone.style.display = "block";
+  // Visual Reset
+  zone.style.width = "100%";
+  zone.style.background = "var(--text-muted)";
+
+  // Clear any existing interval for this specific zone if we tracked it (simplified here)
+  // Ideally use a map of intervals. For now, multiple clicks might race, but acceptable for prototype.
 
   const timer = setInterval(() => {
     millisLeft -= 100;
-    frame++;
+    const pct = Math.max(0, (millisLeft / total) * 100);
+    const secondsLeft = Math.ceil(millisLeft / 1000);
 
-    const secondsLeft = Math.max(0, Math.ceil(millisLeft / 1000));
-    const totalSteps = 8;
-    const filledSteps = Math.floor(((total - millisLeft) / total) * totalSteps);
-    const bar = "█".repeat(Math.max(0, filledSteps)) + ".".repeat(Math.max(0, totalSteps - filledSteps));
-    const spinner = frames[frame % frames.length];
-
-    zone.innerHTML = `${spinner} [${bar}] ${secondsLeft}s`;
+    zone.style.background = `linear-gradient(90deg, var(--text-muted) ${pct}%, transparent ${pct}%)`;
+    zone.style.color = "var(--bg-color)";
+    zone.textContent = `PAUSE: ${secondsLeft}s`;
 
     if (millisLeft <= 0) {
       clearInterval(timer);
-      zone.innerHTML = `<span style="color: var(--primary-color);">READY</span>`;
-      setTimeout(() => { if (zone.innerHTML.includes("READY")) zone.style.display = "none"; }, 4000);
+      zone.style.background = "var(--primary-color)";
+      zone.style.color = "black";
+      zone.textContent = "READY > GO!";
+      // Play sound or vibration could go here
     }
   }, 100);
 }
@@ -1311,6 +1282,16 @@ document.getElementById("pause-btn")?.addEventListener("click", (e) => {
     startTimer(false); // Don't reset start time
     notify("TRAINING FORTGESETZT");
   }
+});
+
+// Intermediate Save Button
+document.getElementById("save-intermediate-btn")?.addEventListener("click", () => {
+  saveDraft();
+  notify("ENTWURF GESICHERT");
+  // Trigger small animation
+  const btn = document.getElementById("save-intermediate-btn");
+  btn.textContent = "GESPEICHERT!";
+  setTimeout(() => btn.textContent = "ZWISCHENSPEICHERN", 1000);
 });
 
 function renderHistory() {
