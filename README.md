@@ -1,8 +1,8 @@
-# WEYLAND YUTANI FITNESS TRACKER 🏋️‍♂️👽
+# WEYLAND YUTANI FITNESS TRACKER
 
 A sci-fi themed progressive overload workout tracker. "Building Better Worlds... and Better Bodies."
 
-## 🌟 Features
+## Features
 
 *   **Alien Terminal UI**: High-contrast, futuristic "retro-terminal" interface.
 *   **Smart Routines**: Automatically cycles through your workout plans (A -> B -> C).
@@ -12,7 +12,7 @@ A sci-fi themed progressive overload workout tracker. "Building Better Worlds...
 *   **Data Export**: 1-Click CSV Export of all your training data.
 *   **Pixel Penguin Companion**: A motivational little friend who reminds you to hydrate. 🐧
 
-## 🚀 Getting Started
+##  Getting Started
 
 ### 1. User Setup
 1.  Open the App URL.
@@ -26,7 +26,7 @@ A sci-fi themed progressive overload workout tracker. "Building Better Worlds...
 3.  Enter your weights/reps.
 4.  Hit **"TRAINING SPEICHERN"** when done.
 
-## 🛠️ Tech Stack & Setup
+##  Tech Stack & Setup
 
 *   **Frontend**: Vanilla JS, HTML5, CSS3 (No build step required, just drag & drop).
 *   **Backend**: Supabase (PostgreSQL, Auth, Realtime).
@@ -37,7 +37,7 @@ The app logic is contained entirely in `script.js`.
 *   `suggestNextWorkout()`: Handles the A/B cycle logic.
 *   `loadWorkout()`: Fetches specific exercise history for overload context.
 
-## 🐧 The Penguin
+## The Penguin
 The mascot appears every ~20 seconds to keep morale high.
 *   *Hidden Feature*: He sometimes does a little dance before walking.
 
