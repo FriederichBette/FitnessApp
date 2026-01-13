@@ -1,45 +1,41 @@
-# WEYLAND YUTANI FITNESS TRACKER 🏋️‍♂️👽
+# WEYLAND-YUTANI FITNESS TRACKER
 
-A sci-fi themed progressive overload workout tracker. "Building Better Worlds... and Better Bodies."
+## Project Overview
+This application is a progressive overload fitness tracker with a "Retro Sci-Fi" interface designed for mobile web use. It focuses on efficiency, allowing users to track weights, reps, and rest times with minimal friction. The "Alien Terminal" aesthetic distinguishes it from standard fitness apps, offering an immersive experience.
 
-## 🌟 Features
+## Features
+- **Smart Routine Management**: Rotates through workout plans (e.g., A/B Split or Push/Pull/Legs) automatically based on completion history.
+- **Progressive Overload**: Displays the previous performance for each exercise directly in the input field to encourage improvement.
+- **Cardio Tracking**: Supports duration (minutes) and calorie tracking alongside standard weightlifting.
+- **Offline Capable (PWA)**: Can be installed on mobile devices for a native-like experience.
+- **Data Privacy**: Users own their data. Includes functionality to export all logs as CSV or delete the account entirely.
+- **Interactive UI**: Features a detailed "terminal" design with auditory and visual feedback (animations, glow effects).
 
-*   **Alien Terminal UI**: High-contrast, futuristic "retro-terminal" interface.
-*   **Smart Routines**: Automatically cycles through your workout plans (A -> B -> C).
-*   **Progressive Overload**: Shows your last lift *for that specific exercise* directly in the input field.
-*   **System Templates**: Pre-loaded "FULL BODY" routines to get started instantly.
-*   **History & Stats**: Weekly volume visualization and collapsible history logs.
-*   **Data Export**: 1-Click CSV Export of all your training data.
-*   **Pixel Penguin Companion**: A motivational little friend who reminds you to hydrate. 🐧
+## Technology Stack
+The project is built with a focus on simplicity and longevity, avoiding heavy frontend frameworks.
+- **Frontend**: Vanilla JavaScript (ES6+), HTML5, CSS3.
+- **Backend**: Supabase (PostgreSQL) for authentication, data storage, and real-time updates.
+- **Hosting**: Static file hosting (e.g., Vercel, Netlify, or GitHub Pages).
 
-## 🚀 Getting Started
+## Setup Instructions
 
-### 1. User Setup
-1.  Open the App URL.
-2.  Click **"NEU REGISTRIEREN"** and create an account.
-3.  Go to the **"PLÄNE"** tab.
-4.  Copy a **"SYSTEM VORLAGE"** (e.g., Full Body A) to your routines.
+### 1. Prerequisites
+- A Supabase account.
+- Basic web server for local testing (e.g., Live Server extension for VS Code).
 
-### 2. Training
-1.  Go to **"TRAINING"**.
-2.  Select your routine and workout.
-3.  Enter your weights/reps.
-4.  Hit **"TRAINING SPEICHERN"** when done.
+### 2. Database Setup
+The backend logic works with Supabase. You will need to execute the SQL scripts found in the `database/` directory to set up the necessary tables (`logs`, `workouts`, `workout_exercises`) and Row Level Security (RLS) policies.
 
-## 🛠️ Tech Stack & Setup
+### 3. Configuration
+The application connects to Supabase via the client library. Ensure your Project URL and Anonymous Key are correctly configured in `index.html` (header script) or `script.js` depending on the implementation version.
 
-*   **Frontend**: Vanilla JS, HTML5, CSS3 (No build step required, just drag & drop).
-*   **Backend**: Supabase (PostgreSQL, Auth, Realtime).
+## Usage
+1. **Registration**: Create an account via the interface.
+2. **Plan Creation**: Go to the "Plans" section to create new routines or use the provided system templates.
+3. **Training**: Select a workout on the main screen. The app will suggest the next logical workout in your routine.
+4. **History**: View past training sessions and weekly volume statistics in the "History" tab.
 
-### Local Logic
-The app logic is contained entirely in `script.js`.
-*   `init()`: Loads initial state.
-*   `suggestNextWorkout()`: Handles the A/B cycle logic.
-*   `loadWorkout()`: Fetches specific exercise history for overload context.
+## License
+This project is for personal use and portfolio demonstration. All rights to the "Alien" franchise intellectual property belong to their respective owners.
 
-## 🐧 The Penguin
-The mascot appears every ~20 seconds to keep morale high.
-*   *Hidden Feature*: He sometimes does a little dance before walking.
-
----
-*Property of Weyland-Yutani Corp. All rights reserved.*
+**Contact**: Friederich Bette

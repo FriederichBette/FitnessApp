@@ -397,11 +397,11 @@ async function renderMyWorkouts() {
 
         // COPY WHOLE ROUTINE BUTTON
         header.innerHTML = `
-            <div style="display:flex; align-items:center; gap:10px; cursor:pointer;" onclick="toggleHistory('${contentId}', this)">
-                 <span class="history-toggle-icon collapsed-icon">▼</span>
-                 <span>${routine}</span>
+            <div style="display:flex; align-items:center; gap:10px; cursor:pointer; flex: 1; min-width: 0;" onclick="toggleHistory('${contentId}', this)">
+                 <span class="history-toggle-icon collapsed-icon" style="flex-shrink: 0;">▼</span>
+                 <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${routine}</span>
             </div>
-            <button class="secondary" style="width: auto; padding: 2px 8px; font-size: 0.6rem;" onclick="copyWholeRoutine('${routine}')">GANZE ROUTINE KOPIEREN</button>
+            <button class="secondary" style="width: auto; padding: 4px 8px; font-size: 0.6rem; flex-shrink: 0; margin-left: 10px;" onclick="copyWholeRoutine('${routine}')">ROUTINE KOPIEREN</button>
         `;
         templatesList.appendChild(header);
 
@@ -439,11 +439,11 @@ async function renderMyWorkouts() {
     const contentId = `routine-content-${routine.replace(/[^a-zA-Z0-9]/g, '')}`;
 
     header.innerHTML = `
-            <div style="display:flex; align-items:center; gap:10px; cursor:pointer;" onclick="toggleHistory('${contentId}', this)">
-                 <span class="history-toggle-icon collapsed-icon">▼</span>
-                 <span>${routine}</span>
+            <div style="display:flex; align-items:center; gap:10px; cursor:pointer; flex: 1; min-width: 0;" onclick="toggleHistory('${contentId}', this)">
+                 <span class="history-toggle-icon collapsed-icon" style="flex-shrink: 0;">▼</span>
+                 <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${routine}</span>
             </div>
-            <button onclick="deleteRoutine('${routine}')" style="width: auto; padding: 2px 8px; font-size: 0.6rem; color: var(--error-color); border-color: var(--error-color);">X_ROUTINE_LÖSCHEN</button>
+            <button onclick="deleteRoutine('${routine}')" style="width: auto; padding: 4px 8px; font-size: 0.6rem; color: var(--error-color); border-color: var(--error-color); flex-shrink: 0; margin-left: 10px;">LÖSCHEN</button>
         `;
     myWorkoutsList.appendChild(header);
 
