@@ -79,58 +79,10 @@ function initPenguin() {
   }, 4000);
 
   const messages = [
-    // Wasser Reminder
-    "Zeit für Wasser. Ja, schon wieder. Tragisch.",
-    "Hydration-Check. Du fällst gerade durch.",
-    "Trink Wasser. Dein Körper ist kein Kaktus.",
-    "Nein, Kaffee zählt nicht. Versuch’s nochmal.",
-    "Wasser ist kein optionales DLC.",
-    "Ein Schluck Verantwortung, bitte.",
-    "Deine Zellen verdursten leise. Romantisch.",
-    "Du willst Leistung? Dann trink wie ein Erwachsener.",
-    "Ich bin ein Pinguin. Ich weiß, was Wasser ist. Du offenbar nicht.",
-    "Hydration ist sexy. Leider merkt das keiner.",
-
-    // Nach dem Trinken
-    "Wow. Flüssige Reife.",
-    "Siehst direkt 3 % funktionaler aus.",
-    "Dein Körper: endlich ein kompetenter Manager.",
-    "Stark. Verantwortung in flüssiger Form.",
-    "Nicht schlecht. Wiederholbar.",
-
-    // Training – allgemein sarkastisch
-    "Nicht schön. Aber effektiv.",
-    "Das war kein Chaos. Das war Charakterbildung.",
-    "Siehst aus wie kurz vor Aufgabe. Solide Leistung.",
-    "Elegant war’s nicht. Stark war’s schon.",
-    "Wenn das leicht wäre, wärst du enttäuscht.",
-
-    // Nach schweren Sets
-    "Ah. Du hast dein Gesicht wieder. Glückwunsch.",
-    "Das war Schmerz mit Mehrwert.",
-    "Sieht anstrengend aus. Ist Wachstum.",
-    "Respekt. Widerwilliger Respekt, aber trotzdem.",
-
-    // Beim Weitermachen
-    "Du bist noch hier? Interessant.",
-    "Offenbar hast du Prinzipien.",
-    "Nicht motiviert. Aber diszipliniert. Gefährlich gut.",
-
-    // Wenn man struggelt
-    "Langsam ist immer noch vorwärts. Leider.",
-    "Atmen hilft. Meistens.",
-    "Das ist kein Scheitern. Das ist ein Umweg mit Schweiß.",
-
-    // Nach dem Training
-    "Glückwunsch. Du hast dich nicht gedrückt.",
-    "Du bist offiziell besser als dein Sofa.",
-    "Das war Selbstrespekt. Sah unbequem aus.",
-    "Nicht perfekt. Aber erledigt.",
-
-    // Meta-Pinguin
-    "Ich bin nur ein Pinguin. Aber ich urteile leise.",
-    "Wenn ich klatschen könnte, würde ich es nicht tun. Innerlich vielleicht.",
-    "Wir beide wissen: Du kannst mehr. Morgen."
+    "Trink Wasser nicht vergessen!", "Du schaffst das!",
+    "Geiler Typ!", "Maschine!", "Bleib dran!",
+    "Starkes Set!", "Sauber!", "Weiter so!",
+    "Top Leistung!", "Gönn dir Wasser!"
   ];
 
   // Click to Talk
@@ -1011,7 +963,12 @@ async function loadWorkout(draftData = null) {
 
       if (ex.is_cardio) {
         card.innerHTML = `
-                    <h3>[ CARDIO ] ${ex.exercise.toUpperCase()}</h3>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <input type="text" class="ex-title-edit" value="${ex.exercise.toUpperCase()}" 
+                               style="font-weight:bold; color:var(--primary-color); background:transparent; border:none; width:80%; font-size:1rem;"
+                               onchange="updateExerciseName(this, '${ex.exercise}')">
+                        <span style="font-size:0.7rem; color:var(--text-muted);">[CARDIO]</span>
+                    </div>
                     <div class="exercise-info">ZIEL: ${ex.sets} MIN | KCAL: ${ex.reps || "--"}</div>
                     <div class="last-logs">ZULETZT: ${lastLogs}</div>
                     <div class="set-row cardio-entry">
@@ -1022,7 +979,9 @@ async function loadWorkout(draftData = null) {
                 `;
       } else {
         card.innerHTML = `
-                    <h3>${ex.exercise.toUpperCase()}</h3>
+                    <input type="text" class="ex-title-edit" value="${ex.exercise.toUpperCase()}" 
+                           style="font-weight:bold; color:var(--primary-color); background:transparent; border:none; width:100%; font-size:1rem; margin-bottom:5px;"
+                           onchange="updateExerciseName(this, '${ex.exercise}')">
                     <div class="exercise-info">ZIEL: ${ex.sets} SÄTZE | WDH: ${ex.reps || "--"}</div>
                     <div class="last-logs">ZULETZT: ${lastLogs}</div>
                 `;
@@ -1045,7 +1004,8 @@ async function loadWorkout(draftData = null) {
                             <label style="min-width: 55px; font-size: 0.75rem;">SATZ_${i}</label>
                             <input type="number" step="0.5" placeholder="KG" class="weight" data-ex="${ex.exercise}" data-set="${i}" value="${defaultWeight}" style="width: 50px; margin: 0; padding: 4px;">
                             <input type="number" placeholder="WDH" class="reps" data-ex="${ex.exercise}" data-set="${i}" value="${draft ? draft.reps : ""}" style="width: 45px; margin: 0; padding: 4px;">
-                            <button class="start-rest-btn" data-ex="${ex.exercise}" data-set="${i}" data-rest="${ex.rest_time || 60}" style="width: auto; padding: 4px 6px; font-size: 0.65rem;">PAUSE</button>
+                            <input type="number" class="rest-edit" value="${ex.rest_time || 60}" style="width: 35px; padding: 4px; font-size:0.65rem; color:var(--text-muted); border:1px solid var(--secondary-color);">
+                            <button class="start-rest-btn" data-ex="${ex.exercise}" data-set="${i}" style="width: auto; padding: 4px 6px; font-size: 0.65rem;">PAUSE</button>
                             <div class="rest-zone" id="rest-${ex.exercise.replace(/\s+/g, '-')}-${i}" style="font-size: 0.6rem; color: var(--text-muted); display: none; overflow: hidden; text-overflow: ellipsis;"></div>
                         </div>
                     `;
@@ -1082,6 +1042,7 @@ async function loadWorkout(draftData = null) {
                         <label style="min-width: 55px; font-size: 0.75rem;">SATZ_${i}</label>
                         <input type="number" step="0.5" placeholder="KG" class="weight" data-ex="${exName}" data-set="${i}" style="width: 50px; margin: 0; padding: 4px;">
                         <input type="number" placeholder="WDH" class="reps" data-ex="${exName}" data-set="${i}" style="width: 45px; margin: 0; padding: 4px;">
+                        <input type="number" class="rest-edit" value="60" style="width: 35px; padding: 4px; font-size:0.65rem; color:var(--text-muted); border:1px solid var(--secondary-color);">
                         <button class="start-rest-btn" data-ex="${exName}" data-set="${i}" data-rest="60" style="width: auto; padding: 4px 6px; font-size: 0.65rem;">PAUSE</button>
                         <div class="rest-zone" id="rest-${exName.replace(/\s+/g, '-')}-${i}" style="font-size: 0.6rem; color: var(--text-muted); display: none; overflow: hidden; text-overflow: ellipsis;"></div>
                     </div>
@@ -1105,7 +1066,10 @@ async function loadWorkout(draftData = null) {
           btn.addEventListener("click", (e) => {
             const ex = e.target.dataset.ex;
             const set = e.target.dataset.set;
-            startRestTimer(ex, set);
+            const row = e.target.parentElement;
+            const restInput = row.querySelector(".rest-edit");
+            const customTime = restInput ? Number(restInput.value) : 60;
+            startRestTimer(ex, set, customTime);
           });
         });
       }
@@ -1131,26 +1095,14 @@ async function loadWorkout(draftData = null) {
 
   document.querySelectorAll(".start-rest-btn").forEach(btn => {
     btn.addEventListener("click", (e) => {
+      // Find sibling input for rest time
+      const row = e.target.parentElement;
+      const restInput = row.querySelector(".rest-edit");
+      const customTime = restInput ? Number(restInput.value) : 60;
+
       const ex = e.target.dataset.ex;
       const set = e.target.dataset.set;
-      startRestTimer(ex, set);
-    });
-  });
-
-  contentArea.appendChild(trainingSpacer);
-
-  document.querySelectorAll("input").forEach(input => {
-    input.addEventListener("input", () => {
-      saveDraft();
-      updateVolume();
-    });
-  });
-
-  document.querySelectorAll(".start-rest-btn").forEach(btn => {
-    btn.addEventListener("click", (e) => {
-      const ex = e.target.dataset.ex;
-      const set = e.target.dataset.set;
-      startRestTimer(ex, set);
+      startRestTimer(ex, set, customTime);
     });
   });
 
@@ -1163,6 +1115,31 @@ async function loadWorkout(draftData = null) {
     startTimer(true);
   }
 }
+
+// Function to update exercise names dynamically
+window.updateExerciseName = (input, oldName) => {
+  const newName = input.value.trim().toUpperCase();
+  if (!newName) return;
+
+  // Update all inputs in this card to use the new name for saving
+  // 1. Find the card container
+  // The Input is strictly inside the card
+  const card = input.closest(".exercise-card");
+  if (!card) return;
+
+  // Update data-ex on all relevant elements
+  card.querySelectorAll("[data-ex]").forEach(el => {
+    el.dataset.ex = newName;
+  });
+
+  // Also update REST IDs if possible or just accept visual disconnect (minor)
+  // Updating ID is tricky for running timers, but essential for save logic.
+  // The "saveWorkout" uses dataset.ex, so that is covered.
+  // The "startRestTimer" uses dataset.ex, so that works for NEW clicks.
+
+  notify(`UMBENANNT: ${newName}`);
+  saveDraft();
+};
 
 function startRestTimer(exName, setNum, customRest = null) {
   let duration = customRest || 60;
