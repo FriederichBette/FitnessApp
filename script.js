@@ -312,15 +312,15 @@ function showPage(pageId) {
         const w = availableWorkouts.find(x => x.id === savedDraft.workout);
         if (w) {
           const resumeBtn = document.createElement("button");
-          resumeBtn.className = "secondary";
-          resumeBtn.style.cssText = "margin-bottom: 20px; border-color: var(--primary-color); border-style: dashed; animation: terminalPulse 2s infinite;";
+          resumeBtn.className = "important-btn"; // Use a prominent class or style
+          resumeBtn.style.cssText = "width: 100%; margin-bottom: 20px; padding: 15px; border: 2px dashed var(--primary-color); background: rgba(0, 255, 65, 0.1); animation: terminalPulse 2s infinite; font-weight: bold; font-size: 1.1rem; color: var(--primary-color); cursor: pointer;";
           resumeBtn.innerHTML = `> SESSION FORTSETZEN: ${w.name.toUpperCase()}`;
           resumeBtn.onclick = () => {
             workoutSelect.value = savedDraft.workout;
             loadWorkout(savedDraft);
           };
 
-          // Insert after subtitle
+          // Insert at the top of the selection area
           const hint = document.getElementById("next-workout-hint");
           if (hint) hint.parentNode.insertBefore(resumeBtn, hint.nextSibling);
         }
@@ -731,14 +731,8 @@ async function init() {
     if (savedDraft && savedDraft.workout) {
       const w = availableWorkouts.find(x => x.id === savedDraft.workout);
       if (w) {
-        // Auto-Resume or Show Button logic
-        // We will Auto-Resume to fix "Black Screen Bug" directly
-        notify("TRAINING WIEDERHERGESTELLT");
-        routineSelect.value = w.routine_name || "";
-        populateWorkoutSelect();
-        workoutSelect.value = savedDraft.workout;
-        loadWorkout(savedDraft);
-        return; // Skip normal suggestion
+        // Note: Auto-Resume removed per user feedback ("komisch")
+        // We relies solely on the Resume Button in showPage("home")
       }
     }
 
@@ -955,124 +949,176 @@ async function loadWorkout(draftData = null) {
 
   try {
     exercisesInWorkout.forEach((ex) => {
-      if (!ex.exercise) return; // Skip invalid entries
+      if (!ex.exercise) return;
 
       const card = document.createElement("div");
       card.className = "exercise-card";
+      card.dataset.exerciseName = ex.exercise; // Helper for updates
       const lastLogs = getLastExerciseLogs(ex.exercise, workoutId);
 
-      if (ex.is_cardio) {
-        card.innerHTML = `
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <input type="text" class="ex-title-edit" value="${ex.exercise.toUpperCase()}" 
-                               style="font-weight:bold; color:var(--primary-color); background:transparent; border:none; width:80%; font-size:1rem;"
-                               onchange="updateExerciseName(this, '${ex.exercise}')">
-                        <span style="font-size:0.7rem; color:var(--text-muted);">[CARDIO]</span>
-                    </div>
-                    <div class="exercise-info">ZIEL: ${ex.sets} MIN | KCAL: ${ex.reps || "--"}</div>
-                    <div class="last-logs">ZULETZT: ${lastLogs}</div>
-                    <div class="set-row cardio-entry">
-                        <label style="font-size:0.75rem;">IST-DATEN:</label>
-                        <input type="number" placeholder="MIN" class="weight duration" data-ex="${ex.exercise}" data-iscardio="true" style="width: 70px;">
-                        <input type="number" placeholder="KCAL" class="reps calories" data-ex="${ex.exercise}" style="width: 70px;">
-                    </div>
-                `;
-      } else {
-        card.innerHTML = `
-                    <input type="text" class="ex-title-edit" value="${ex.exercise.toUpperCase()}" 
-                           style="font-weight:bold; color:var(--primary-color); background:transparent; border:none; width:100%; font-size:1rem; margin-bottom:5px;"
-                           onchange="updateExerciseName(this, '${ex.exercise}')">
-                    <div class="exercise-info">ZIEL: ${ex.sets} SÄTZE | WDH: ${ex.reps || "--"}</div>
-                    <div class="last-logs">ZULETZT: ${lastLogs}</div>
-                `;
+      // Header with Edit Toggle
+      const headerRow = document.createElement("div");
+      headerRow.style.display = "flex";
+      headerRow.style.justifyContent = "space-between";
+      headerRow.style.alignItems = "center";
 
-        for (let i = 1; i <= ex.sets; i++) {
-          const row = document.createElement("div");
-          row.className = "set-container";
-          const draft = draftEntries?.find(d => d.ex === ex.exercise && d.set === i);
+      // Title Input
+      const titleInput = document.createElement("input");
+      titleInput.type = "text";
+      titleInput.className = "ex-title-edit";
+      titleInput.value = ex.exercise.toUpperCase();
+      titleInput.style.cssText = "font-weight:bold; color:var(--primary-color); background:transparent; border:none; width:70%; font-size:1rem;";
+      titleInput.onchange = (e) => updateExerciseName(e.target, ex.exercise);
 
-          let defaultWeight = "";
-          if (draft) {
-            defaultWeight = draft.weight;
-          } else if (lastLogs === "KEINE DATEN" && ex.weight) {
-            // Use Start Weight from Template ONLY if no history exists
-            defaultWeight = ex.weight;
-          }
+      // Control Group (Cardio Toggle + Edit Btn)
+      const controls = document.createElement("div");
+      controls.style.display = "flex";
+      controls.style.gap = "8px";
+      controls.style.alignItems = "center";
 
-          row.innerHTML = `
-                        <div class="set-row" style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">
-                            <label style="min-width: 55px; font-size: 0.75rem;">SATZ_${i}</label>
-                            <input type="number" step="0.5" placeholder="KG" class="weight" data-ex="${ex.exercise}" data-set="${i}" value="${defaultWeight}" style="width: 50px; margin: 0; padding: 4px;">
-                            <input type="number" placeholder="WDH" class="reps" data-ex="${ex.exercise}" data-set="${i}" value="${draft ? draft.reps : ""}" style="width: 45px; margin: 0; padding: 4px;">
-                            <input type="number" class="rest-edit" value="${ex.rest_time || 60}" style="width: 35px; padding: 4px; font-size:0.65rem; color:var(--text-muted); border:1px solid var(--secondary-color);">
-                            <button class="start-rest-btn" data-ex="${ex.exercise}" data-set="${i}" style="width: auto; padding: 4px 6px; font-size: 0.65rem;">PAUSE</button>
-                            <div class="rest-zone" id="rest-${ex.exercise.replace(/\s+/g, '-')}-${i}" style="font-size: 0.6rem; color: var(--text-muted); display: none; overflow: hidden; text-overflow: ellipsis;"></div>
-                        </div>
-                    `;
-          card.appendChild(row);
-        }
+      // Edit Button
+      const editBtn = document.createElement("button");
+      editBtn.innerHTML = "📝";
+      editBtn.className = "secondary";
+      editBtn.style.padding = "2px 6px";
+      editBtn.style.fontSize = "0.8rem";
+      editBtn.onclick = () => toggleEditMode(card);
+
+      controls.appendChild(editBtn);
+      headerRow.appendChild(titleInput);
+      headerRow.appendChild(controls);
+      card.appendChild(headerRow);
+
+      // Info Row
+      const infoRow = document.createElement("div");
+      infoRow.className = "exercise-info";
+      infoRow.innerHTML = `ZIEL: ${ex.sets} SÄTZE | ${ex.is_cardio ? 'DAUER' : 'WDH'}: ${ex.is_cardio ? (ex.reps || "0") + " KCAL" : (ex.reps || "--")}`;
+      card.appendChild(infoRow);
+
+      const logRow = document.createElement("div");
+      logRow.className = "last-logs";
+      logRow.textContent = `ZULETZT: ${lastLogs}`;
+      card.appendChild(logRow);
+
+      // Sets Container
+      const setsWrapper = document.createElement("div");
+      setsWrapper.className = "sets-wrapper";
+
+      // Render Initial Sets
+      for (let i = 1; i <= ex.sets; i++) {
+        const draft = draftEntries?.find(d => d.ex === ex.exercise && d.set === i);
+        // Use Draft weight OR Template weight OR empty
+        let defWeight = "";
+        if (draft) defWeight = draft.weight;
+        else if (lastLogs === "KEINE DATEN" && ex.weight) defWeight = ex.weight;
+
+        const setRow = createSetRow(i, ex.exercise, ex.is_cardio, defWeight, draft ? draft.reps : "", ex.rest_time || 60);
+        setsWrapper.appendChild(setRow);
       }
+      card.appendChild(setsWrapper);
+
+      // ADD SET BUTTON (Hidden by default)
+      const addSetBtn = document.createElement("button");
+      addSetBtn.className = "secondary edit-only";
+      addSetBtn.innerText = "+ SATZ";
+      addSetBtn.style.cssText = "display:none; width:100%; margin-top:10px; border-style:dashed;";
+      addSetBtn.onclick = () => {
+        const currentSets = setsWrapper.children.length;
+        const newRow = createSetRow(currentSets + 1, titleInput.value.trim(), ex.is_cardio, "", "", ex.rest_time || 60);
+        setsWrapper.appendChild(newRow);
+        // Re-attach listeners for the new row
+        attachInputListeners(newRow);
+      };
+      card.appendChild(addSetBtn);
+
       contentArea.appendChild(card);
     });
 
     // --- BUTTON: ADD DYNAMIC EXERCISE ---
-    // Allows user to add exercises during training
     const addExContainer = document.createElement("div");
     addExContainer.style.textAlign = "center";
     addExContainer.style.marginTop = "20px";
 
     const addExBtn = document.createElement("button");
-    addExBtn.textContent = "+ WEITERE ÜBUNG HINZUFÜGEN";
+    addExBtn.textContent = "+ WEITERE ÜBUNG";
     addExBtn.className = "secondary";
     addExBtn.onclick = () => {
       const exName = prompt("NAME DER ÜBUNG:", "");
-      if (exName && exName.trim().length > 0) {
-        // Append Card
-        const card = document.createElement("div");
-        card.className = "exercise-card";
-        card.innerHTML = `
-                 <h3>${exName.toUpperCase()} (ZUSATZ)</h3>
-                 <div class="exercise-info">EXTRA HINZUGEFÜGT</div>
-            `;
-        for (let i = 1; i <= 3; i++) {
-          const row = document.createElement("div");
-          row.className = "set-container";
-          row.innerHTML = `
-                    <div class="set-row" style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">
-                        <label style="min-width: 55px; font-size: 0.75rem;">SATZ_${i}</label>
-                        <input type="number" step="0.5" placeholder="KG" class="weight" data-ex="${exName}" data-set="${i}" style="width: 50px; margin: 0; padding: 4px;">
-                        <input type="number" placeholder="WDH" class="reps" data-ex="${exName}" data-set="${i}" style="width: 45px; margin: 0; padding: 4px;">
-                        <input type="number" class="rest-edit" value="60" style="width: 35px; padding: 4px; font-size:0.65rem; color:var(--text-muted); border:1px solid var(--secondary-color);">
-                        <button class="start-rest-btn" data-ex="${exName}" data-set="${i}" data-rest="60" style="width: auto; padding: 4px 6px; font-size: 0.65rem;">PAUSE</button>
-                        <div class="rest-zone" id="rest-${exName.replace(/\s+/g, '-')}-${i}" style="font-size: 0.6rem; color: var(--text-muted); display: none; overflow: hidden; text-overflow: ellipsis;"></div>
-                    </div>
-                `;
-          card.appendChild(row);
-        }
-        // Add before the button itself or at end of content? 
-        // Better to append to contentArea before spacer.
-        // But we are at end of function.
-        // Just insert before this container.
-        contentArea.insertBefore(card, addExContainer);
+      if (!exName || exName.trim().length === 0) return;
 
-        // Re-attach listeners for new inputs
-        card.querySelectorAll("input").forEach(input => {
-          input.addEventListener("input", () => {
-            saveDraft();
-            updateVolume();
-          });
-        });
-        card.querySelectorAll(".start-rest-btn").forEach(btn => {
-          btn.addEventListener("click", (e) => {
-            const ex = e.target.dataset.ex;
-            const set = e.target.dataset.set;
-            const row = e.target.parentElement;
-            const restInput = row.querySelector(".rest-edit");
-            const customTime = restInput ? Number(restInput.value) : 60;
-            startRestTimer(ex, set, customTime);
-          });
-        });
+      const isCardio = confirm("IST DAS EINE CARDIO-ÜBUNG?\nOK = JA, ABBRECHEN = NEIN (KRAFT)");
+
+      // Append Card Manually (reusing logic would be better but keeping it contained)
+      // We essentially mock a plan entry
+      const mockEx = {
+        exercise: exName.trim(),
+        sets: 3,
+        reps: isCardio ? 0 : 10,
+        weight: 0,
+        rest_time: 60,
+        is_cardio: isCardio
+      };
+
+      // Reuse the generator logic by extracting it? 
+      // For now, let's just append a card using the same structure
+      // NOTE: We need to trigger the DOM creation similar to above.
+      // Copy-paste pattern for stability in this tool usage.
+
+      const card = document.createElement("div");
+      card.className = "exercise-card";
+
+      // Header
+      const headerRow = document.createElement("div");
+      headerRow.style.display = "flex";
+      headerRow.style.justifyContent = "space-between";
+      headerRow.style.alignItems = "center";
+
+      const titleInput = document.createElement("input");
+      titleInput.type = "text";
+      titleInput.className = "ex-title-edit";
+      titleInput.value = mockEx.exercise.toUpperCase();
+      titleInput.style.cssText = "font-weight:bold; color:var(--primary-color); background:transparent; border:none; width:70%; font-size:1rem;";
+      titleInput.onchange = (e) => updateExerciseName(e.target, mockEx.exercise);
+
+      const controls = document.createElement("div");
+      const editBtn = document.createElement("button");
+      editBtn.innerHTML = "📝";
+      editBtn.className = "secondary";
+      editBtn.style.padding = "2px 6px";
+      editBtn.style.fontSize = "0.8rem";
+      editBtn.onclick = () => toggleEditMode(card);
+      controls.appendChild(editBtn);
+      headerRow.appendChild(titleInput);
+      headerRow.appendChild(controls);
+      card.appendChild(headerRow);
+
+      const infoRow = document.createElement("div");
+      infoRow.className = "exercise-info";
+      infoRow.innerHTML = "ZUSATZ-ÜBUNG";
+      card.appendChild(infoRow);
+
+      const setsWrapper = document.createElement("div");
+      setsWrapper.className = "sets-wrapper";
+
+      for (let i = 1; i <= 3; i++) {
+        setsWrapper.appendChild(createSetRow(i, mockEx.exercise, isCardio, "", "", 60));
       }
+      card.appendChild(setsWrapper);
+
+      const addSetBtn = document.createElement("button");
+      addSetBtn.className = "secondary edit-only";
+      addSetBtn.innerText = "+ SATZ";
+      addSetBtn.style.cssText = "display:none; width:100%; margin-top:10px; border-style:dashed;";
+      addSetBtn.onclick = () => {
+        const currentSets = setsWrapper.children.length;
+        const newRow = createSetRow(currentSets + 1, titleInput.value.trim(), isCardio, "", "", 60);
+        setsWrapper.appendChild(newRow);
+        attachInputListeners(newRow);
+      };
+      card.appendChild(addSetBtn);
+
+      contentArea.insertBefore(card, addExContainer);
+      attachInputListeners(card); // Attach to all new inputs
     };
     addExContainer.appendChild(addExBtn);
     contentArea.appendChild(addExContainer);
@@ -1114,6 +1160,83 @@ async function loadWorkout(draftData = null) {
   } else {
     startTimer(true);
   }
+}
+
+// --- HELPER FUNCTIONS FOR DYNAMIC UI ---
+
+function toggleEditMode(card) {
+  const isEdit = card.classList.toggle("edit-mode-active");
+  // Toggle visibility of delete buttons and add set buttons
+  card.querySelectorAll(".delete-set-btn").forEach(btn => {
+    btn.style.display = isEdit ? "block" : "none";
+  });
+  card.querySelectorAll(".edit-only").forEach(el => {
+    el.style.display = isEdit ? "block" : "none";
+  });
+}
+
+function createSetRow(i, exName, isCardio, weight, reps, rest) {
+  const container = document.createElement("div");
+  container.className = "set-container";
+
+  const row = document.createElement("div");
+  row.className = "set-row"; // Critical for saver
+  row.style.cssText = "display: flex; align-items: center; gap: 6px; margin-bottom: 8px;";
+
+  // Determine Inputs based on Type
+  let inputsHtml = "";
+  if (isCardio) {
+    inputsHtml = `
+            <input type="number" placeholder="MIN" class="weight duration" data-ex="${exName}" data-set="${i}" data-iscardio="true" value="${weight}" style="width: 50px; margin: 0; padding: 4px;">
+            <input type="number" placeholder="KCAL" class="reps calories" data-ex="${exName}" data-set="${i}" value="${reps}" style="width: 45px; margin: 0; padding: 4px;">
+        `;
+  } else {
+    inputsHtml = `
+            <input type="number" step="0.5" placeholder="KG" class="weight" data-ex="${exName}" data-set="${i}" value="${weight}" style="width: 50px; margin: 0; padding: 4px;">
+            <input type="number" placeholder="WDH" class="reps" data-ex="${exName}" data-set="${i}" value="${reps}" style="width: 45px; margin: 0; padding: 4px;">
+        `;
+  }
+
+  row.innerHTML = `
+        <label style="min-width: 55px; font-size: 0.75rem;">SATZ_${i}</label>
+        ${inputsHtml}
+        <input type="number" class="rest-edit" value="${rest}" style="width: 35px; padding: 4px; font-size:0.65rem; color:var(--text-muted); border:1px solid var(--secondary-color);">
+        <button class="start-rest-btn" data-ex="${exName}" data-set="${i}" style="width: auto; padding: 4px 6px; font-size: 0.65rem;">PAUSE</button>
+        
+        <!-- Delete Button (Hidden by default) -->
+        <button class="delete-set-btn" style="display:none; color:red; border:1px solid red; background:transparent; padding:2px 6px; font-size:0.7rem; margin-left:5px;">X</button>
+
+        <div class="rest-zone" id="rest-${exName.replace(/\s+/g, '-')}-${i}" style="font-size: 0.6rem; color: var(--text-muted); display: none; overflow: hidden; text-overflow: ellipsis; width:100%;"></div>
+    `;
+
+  // Add Delete Logic
+  row.querySelector(".delete-set-btn").onclick = () => {
+    container.remove();
+    saveDraft(); // Update state
+    updateVolume();
+  };
+
+  container.appendChild(row);
+  return container;
+}
+
+function attachInputListeners(container) {
+  container.querySelectorAll("input").forEach(input => {
+    input.addEventListener("input", () => {
+      saveDraft();
+      updateVolume();
+    });
+  });
+  container.querySelectorAll(".start-rest-btn").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      const row = e.target.parentElement;
+      const restInput = row.querySelector(".rest-edit");
+      const customTime = restInput ? Number(restInput.value) : 60;
+      const ex = e.target.dataset.ex;
+      const set = e.target.dataset.set;
+      startRestTimer(ex, set, customTime);
+    });
+  });
 }
 
 // Function to update exercise names dynamically
