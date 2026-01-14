@@ -181,6 +181,10 @@ client.auth.onAuthStateChange(async (event, session) => {
       else notify("FEHLER BEIM ÄNDERN: " + error.message, "error");
     }
   }
+
+  // Prevent re-init on token refresh (Avoids UI reset on screen off/on)
+  if (event === "TOKEN_REFRESHED") return;
+
   handleAuthState();
 });
 
@@ -308,10 +312,15 @@ function showPage(pageId) {
       const savedDraft = JSON.parse(localStorage.getItem("workout_draft"));
       const contentArea = document.getElementById("content-area");
 
+      // CLEANUP: Remove any existing resume buttons to prevent duplicates
+      const existingBtn = document.getElementById("resume-session-btn");
+      if (existingBtn) existingBtn.remove();
+
       if (savedDraft && savedDraft.workout && contentArea.innerHTML === "") {
         const w = availableWorkouts.find(x => x.id === savedDraft.workout);
         if (w) {
           const resumeBtn = document.createElement("button");
+          resumeBtn.id = "resume-session-btn";
           resumeBtn.className = "important-btn"; // Use a prominent class or style
           resumeBtn.style.cssText = "width: 100%; margin-bottom: 20px; padding: 15px; border: 2px dashed var(--primary-color); background: rgba(0, 255, 65, 0.1); animation: terminalPulse 2s infinite; font-weight: bold; font-size: 1.1rem; color: var(--primary-color); cursor: pointer;";
           resumeBtn.innerHTML = `> SESSION FORTSETZEN: ${w.name.toUpperCase()}`;
@@ -1735,5 +1744,3 @@ window.toggleHistory = (id, headerElement) => {
 };
 
 handleAuthState();
-
-
