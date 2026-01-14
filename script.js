@@ -987,10 +987,12 @@ async function loadWorkout(draftData = null) {
 
       // Edit Button
       const editBtn = document.createElement("button");
-      editBtn.innerHTML = "📝";
+      editBtn.textContent = "BEARBEITEN";
       editBtn.className = "secondary";
       editBtn.style.padding = "2px 6px";
-      editBtn.style.fontSize = "0.8rem";
+      editBtn.style.fontSize = "0.6rem";
+      editBtn.style.fontWeight = "bold";
+      editBtn.style.letterSpacing = "1px";
       editBtn.onclick = () => toggleEditMode(card);
 
       controls.appendChild(editBtn);
@@ -1091,10 +1093,12 @@ async function loadWorkout(draftData = null) {
 
       const controls = document.createElement("div");
       const editBtn = document.createElement("button");
-      editBtn.innerHTML = "📝";
+      editBtn.textContent = "BEARBEITEN";
       editBtn.className = "secondary";
       editBtn.style.padding = "2px 6px";
-      editBtn.style.fontSize = "0.8rem";
+      editBtn.style.fontSize = "0.6rem";
+      editBtn.style.fontWeight = "bold";
+      editBtn.style.letterSpacing = "1px";
       editBtn.onclick = () => toggleEditMode(card);
       controls.appendChild(editBtn);
       headerRow.appendChild(titleInput);
