@@ -155,6 +155,8 @@ let restTimeLeft = 0;
 
 // ---------------- AUTH LOGIC ----------------
 
+// ---------------- AUTH LOGIC ----------------
+
 async function handleAuthState() {
   const { data: { session } } = await client.auth.getSession();
   if (session) {
@@ -165,11 +167,56 @@ async function handleAuthState() {
     init(); // Load Data
     showPage("home");
 
-
   } else {
+    // Show Landing Hero first on Logout / Init
     authOverlay.style.display = "flex";
     mainApp.style.display = "none";
+    showLandingHero();
   }
+}
+
+// Landing / Auth Flow
+const landingHero = document.getElementById("landing-hero");
+const authCard = document.getElementById("auth-card");
+const initSystemBtn = document.getElementById("init-system-btn");
+
+function showLandingHero() {
+  if (landingHero) landingHero.style.display = "flex";
+  if (authCard) authCard.style.display = "none";
+}
+
+if (initSystemBtn) {
+  initSystemBtn.addEventListener("click", () => {
+    // Play cool sound effect if possible (later)
+    landingHero.style.display = "none";
+    authCard.style.display = "block";
+  });
+}
+
+// Legal Modal
+const legalModal = document.getElementById("legal-modal");
+const openLegalBtn = document.getElementById("open-legal-modal");
+const closeLegalBtn = document.getElementById("close-legal-modal");
+const acceptLegalBtn = document.getElementById("accept-legal-btn");
+const regConsent = document.getElementById("reg-consent");
+
+if (openLegalBtn) {
+  openLegalBtn.addEventListener("click", () => {
+    legalModal.style.display = "flex";
+  });
+}
+
+function closeLegal() {
+  legalModal.style.display = "none";
+}
+
+if (closeLegalBtn) closeLegalBtn.addEventListener("click", closeLegal);
+
+if (acceptLegalBtn) {
+  acceptLegalBtn.addEventListener("click", () => {
+    if (regConsent) regConsent.checked = true;
+    closeLegal();
+  });
 }
 
 client.auth.onAuthStateChange(async (event, session) => {
@@ -189,7 +236,6 @@ client.auth.onAuthStateChange(async (event, session) => {
 });
 
 // Auth Listeners
-// Auth Listeners
 document.getElementById("login-btn").addEventListener("click", async (e) => {
   const btn = e.target;
   if (btn.disabled) return;
@@ -198,15 +244,15 @@ document.getElementById("login-btn").addEventListener("click", async (e) => {
   const password = document.getElementById("password").value;
 
   btn.disabled = true;
-  btn.textContent = "LÄDT...";
+  btn.textContent = "VERIFIZIERE...";
 
   try {
     const { error } = await client.auth.signInWithPassword({ email, password });
-    if (error) notify("FEHLER: " + error.message, "error");
+    if (error) notify("ZUGRIFF VERWEIGERT: " + error.message, "error");
   } finally {
     setTimeout(() => {
       btn.disabled = false;
-      btn.textContent = "ANMELDEN";
+      btn.textContent = "ACCESS_TERMINAL";
     }, 500);
   }
 });
@@ -231,7 +277,7 @@ document.getElementById("forgot-password-link").addEventListener("click", async 
 
   setTimeout(() => {
     link.style.pointerEvents = "auto";
-    link.textContent = "PASSWORT VERGESSEN?";
+    link.textContent = "CODE VERGESSEN?";
   }, 2000);
 });
 
@@ -243,10 +289,10 @@ document.getElementById("register-btn").addEventListener("click", async (e) => {
   const password = document.getElementById("reg-password").value;
   const consent = document.getElementById("reg-consent").checked;
 
-  if (!consent) return notify("BITTE DATENSCHUTZ AKZEPTIEREN", "error");
+  if (!consent) return notify("PROTOKOLL NICHT AKZEPTIERT", "error");
 
   btn.disabled = true;
-  btn.textContent = "ERSTELLE...";
+  btn.textContent = "REGISTRIERE...";
 
   try {
     const { error } = await client.auth.signUp({ email, password });
@@ -254,7 +300,7 @@ document.getElementById("register-btn").addEventListener("click", async (e) => {
     else notify("REGISTRIERUNG ERFOLGREICH");
   } finally {
     btn.disabled = false;
-    btn.textContent = "KONTO ERSTELLEN";
+    btn.textContent = "REGISTER_PERSONNEL";
   }
 });
 
@@ -263,6 +309,7 @@ document.getElementById("logout-btn").addEventListener("click", async () => {
   setTimeout(async () => {
     await client.auth.signOut();
     document.body.classList.remove("crt-off");
+    showLandingHero(); // Ensure we go back to hero
   }, 600);
 });
 
@@ -271,14 +318,14 @@ document.getElementById("show-register").addEventListener("click", (e) => {
   e.preventDefault();
   document.getElementById("login-form").style.display = "none";
   document.getElementById("register-form").style.display = "block";
-  document.getElementById("auth-title").textContent = "NEU REGISTRIEREN";
+  document.getElementById("auth-title").textContent = "NEW_ENTRY";
 });
 
 document.getElementById("show-login").addEventListener("click", (e) => {
   e.preventDefault();
   document.getElementById("login-form").style.display = "block";
   document.getElementById("register-form").style.display = "none";
-  document.getElementById("auth-title").textContent = "ANMELDUNG";
+  document.getElementById("auth-title").textContent = "PERSONNEL_LOGIN";
 });
 
 // ---------------- NAVIGATION ----------------

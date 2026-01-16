@@ -16,40 +16,116 @@
 </head>
 
 <body>
-    <!-- AUTHENTIFIZIERUNG -->
+    <!-- LANDING & AUTH SYSTEM -->
     <div id="auth-overlay" class="overlay">
-        <div class="auth-card">
-            <h1 id="auth-title">FITNESS_LOGIN</h1>
+
+        <!-- HERO / WELCOME SCREEN -->
+        <div id="landing-hero" class="landing-content">
+            <div class="weyland-brand">
+                <div class="brand-logo">W-Y</div>
+                <h1 class="brand-title">WEYLAND-YUTANI</h1>
+                <div class="brand-slogan">BUILDING BETTER WORLDS</div>
+            </div>
+
+            <div class="terminal-loader">
+                <div class="msg">SYSTEM_STATUS: <span class="blink">STANDBY</span></div>
+                <div class="msg">CRITICAL_PROTOCOLS: <span class="ok">LOADED</span></div>
+            </div>
+
+            <button id="init-system-btn" class="mega-btn">
+                <span class="btn-text">INITIALIZE_INTERFACE</span>
+                <span class="btn-decor">>></span>
+            </button>
+        </div>
+
+        <!-- LOGIN / REGISTER CARD (Hidden initially) -->
+        <div id="auth-card" class="auth-card" style="display: none;">
+            <div class="auth-header">
+                <div class="logo-small">W-Y CORP</div>
+                <h2 id="auth-title">PERSONNEL_LOGIN</h2>
+            </div>
+
             <div id="login-form">
-                <input type="email" id="email" placeholder="EMAIL-ADRESSE" autocomplete="email">
-                <input type="password" id="password" placeholder="PASSWORT" autocomplete="current-password">
-                <button id="login-btn">ANMELDEN</button>
-                <div style="margin-top: 10px; font-size: 0.7rem; text-align: center;">
-                    <a href="#" id="forgot-password-link" style="color: var(--text-muted);">PASSWORT VERGESSEN?</a>
+                <div class="input-group">
+                    <label>IDENTIFICATION</label>
+                    <input type="email" id="email" placeholder="USER.ID@CORP.NET" autocomplete="email">
                 </div>
-                <div style="margin-top: 20px; font-size: 0.75rem; text-align: center;">
-                    KEIN ZUGANG? <a href="#" id="show-register" style="color: var(--primary-color);">REGISTRIEREN</a>
+                <div class="input-group">
+                    <label>SECURITY_CODE</label>
+                    <input type="password" id="password" placeholder="••••••••" autocomplete="current-password">
+                </div>
+
+                <button id="login-btn">ACCESS_TERMINAL</button>
+
+                <div class="auth-links">
+                    <a href="#" id="forgot-password-link">CODE VERGESSEN?</a>
+                </div>
+
+                <div class="auth-footer">
+                    NO CLEARANCE? <a href="#" id="show-register" class="action-link">REQUEST ACCESS</a>
                 </div>
             </div>
-            <div id="register-form" style="display: none;">
-                <input type="email" id="reg-email" placeholder="EMAIL-ADRESSE">
-                <input type="password" id="reg-password" placeholder="PASSWORT">
 
-                <div
-                    style="display:flex; gap:10px; align-items:start; margin: 10px 0; font-size: 0.65rem; color: var(--text-muted); text-align: left;">
-                    <input type="checkbox" id="reg-consent" style="width:auto; margin-top:2px;">
-                    <label for="reg-consent" style="line-height:1.2;">
-                        Ich stimme der Speicherung meiner Trainingsdaten gemäß der <span class="nav-item"
-                            data-page="info"
-                            style="text-decoration:underline; cursor:pointer; color:var(--primary-color);">Datenschutzerklärung</span>
-                        zu.
+            <div id="register-form" style="display: none;">
+                <div class="input-group">
+                    <label>NEW_DESIGNATION</label>
+                    <input type="email" id="reg-email" placeholder="EMAIL_ADDRESS">
+                </div>
+                <div class="input-group">
+                    <label>SET_SECURITY_CODE</label>
+                    <input type="password" id="reg-password" placeholder="PASSWORD">
+                </div>
+
+                <div class="consent-box">
+                    <input type="checkbox" id="reg-consent">
+                    <label for="reg-consent">
+                        Ich bestätige die <span id="open-legal-modal" class="link">Datenschutz-Protokolle</span>
+                        und stimme der Verarbeitung meiner biometrischen Daten zu.
                     </label>
                 </div>
 
-                <button id="register-btn">KONTO ERSTELLEN</button>
-                <div style="margin-top: 20px; font-size: 0.75rem; text-align: center;">
-                    VORHANDEN? <a href="#" id="show-login" style="color: var(--primary-color);">LOGIN</a>
+                <button id="register-btn">REGISTER_PERSONNEL</button>
+
+                <div class="auth-footer">
+                    HAS ID? <a href="#" id="show-login" class="action-link">LOGIN</a>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LEGAL MODAL (Overlay for Privacy Policy) -->
+    <div id="legal-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>DATENSCHUTZ_PROTOKOLLE</h3>
+                <button id="close-legal-modal" class="close-btn">X</button>
+            </div>
+            <div class="modal-body">
+                <p class="subtitle">DATENSCHUTZ (DSGVO / GDPR)</p>
+                <div class="legal-text">
+                    <strong>1. ZWECK & DATENARTEN</strong><br>
+                    Zur Bereitstellung des digitalen Trainingstagebuchs speichern wir:<br>
+                    - Authentifizierungsdaten (E-Mail, verschl. Passwort via Supabase)<br>
+                    - Nutzergenerierte Inhalte (Trainingspläne, Leistungswerte, Zeitstempel)<br>
+                    Es erfolgt keine Weitergabe an Dritte oder Nutzung für Werbung.<br><br>
+
+                    <strong>2. SPEICHERDAUER</strong><br>
+                    Daten bleiben gespeichert, solange dein Nutzerkonto existiert. Logs können durch dich im "Verlauf"
+                    einzeln permanent gelöscht werden.<br><br>
+
+                    <strong>3. DEINE RECHTE (ART. 15-20 DSGVO)</strong><br>
+                    Du hast jederzeit das Recht auf:<br>
+                    - Auskunft über deine gespeicherten Daten<br>
+                    - Korrektur falscher Daten<br>
+                    - Vollständige Löschung (Kontoauflösung: Bitte E-Mail an Support)<br>
+                    - Export deiner Daten (CSV-Export Funktion im Verlauf)<br><br>
+
+                    <strong>4. HOSTING MIT SUPABASE</strong><br>
+                    Backend-Dienste werden durch Supabase Inc. bereitgestellt. Serverstandort: EU (Frankfurt/AWS) soweit
+                    technisch möglich, ansonsten unter Einhaltung von Standardvertragsklauseln.
+                </div>
+                <button id="accept-legal-btn" class="secondary" style="margin-top:20px;">PROTOKOLL AKZEPTIEREN &
+                    SCHLIESSEN</button>
             </div>
         </div>
     </div>

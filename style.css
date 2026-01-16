@@ -1060,3 +1060,318 @@ button,
         height: 1px;
     }
 }
+
+/* --- LANDING & AUTH STYLES --- */
+
+/* Landing Hero Section */
+#landing-hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    width: 100%;
+    text-align: center;
+    padding: 20px;
+    animation: fadeIn 1s ease-out;
+}
+
+.weyland-brand {
+    margin-bottom: 40px;
+    animation: terminalPulse 3s infinite alternate;
+}
+
+.brand-logo {
+    font-size: 3rem;
+    font-weight: bold;
+    border: 4px solid var(--primary-color);
+    width: 100px;
+    height: 100px;
+    line-height: 90px;
+    margin: 0 auto 15px;
+    border-radius: 5px;
+    box-shadow: 0 0 20px rgba(0, 255, 65, 0.2);
+}
+
+.brand-title {
+    font-size: 1.8rem;
+    letter-spacing: 4px;
+    margin-bottom: 5px;
+    text-shadow: 0 0 10px var(--primary-color);
+}
+
+.brand-slogan {
+    font-size: 0.8rem;
+    letter-spacing: 2px;
+    color: var(--text-muted);
+}
+
+.terminal-loader {
+    font-size: 0.7rem;
+    text-align: left;
+    margin-bottom: 40px;
+    border-left: 1px solid var(--secondary-color);
+    padding-left: 10px;
+}
+
+.terminal-loader .msg {
+    margin-bottom: 4px;
+    color: var(--text-muted);
+}
+
+.terminal-loader .ok {
+    color: var(--primary-color);
+    font-weight: bold;
+}
+
+.blink {
+    animation: blink 1s infinite step-end;
+}
+
+@keyframes blink {
+    50% {
+        opacity: 0;
+    }
+}
+
+.mega-btn {
+    border: 2px solid var(--primary-color);
+    background: transparent;
+    padding: 20px 40px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    max-width: 300px;
+    letter-spacing: 2px;
+    box-shadow: 0 0 15px rgba(0, 255, 65, 0.1);
+}
+
+.mega-btn:hover {
+    background: var(--primary-color);
+    color: #000;
+    box-shadow: 0 0 30px rgba(0, 255, 65, 0.4);
+}
+
+.mega-btn .btn-decor {
+    position: absolute;
+    right: 15px;
+    animation: slideRight 1s infinite ease-in-out;
+}
+
+@keyframes slideRight {
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    50% {
+        transform: translateX(5px);
+    }
+}
+
+/* Auth Card Refinement */
+.auth-card {
+    background: rgba(0, 10, 0, 0.95);
+    border: 1px solid var(--primary-color);
+    padding: 30px;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.9);
+    position: relative;
+    animation: scanOpen 0.5s ease-out forwards;
+}
+
+@keyframes scanOpen {
+    from {
+        transform: scaleY(0);
+        opacity: 0;
+    }
+
+    to {
+        transform: scaleY(1);
+        opacity: 1;
+    }
+}
+
+.auth-header {
+    text-align: center;
+    margin-bottom: 30px;
+    border-bottom: 2px solid var(--secondary-color);
+    padding-bottom: 15px;
+}
+
+.logo-small {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    letter-spacing: 2px;
+    margin-bottom: 5px;
+}
+
+#auth-title {
+    font-size: 1.2rem;
+    color: var(--primary-color);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.input-group {
+    margin-bottom: 15px;
+}
+
+.input-group label {
+    display: block;
+    font-size: 0.6rem;
+    color: var(--text-muted);
+    margin-bottom: 5px;
+    text-align: left;
+    padding-left: 2px;
+}
+
+.auth-links {
+    margin-top: 15px;
+    text-align: center;
+    font-size: 0.7rem;
+}
+
+.auth-footer {
+    margin-top: 30px;
+    text-align: center;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    border-top: 1px dashed var(--secondary-color);
+    padding-top: 15px;
+}
+
+.action-link {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: bold;
+    border-bottom: 1px solid transparent;
+    transition: border 0.3s;
+}
+
+.action-link:hover {
+    border-bottom: 1px solid var(--primary-color);
+}
+
+/* Consent Checkbox Styling */
+.consent-box {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin: 20px 0;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    text-align: left;
+    background: rgba(0, 59, 0, 0.1);
+    padding: 10px;
+    border: 1px solid var(--secondary-color);
+}
+
+.consent-box input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    margin: 0;
+    flex-shrink: 0;
+    background: transparent !important;
+    border: 1px solid var(--primary-color);
+    appearance: none;
+    -webkit-appearance: none;
+    position: relative;
+    cursor: pointer;
+}
+
+.consent-box input[type="checkbox"]:checked {
+    background: var(--primary-color) !important;
+}
+
+.consent-box input[type="checkbox"]:checked::after {
+    content: 'X';
+    color: #000;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.link {
+    color: var(--primary-color);
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+/* LEGAL MODAL */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
+    z-index: 20000;
+    /* Higher than Auth Overlay */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    animation: fadeIn 0.3s;
+}
+
+.modal-content {
+    background: #000;
+    border: 1px solid var(--primary-color);
+    border-top: 4px solid var(--primary-color);
+    width: 100%;
+    max-width: 600px;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 0 50px rgba(0, 59, 0, 0.8);
+}
+
+.modal-header {
+    padding: 15px;
+    border-bottom: 1px solid var(--text-muted);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(0, 59, 0, 0.2);
+}
+
+.modal-header h3 {
+    font-size: 1rem;
+    color: var(--primary-color);
+    margin: 0;
+}
+
+.close-btn {
+    background: transparent;
+    border: 1px solid var(--error-color);
+    color: var(--error-color);
+    font-size: 1rem;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.modal-body {
+    padding: 20px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.legal-text {
+    font-size: 0.75rem;
+    line-height: 1.5;
+    color: var(--text-muted);
+}
