@@ -1003,14 +1003,52 @@ async function loadWorkout(draftData = null) {
     }
   }
 
+  // --- RESTORE DRAFT STATE ---
+  const renames = draftData?.renames || {};
+  const customExercises = draftData?.customExercises || [];
+
+  // Merge Custom Exercises from Draft into the plan to be rendered
+  const combinedPlan = [...exercisesInWorkout];
+
+  if (customExercises.length > 0) {
+    customExercises.forEach(c => {
+      combinedPlan.push({
+        exercise: c.name, // This is the preserved name
+        originalName: c.originalName || c.name,
+        sets: c.sets,
+        reps: 0, // Mock
+        weight: 0,
+        rest_time: c.rest_time || 60,
+        is_cardio: c.is_cardio,
+        is_dynamic: true
+      });
+    });
+  }
+
   try {
-    exercisesInWorkout.forEach((ex) => {
-      if (!ex.exercise) return;
+    combinedPlan.forEach((ex) => {
+      // Determine Display Name and Original Name
+      const originalName = ex.originalName || ex.exercise;
+      let displayName = ex.exercise;
+
+      // Apply Renames if applicable
+      if (!ex.is_dynamic && renames[originalName]) {
+        displayName = renames[originalName];
+      }
+      // If dynamic, ex.exercise is already the current name from draft (c.name)
+
+      if (!originalName) return;
 
       const card = document.createElement("div");
       card.className = "exercise-card";
-      card.dataset.exerciseName = ex.exercise; // Helper for updates
-      const lastLogs = getLastExerciseLogs(ex.exercise, workoutId);
+      card.dataset.originalName = originalName;
+      if (ex.is_dynamic) card.dataset.isDynamic = "true";
+
+      // Using displayName for matching logs and saving entries
+      const effectiveName = displayName; // This is what we use for data-ex
+      card.dataset.exerciseName = effectiveName;
+
+      const lastLogs = getLastExerciseLogs(effectiveName, workoutId);
 
       // Header with Edit Toggle
       const headerRow = document.createElement("div");
@@ -1022,9 +1060,10 @@ async function loadWorkout(draftData = null) {
       const titleInput = document.createElement("input");
       titleInput.type = "text";
       titleInput.className = "ex-title-edit";
-      titleInput.value = ex.exercise.toUpperCase();
+      titleInput.value = displayName.toUpperCase();
       titleInput.style.cssText = "font-weight:bold; color:var(--primary-color); background:transparent; border:none; width:70%; font-size:1rem;";
-      titleInput.onchange = (e) => updateExerciseName(e.target, ex.exercise);
+      // When renaming, we update the UI logic
+      titleInput.onchange = (e) => updateExerciseName(e.target, originalName);
 
       // Control Group (Cardio Toggle + Edit Btn)
       const controls = document.createElement("div");
@@ -1050,7 +1089,7 @@ async function loadWorkout(draftData = null) {
       // Info Row
       const infoRow = document.createElement("div");
       infoRow.className = "exercise-info";
-      infoRow.innerHTML = `ZIEL: ${ex.sets} SÄTZE | ${ex.is_cardio ? 'DAUER' : 'WDH'}: ${ex.is_cardio ? (ex.reps || "0") + " KCAL" : (ex.reps || "--")}`;
+      infoRow.innerHTML = ex.is_dynamic ? "ZUSATZ-ÜBUNG" : `ZIEL: ${ex.sets} SÄTZE | ${ex.is_cardio ? 'DAUER' : 'WDH'}: ${ex.is_cardio ? (ex.reps || "0") + " KCAL" : (ex.reps || "--")}`;
       card.appendChild(infoRow);
 
       const logRow = document.createElement("div");
@@ -1062,15 +1101,38 @@ async function loadWorkout(draftData = null) {
       const setsWrapper = document.createElement("div");
       setsWrapper.className = "sets-wrapper";
 
-      // Render Initial Sets
-      for (let i = 1; i <= ex.sets; i++) {
-        const draft = draftEntries?.find(d => d.ex === ex.exercise && d.set === i);
+      // Render Sets (Use Draft count if available, else Plan count)
+      // For dynamic exercises, plan count comes from customExercises (saved state)
+      // For regular, use plan count (ex.sets)
+      const targetSets = ex.sets;
+
+      // Check if we have MORE sets in draft entries than plan?
+      // Only if we want to restore added sets.
+      // Easiest is to scan draftEntries for max set number for this exercise.
+      let maxSetMap = 0;
+      if (draftEntries) {
+        const related = draftEntries.filter(d => d.ex === effectiveName);
+        if (related.length > 0) {
+          maxSetMap = Math.max(...related.map(r => r.set));
+        }
+      }
+      const setsToRender = Math.max(targetSets, maxSetMap);
+
+      for (let i = 1; i <= setsToRender; i++) {
+        const draft = draftEntries?.find(d => d.ex === effectiveName && d.set === i);
         // Use Draft weight OR Template weight OR empty
         let defWeight = "";
-        if (draft) defWeight = draft.weight;
-        else if (lastLogs === "KEINE DATEN" && ex.weight) defWeight = ex.weight;
+        let defReps = "";
 
-        const setRow = createSetRow(i, ex.exercise, ex.is_cardio, defWeight, draft ? draft.reps : "", ex.rest_time || 60);
+        if (draft) {
+          defWeight = draft.weight;
+          defReps = draft.reps;
+        } else if (lastLogs === "KEINE DATEN" && ex.weight && !ex.is_dynamic) {
+          // Only autofill target weight if no history and not dynamic
+          defWeight = ex.weight;
+        }
+
+        const setRow = createSetRow(i, effectiveName, ex.is_cardio, defWeight, defReps, ex.rest_time || 60);
         setsWrapper.appendChild(setRow);
       }
       card.appendChild(setsWrapper);
@@ -1124,6 +1186,8 @@ async function loadWorkout(draftData = null) {
 
       const card = document.createElement("div");
       card.className = "exercise-card";
+      card.dataset.isDynamic = "true";
+      card.dataset.originalName = mockEx.exercise;
 
       // Header
       const headerRow = document.createElement("div");
@@ -1179,6 +1243,7 @@ async function loadWorkout(draftData = null) {
 
       contentArea.insertBefore(card, addExContainer);
       attachInputListeners(card); // Attach to all new inputs
+      saveDraft(); // Trigger immediate save
     };
     addExContainer.appendChild(addExBtn);
     contentArea.appendChild(addExContainer);
@@ -1431,10 +1496,47 @@ function startTimer(reset = true, savedStartTime = null) {
 
 function saveDraft() {
   const entries = [];
+  const renames = {};
+  const customExercises = [];
+
+  document.querySelectorAll(".exercise-card").forEach(card => {
+    // 1. Capture Renames
+    const titleInput = card.querySelector(".ex-title-edit");
+    if (titleInput) {
+      const currentName = titleInput.value.trim().toUpperCase();
+      const originalName = card.dataset.originalName;
+      const isDynamic = card.dataset.isDynamic === "true";
+
+      if (isDynamic) {
+        // Collect Custom Exercise Data to re-instantiate it
+        const setsCount = card.querySelectorAll(".set-row").length;
+        // Determine isCardio from first row (fallback to false)
+        const firstRowInput = card.querySelector(".set-row input.weight");
+        const isCardio = firstRowInput ? firstRowInput.dataset.iscardio === "true" : false;
+
+        customExercises.push({
+          name: currentName, // Use current name as the key
+          originalName: originalName,
+          sets: setsCount,
+          is_cardio: isCardio,
+          rest_time: 60 // Default or scrape if needed, but not critical
+        });
+      } else {
+        // Regular Plan Exercise
+        if (originalName && currentName !== originalName) {
+          renames[originalName] = currentName;
+        }
+      }
+    }
+  });
+
   document.querySelectorAll(".exercise-card .set-row").forEach(row => {
     const w = row.querySelector(".weight");
     const r = row.querySelector(".reps");
-    if (w.value || r.value) {
+    // Save even if empty to preserve structure if needed, but filtering empty is cleaner usually.
+    // User wants "ALL" state. So maybe even empty rows? 
+    // Let's stick to values for now, but ensure we save enough to rebuild.
+    if (w && r) {
       entries.push({
         ex: w.dataset.ex,
         set: Number(w.dataset.set || 1),
@@ -1448,6 +1550,8 @@ function saveDraft() {
   const draftData = {
     workout: workoutSelect.value,
     entries,
+    renames,
+    customExercises,
     startTime: workoutStartTime,
     lastModified: Date.now()
   };

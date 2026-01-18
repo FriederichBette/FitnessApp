@@ -1,6 +1,6 @@
 {
-    "name": "WEYLAND FITNESS",
-    "short_name": "WEYLAND",
+    "name": "PERFORMANCE HUB",
+    "short_name": "TRACKER",
     "start_url": "/index.html",
     "display": "standalone",
     "background_color": "#000000",
