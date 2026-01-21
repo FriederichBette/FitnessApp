@@ -79,7 +79,7 @@ function initPenguin() {
   }, 4000);
 
   const messages = [
-    "Trink Wasser nicht vergessen!", "Du schaffst das!",
+    "Trink Wasser!", "Du schaffst das!",
     "Geiler Typ!", "Maschine!", "Bleib dran!",
     "Starkes Set!", "Sauber!", "Weiter so!",
     "Top Leistung!", "Gönn dir Wasser!"
