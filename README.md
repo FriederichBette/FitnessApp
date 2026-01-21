@@ -1,4 +1,4 @@
-# WEYLAND-YUTANI FITNESS TRACKER
+# Fitness Tracker
 
 ## Project Overview
 This application is a progressive overload fitness tracker with a "Retro Sci-Fi" interface designed for mobile web use. It focuses on efficiency, allowing users to track weights, reps, and rest times with minimal friction. The "Alien Terminal" aesthetic distinguishes it from standard fitness apps, offering an immersive experience.
