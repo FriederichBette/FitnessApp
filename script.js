@@ -1559,9 +1559,20 @@ function saveDraft() {
 }
 
 // Global Auto-Save on Visibility Change (Mobile Screen Off)
-document.addEventListener("visibilitychange", () => {
+// Global Auto-Save on Visibility Change (Mobile Screen Off)
+document.addEventListener("visibilitychange", async () => {
   if (document.visibilityState === "hidden") {
     saveDraft();
+  } else if (document.visibilityState === "visible") {
+    // Re-acquire Wake Lock if it was active
+    if (wakeLockBtn && wakeLockBtn.textContent === "BILDSCHIRM: IMMER AN" && !wakeLock) {
+      try {
+        wakeLock = await navigator.wakeLock.request('screen');
+        console.log("Wake Lock re-acquired");
+      } catch (err) {
+        console.log("Wake Lock re-acquire failed", err);
+      }
+    }
   }
 });
 
@@ -1683,6 +1694,61 @@ document.getElementById("save-intermediate-btn")?.addEventListener("click", () =
   btn.textContent = "GESPEICHERT!";
   setTimeout(() => btn.textContent = "ZWISCHENSPEICHERN", 1000);
 });
+
+// --- WAKE LOCK (SCREEN KEEP ALIVE) ---
+let wakeLock = null;
+const wakeLockBtn = document.getElementById("wake-lock-btn");
+
+if (wakeLockBtn) {
+  wakeLockBtn.addEventListener("click", toggleWakeLock);
+}
+
+async function toggleWakeLock() {
+  if (wakeLock) {
+    try {
+      await wakeLock.release();
+      wakeLock = null;
+    } catch (err) {
+      console.error(err);
+    }
+    updateWakeLockUI(false);
+    notify("BILDSCHIRM-SPERRE: AKTIV (NORMAL)");
+  } else {
+    try {
+      wakeLock = await navigator.wakeLock.request('screen');
+      wakeLock.addEventListener('release', () => {
+        console.log('Wake Lock released');
+        if (wakeLock !== null) {
+          // It was released by system, but our state thinks it's on?
+          // Usually we set wakeLock = null manually.
+          // If system releases it (e.g. tab switch), we will re-acquire on visibility change.
+        }
+      });
+      updateWakeLockUI(true);
+      notify("BILDSCHIRM BLEIBT AN");
+    } catch (err) {
+      notify("FEHLER: " + err.message, "error");
+      updateWakeLockUI(false);
+    }
+  }
+}
+
+function updateWakeLockUI(active) {
+  if (!wakeLockBtn) return;
+  if (active) {
+    wakeLockBtn.textContent = "BILDSCHIRM: IMMER AN";
+    wakeLockBtn.style.borderStyle = "solid";
+    wakeLockBtn.style.borderColor = "var(--primary-color)";
+    wakeLockBtn.style.color = "var(--primary-color)";
+    wakeLockBtn.style.boxShadow = "0 0 10px var(--primary-color)";
+  } else {
+    wakeLockBtn.textContent = "BILDSCHIRM: NORMAL";
+    wakeLockBtn.style.borderStyle = "dotted";
+    wakeLockBtn.style.borderColor = "var(--text-muted)";
+    wakeLockBtn.style.color = "var(--text-muted)";
+    wakeLockBtn.style.boxShadow = "none";
+  }
+}
 
 function renderHistory() {
   const historyList = document.getElementById("history-list");
