@@ -355,32 +355,7 @@ function showPage(pageId) {
       populateRoutineSelect();
       populateWorkoutSelect();
 
-      // Inject Resume Button if Draft Exists and we are NOT already showing a workout
-      const savedDraft = JSON.parse(localStorage.getItem("workout_draft"));
-      const contentArea = document.getElementById("content-area");
 
-      // CLEANUP: Remove any existing resume buttons to prevent duplicates
-      const existingBtn = document.getElementById("resume-session-btn");
-      if (existingBtn) existingBtn.remove();
-
-      if (savedDraft && savedDraft.workout && contentArea.innerHTML === "") {
-        const w = availableWorkouts.find(x => x.id === savedDraft.workout);
-        if (w) {
-          const resumeBtn = document.createElement("button");
-          resumeBtn.id = "resume-session-btn";
-          resumeBtn.className = "important-btn"; // Use a prominent class or style
-          resumeBtn.style.cssText = "width: 100%; margin-bottom: 20px; padding: 15px; border: 2px dashed var(--primary-color); background: rgba(0, 255, 65, 0.1); animation: terminalPulse 2s infinite; font-weight: bold; font-size: 1.1rem; color: var(--primary-color); cursor: pointer;";
-          resumeBtn.innerHTML = `> SESSION FORTSETZEN: ${w.name.toUpperCase()}`;
-          resumeBtn.onclick = () => {
-            workoutSelect.value = savedDraft.workout;
-            loadWorkout(savedDraft);
-          };
-
-          // Insert at the top of the selection area
-          const hint = document.getElementById("next-workout-hint");
-          if (hint) hint.parentNode.insertBefore(resumeBtn, hint.nextSibling);
-        }
-      }
     });
   }
   if (pageId === "history") renderHistory();
@@ -787,12 +762,18 @@ async function init() {
     if (savedDraft && savedDraft.workout) {
       const w = availableWorkouts.find(x => x.id === savedDraft.workout);
       if (w) {
-        // Note: Auto-Resume removed per user feedback ("komisch")
-        // We relies solely on the Resume Button in showPage("home")
+        // AUTO-RESUME IMPLEMENTATION
+        if (w.routine_name) routineSelect.value = w.routine_name;
+        populateWorkoutSelect();
+        workoutSelect.value = savedDraft.workout;
+
+        await loadWorkout(savedDraft);
+        notify("SESSION AUTOMATICALLY RESTORED");
+        return; // Skip normal flow suggestion
       }
     }
 
-    // Normal Flow
+    // Normal Flow (Only if no resume)
     if (logs.length > 0) {
       const lastW = availableWorkouts.find(w => w.id == logs[0].workout);
       if (lastW) routineSelect.value = lastW.routine_name;
@@ -1280,8 +1261,9 @@ async function loadWorkout(draftData = null) {
   updateVolume();
 
   // Restore Timer if draft exists
-  if (draftEntries && draftEntries.startTime) {
-    startTimer(false, draftEntries.startTime);
+  if (draftData && draftData.startTime) {
+    startTimer(false, draftData.startTime);
+    notify("SESSION RESTORED (TIME SYNCED)");
   } else {
     startTimer(true);
   }
@@ -1494,68 +1476,79 @@ function startTimer(reset = true, savedStartTime = null) {
   }, 1000);
 }
 
-function saveDraft() {
-  const entries = [];
-  const renames = {};
-  const customExercises = [];
+// GUARD: Do not save if there are no exercises (prevents overwriting draft on load/idle)
+const cards = document.querySelectorAll(".exercise-card");
+if (cards.length === 0) return;
 
-  document.querySelectorAll(".exercise-card").forEach(card => {
-    // 1. Capture Renames
-    const titleInput = card.querySelector(".ex-title-edit");
-    if (titleInput) {
-      const currentName = titleInput.value.trim().toUpperCase();
-      const originalName = card.dataset.originalName;
-      const isDynamic = card.dataset.isDynamic === "true";
+const entries = [];
+const renames = {};
+const customExercises = [];
 
-      if (isDynamic) {
-        // Collect Custom Exercise Data to re-instantiate it
-        const setsCount = card.querySelectorAll(".set-row").length;
-        // Determine isCardio from first row (fallback to false)
-        const firstRowInput = card.querySelector(".set-row input.weight");
-        const isCardio = firstRowInput ? firstRowInput.dataset.iscardio === "true" : false;
+cards.forEach(card => {
+  // 1. Capture Renames
+  const titleInput = card.querySelector(".ex-title-edit");
+  if (titleInput) {
+    const currentName = titleInput.value.trim().toUpperCase();
+    const originalName = card.dataset.originalName;
+    const isDynamic = card.dataset.isDynamic === "true";
 
-        customExercises.push({
-          name: currentName, // Use current name as the key
-          originalName: originalName,
-          sets: setsCount,
-          is_cardio: isCardio,
-          rest_time: 60 // Default or scrape if needed, but not critical
-        });
-      } else {
-        // Regular Plan Exercise
-        if (originalName && currentName !== originalName) {
-          renames[originalName] = currentName;
-        }
+    if (isDynamic) {
+      // Collect Custom Exercise Data to re-instantiate it
+      const setsCount = card.querySelectorAll(".set-row").length;
+      // Determine isCardio from first row (fallback to false)
+      const firstRowInput = card.querySelector(".set-row input.weight");
+      const isCardio = firstRowInput ? firstRowInput.dataset.iscardio === "true" : false;
+
+      customExercises.push({
+        name: currentName, // Use current name as the key
+        originalName: originalName,
+        sets: setsCount,
+        is_cardio: isCardio,
+        rest_time: 60 // Default or scrape if needed, but not critical
+      });
+    } else {
+      // Regular Plan Exercise
+      if (originalName && currentName !== originalName) {
+        renames[originalName] = currentName;
       }
     }
-  });
+  }
 
-  document.querySelectorAll(".exercise-card .set-row").forEach(row => {
-    const w = row.querySelector(".weight");
-    const r = row.querySelector(".reps");
-    // Save even if empty to preserve structure if needed, but filtering empty is cleaner usually.
-    // User wants "ALL" state. So maybe even empty rows? 
-    // Let's stick to values for now, but ensure we save enough to rebuild.
-    if (w && r) {
-      entries.push({
-        ex: w.dataset.ex,
-        set: Number(w.dataset.set || 1),
-        weight: w.value,
-        reps: r.value,
-        isCardio: w.dataset.iscardio === "true"
-      });
-    }
-  });
+  // 2. Capture Sets (Nested to ensure correct ordering 1..N)
+  const rows = card.querySelectorAll(".set-row");
+  if (rows.length > 0) {
+    // Get current exercise name from the first input (most reliable after renames)
+    const firstInput = rows[0].querySelector(".weight");
+    const exName = firstInput ? firstInput.dataset.ex : card.dataset.exerciseName;
 
-  const draftData = {
-    workout: workoutSelect.value,
-    entries,
-    renames,
-    customExercises,
-    startTime: workoutStartTime,
-    lastModified: Date.now()
-  };
-  localStorage.setItem("workout_draft", JSON.stringify(draftData));
+    rows.forEach((row, index) => {
+      const w = row.querySelector(".weight");
+      const r = row.querySelector(".reps");
+      if (w && r) {
+        entries.push({
+          ex: exName,
+          set: index + 1, // Enforce sequential set numbers to avoid gaps
+          weight: w.value,
+          reps: r.value,
+          isCardio: w.dataset.iscardio === "true"
+        });
+      }
+    });
+  }
+});
+
+// REMOVED OLD FLATTENED LOOP
+
+
+const draftData = {
+  workout: workoutSelect.value,
+  entries,
+  renames,
+  customExercises,
+  startTime: workoutStartTime,
+  lastModified: Date.now()
+};
+localStorage.setItem("workout_draft", JSON.stringify(draftData));
 }
 
 // Global Auto-Save on Visibility Change (Mobile Screen Off)
