@@ -1476,79 +1476,80 @@ function startTimer(reset = true, savedStartTime = null) {
   }, 1000);
 }
 
-// GUARD: Do not save if there are no exercises (prevents overwriting draft on load/idle)
-const cards = document.querySelectorAll(".exercise-card");
-if (cards.length === 0) return;
+function saveDraft() {
+  // GUARD: Do not save if there are no exercises (prevents overwriting draft on load/idle)
+  const cards = document.querySelectorAll(".exercise-card");
+  if (cards.length === 0) return;
 
-const entries = [];
-const renames = {};
-const customExercises = [];
+  const entries = [];
+  const renames = {};
+  const customExercises = [];
 
-cards.forEach(card => {
-  // 1. Capture Renames
-  const titleInput = card.querySelector(".ex-title-edit");
-  if (titleInput) {
-    const currentName = titleInput.value.trim().toUpperCase();
-    const originalName = card.dataset.originalName;
-    const isDynamic = card.dataset.isDynamic === "true";
+  cards.forEach(card => {
+    // 1. Capture Renames
+    const titleInput = card.querySelector(".ex-title-edit");
+    if (titleInput) {
+      const currentName = titleInput.value.trim().toUpperCase();
+      const originalName = card.dataset.originalName;
+      const isDynamic = card.dataset.isDynamic === "true";
 
-    if (isDynamic) {
-      // Collect Custom Exercise Data to re-instantiate it
-      const setsCount = card.querySelectorAll(".set-row").length;
-      // Determine isCardio from first row (fallback to false)
-      const firstRowInput = card.querySelector(".set-row input.weight");
-      const isCardio = firstRowInput ? firstRowInput.dataset.iscardio === "true" : false;
+      if (isDynamic) {
+        // Collect Custom Exercise Data to re-instantiate it
+        const setsCount = card.querySelectorAll(".set-row").length;
+        // Determine isCardio from first row (fallback to false)
+        const firstRowInput = card.querySelector(".set-row input.weight");
+        const isCardio = firstRowInput ? firstRowInput.dataset.iscardio === "true" : false;
 
-      customExercises.push({
-        name: currentName, // Use current name as the key
-        originalName: originalName,
-        sets: setsCount,
-        is_cardio: isCardio,
-        rest_time: 60 // Default or scrape if needed, but not critical
-      });
-    } else {
-      // Regular Plan Exercise
-      if (originalName && currentName !== originalName) {
-        renames[originalName] = currentName;
+        customExercises.push({
+          name: currentName, // Use current name as the key
+          originalName: originalName,
+          sets: setsCount,
+          is_cardio: isCardio,
+          rest_time: 60 // Default or scrape if needed, but not critical
+        });
+      } else {
+        // Regular Plan Exercise
+        if (originalName && currentName !== originalName) {
+          renames[originalName] = currentName;
+        }
       }
     }
-  }
 
-  // 2. Capture Sets (Nested to ensure correct ordering 1..N)
-  const rows = card.querySelectorAll(".set-row");
-  if (rows.length > 0) {
-    // Get current exercise name from the first input (most reliable after renames)
-    const firstInput = rows[0].querySelector(".weight");
-    const exName = firstInput ? firstInput.dataset.ex : card.dataset.exerciseName;
+    // 2. Capture Sets (Nested to ensure correct ordering 1..N)
+    const rows = card.querySelectorAll(".set-row");
+    if (rows.length > 0) {
+      // Get current exercise name from the first input (most reliable after renames)
+      const firstInput = rows[0].querySelector(".weight");
+      const exName = firstInput ? firstInput.dataset.ex : card.dataset.exerciseName;
 
-    rows.forEach((row, index) => {
-      const w = row.querySelector(".weight");
-      const r = row.querySelector(".reps");
-      if (w && r) {
-        entries.push({
-          ex: exName,
-          set: index + 1, // Enforce sequential set numbers to avoid gaps
-          weight: w.value,
-          reps: r.value,
-          isCardio: w.dataset.iscardio === "true"
-        });
-      }
-    });
-  }
-});
+      rows.forEach((row, index) => {
+        const w = row.querySelector(".weight");
+        const r = row.querySelector(".reps");
+        if (w && r) {
+          entries.push({
+            ex: exName,
+            set: index + 1, // Enforce sequential set numbers to avoid gaps
+            weight: w.value,
+            reps: r.value,
+            isCardio: w.dataset.iscardio === "true"
+          });
+        }
+      });
+    }
+  });
 
-// REMOVED OLD FLATTENED LOOP
+  // REMOVED OLD FLATTENED LOOP
 
 
-const draftData = {
-  workout: workoutSelect.value,
-  entries,
-  renames,
-  customExercises,
-  startTime: workoutStartTime,
-  lastModified: Date.now()
-};
-localStorage.setItem("workout_draft", JSON.stringify(draftData));
+  const draftData = {
+    workout: workoutSelect.value,
+    entries,
+    renames,
+    customExercises,
+    startTime: workoutStartTime,
+    lastModified: Date.now()
+  };
+  localStorage.setItem("workout_draft", JSON.stringify(draftData));
 }
 
 // Global Auto-Save on Visibility Change (Mobile Screen Off)
