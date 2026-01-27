@@ -82,7 +82,10 @@ function initPenguin() {
     "Trink Wasser!", "Du schaffst das!",
     "Geiler Typ!", "Maschine!", "Bleib dran!",
     "Starkes Set!", "Sauber!", "Weiter so!",
-    "Top Leistung!", "Gönn dir Wasser!"
+    "Top Leistung!", "Gönn dir Wasser!",
+    "BEAST MODE!", "NUR NOCH EINE!",
+    "LIGHT WEIGHT BABY!", "KOMM SCHON!",
+    "PENGUIN GAINS!", "FOKUS!"
   ];
 
   // Click to Talk
@@ -91,13 +94,10 @@ function initPenguin() {
     showPenguinBubble(msg);
 
     // Random Animation on Click
-    const anims = ["wiggle", "spin", "slide", "happyDance"];
+    const anims = ["wiggle", "spin", "slide", "happyDance", "moonwalk", "flip", "rave", "flex"];
     const chosen = anims[Math.floor(Math.random() * anims.length)];
 
-    penguin.style.animation = "none";
-    penguin.offsetHeight;
-    penguin.style.animation = `${chosen} 0.5s ease-out`;
-    setTimeout(() => { penguin.style.animation = "idleBounce 3s infinite ease-in-out"; }, 500);
+    window.triggerPenguinAnim(chosen);
   });
 
   // Animation Trigger
@@ -1055,27 +1055,31 @@ async function loadWorkout(draftData = null) {
 
   // --- PROGRESSIVE OVERLOAD FIX ---
   // Fetch last logs specifically for these exercises to ensure we show history
-  // even if it's older than the default loaded history limit.
-  const uniqueExercises = [...new Set(exercisesInWorkout.map(e => e.exercise))];
-  if (uniqueExercises.length > 0) {
-    // We fetch the last 10 entries for each exercise to be safe (simplified via one query with adequate limit)
-    // Note: A smarter way would be per-exercise RPC, but 'in' query sorted by date is good enough for now.
+  const renames = draftData?.renames || {};
+  const namesToFetch = new Set();
+  exercisesInWorkout.forEach(e => {
+    namesToFetch.add(e.exercise);
+    if (e.originalName) namesToFetch.add(e.originalName);
+    if (renames[e.originalName]) namesToFetch.add(renames[e.originalName]);
+  });
+
+  const uniqueNames = [...namesToFetch];
+
+  if (uniqueNames.length > 0) {
     const { data: historyData } = await client
       .from("logs")
       .select("*")
-      .in("exercise", uniqueExercises)
+      .in("exercise", uniqueNames)
       .eq("user_id", (await client.auth.getUser()).data.user.id)
       .order("date", { ascending: false })
-      .limit(200); // Fetch enough recent context for these specific moves
+      .limit(300);
 
     if (historyData) {
-      // Merge into global logs if not present, so getLastExerciseLogs finds them
       historyData.forEach(hLog => {
         if (!logs.find(existing => existing.id === hLog.id)) {
           logs.push(hLog);
         }
       });
-      // Re-sort global logs just in case
       logs.sort((a, b) => new Date(b.date) - new Date(a.date));
     }
   }
@@ -1298,6 +1302,11 @@ async function loadWorkout(draftData = null) {
       infoRow.innerHTML = "ZUSATZ-ÜBUNG";
       card.appendChild(infoRow);
 
+      const logRow = document.createElement("div");
+      logRow.className = "last-logs";
+      logRow.textContent = `ZULETZT: ${getLastExerciseLogs(mockEx.exercise, null)}`;
+      card.appendChild(logRow);
+
       const setsWrapper = document.createElement("div");
       setsWrapper.className = "sets-wrapper";
 
@@ -1469,6 +1478,23 @@ function attachInputListeners(container) {
     input.addEventListener("input", () => {
       saveDraft();
       updateVolume();
+
+      // Easter Egg: Heavy Weights reaction
+      if (input.classList.contains("weight") && Number(input.value) >= 100) {
+        if (!input._highToneTriggered) {
+          window.triggerPenguinAnim("flex", "KRANKER PUMP!");
+          input._highToneTriggered = true;
+          setTimeout(() => input._highToneTriggered = false, 10000);
+        }
+      }
+    });
+
+    // Random Penguin Cheer on Focus (Safari doesn't always trigger input on first tap)
+    input.addEventListener("focus", () => {
+      if (Math.random() > 0.8) {
+        const moves = ["moonwalk", "flex", "flip"];
+        window.triggerPenguinAnim(moves[Math.floor(Math.random() * moves.length)]);
+      }
     });
   });
   container.querySelectorAll(".start-rest-btn").forEach(btn => {
@@ -1505,6 +1531,13 @@ window.updateExerciseName = (input, oldName) => {
   // The "startRestTimer" uses dataset.ex, so that works for NEW clicks.
 
   notify(`UMBENANNT: ${newName}`);
+
+  // Refresh history for the renamed exercise
+  const logRow = card.querySelector(".last-logs");
+  if (logRow) {
+    logRow.textContent = `ZULETZT: ${getLastExerciseLogs(newName, workoutSelect.value)}`;
+  }
+
   saveDraft();
 };
 
@@ -1560,24 +1593,20 @@ function startRestTimer(exName, setNum, customRest = null) {
 function getLastExerciseLogs(exerciseName, filterWorkoutId = null) {
   let filtered = logs.filter(l => l.exercise === exerciseName);
 
-  if (filterWorkoutId) {
-    filtered = filtered.filter(l => l.workout === filterWorkoutId);
-  }
+  // 1. Try to find logs for THIS specific plan (best match)
+  let bestMatch = filterWorkoutId ? filtered.filter(l => l.workout === filterWorkoutId) : [];
 
-  filtered = filtered.slice(0, 3);
+  // 2. Fallback to any logs for this exercise if no specific plan logs exist
+  let targetLogs = bestMatch.length > 0 ? bestMatch : filtered;
 
-  if (filtered.length === 0) return "KEINE DATEN";
-  // Format: "100kg x 10 | 100kg x 10"
-  // Take top 3 most recent sets from the last session(s)
-  // Actually, users usually want to see what they did LAST SESSION.
-  // So we should find the last date, and show sets from that date.
+  if (targetLogs.length === 0) return "KEINE DATEN";
 
-  const lastDate = filtered[0].date;
+  const lastDate = targetLogs[0].date;
   // Convert YYYY-MM-DD to DD.MM
   const dateParts = lastDate.split("-");
   const shortDate = `${dateParts[2]}.${dateParts[1]}`;
 
-  const lastSessionLogs = filtered.filter(l => l.date === lastDate).sort((a, b) => a.set - b.set);
+  const lastSessionLogs = targetLogs.filter(l => l.date === lastDate).sort((a, b) => a.set - b.set);
 
   const setsStr = lastSessionLogs.map(l => {
     if (l.duration) return `${l.duration}m`; // Cardio
