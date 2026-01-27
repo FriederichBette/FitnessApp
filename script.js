@@ -1,4 +1,5 @@
 // ---- MU-TH-UR 6.0 SYSTEM ----
+console.log("APP VERSION: 2.1.0 (CLOUD_SYNC) - ACTIVATED");
 const client = supabase.createClient(
   "https://yfqergfvydwfwyryggvo.supabase.co",
   "sb_publishable_auj_m_StlyxYK4uGiJYU3w_kll5T-lG"
