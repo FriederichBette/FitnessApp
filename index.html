@@ -146,6 +146,17 @@
 
         <!-- PAGE: TRAINING -->
         <div id="page-home" class="page">
+            <div id="resume-prompt-container"
+                style="display:none; margin-bottom: 20px; border: 1px solid var(--primary-color); padding: 15px; background: rgba(0, 255, 65, 0.05);">
+                <div class="editor-header" style="margin-top:0; border-left:none; padding-left:0; background:none;">
+                    LÄUFENDE_SESSION_GEFUNDEN</div>
+                <p style="font-size:0.75rem; margin-bottom:15px;">Möchtest du dein letztes Training fortsetzen? (Stand
+                    aus Cloud/Local)</p>
+                <div style="display:flex; gap:10px;">
+                    <button id="resume-yes-btn">FORTSETZEN</button>
+                    <button id="resume-no-btn" class="secondary">VERWERFEN</button>
+                </div>
+            </div>
             <p id="next-workout-hint" class="subtitle" style="margin: 0; margin-bottom: 20px;">SYSTEM_BEREIT</p>
             <div class="selection-area">
                 <div class="editor-header">ROUTINE_AUSWAHL:</div>

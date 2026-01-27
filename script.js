@@ -101,30 +101,58 @@ function initPenguin() {
   });
 
   // Animation Trigger
-  window.triggerPenguinAnim = (type) => {
+  window.triggerPenguinAnim = (type, forcedMsg = null) => {
+    const penguin = document.getElementById("pixel-penguin");
+    if (!penguin) return;
+
     penguin.style.animation = "none";
-    penguin.offsetHeight;
-    if (type === "spin") penguin.style.animation = "spin 0.5s ease-out";
-    else if (type === "slide") penguin.style.animation = "slide 0.5s ease-out";
-    else penguin.style.animation = "happyDance 0.5s ease-out";
+    penguin.offsetHeight; // trigger reflow
+
+    // Duration mapping
+    let duration = 500;
+    if (type === "rave") duration = 2000;
+    if (type === "moonwalk") duration = 1500;
+    if (type === "flip") duration = 800;
+
+    penguin.style.animation = `${type} ${duration}ms ease-out`;
+
+    const msgs = {
+      happyDance: ["GEILER TYP!", "MASCHINE!", "STARK!", "LÄUFT!"],
+      rave: ["PARTY PUR!", "SYSTEM RAVE!", "BEATS & GAINS!", "UNSTOFFABLE!"],
+      flip: ["BACKFLIP!", "WOHOOO!", "NICE!", "EXTREME!"],
+      moonwalk: ["SMOOTH...", "HEE-HEE!", "CLEAN MOVE", "KING OF GYM"],
+      flex: ["FLEX!", "PUMP IS REAL", "BREIT GEBAUT", "MASSE PHASE"]
+    };
+
+    if (forcedMsg) {
+      showPenguinBubble(forcedMsg);
+    } else if (msgs[type]) {
+      const msg = msgs[type][Math.floor(Math.random() * msgs[type].length)];
+      showPenguinBubble(msg);
+    }
 
     setTimeout(() => {
       penguin.style.animation = "idleBounce 3s infinite ease-in-out";
-    }, 500);
+    }, duration);
   };
 
   function showPenguinBubble(text) {
     const bubble = document.getElementById("penguin-bubble");
     if (!bubble) return;
     bubble.textContent = text;
-    bubble.style.opacity = "1";
-    setTimeout(() => { bubble.style.opacity = "0"; }, 2000);
+    bubble.style.display = "block";
+
+    // Auto-hide
+    if (window.bubbleTimeout) clearTimeout(window.bubbleTimeout);
+    window.bubbleTimeout = setTimeout(() => {
+      bubble.style.display = "none";
+    }, 2500);
   }
 
   // VICTORY DANCE FUNCTION
   window.penguinDance = () => {
-    window.triggerPenguinAnim("happyDance");
-    showPenguinBubble("VICTORY!");
+    window.triggerPenguinAnim("rave", "TRAINING COMPLETE!");
+    setTimeout(() => window.triggerPenguinAnim("flip"), 2000);
   };
 }
 // Run immediately
@@ -809,40 +837,23 @@ async function init() {
     }
 
     // Check for Resume
+    const resumePrompt = document.getElementById("resume-prompt-container");
     if (savedDraft && savedDraft.workout) {
-      // Offline fallback: If workout not found (because loadWorkouts failed), create a temporary "Ghost" workout
-      let w = availableWorkouts.find(x => x.id === savedDraft.workout);
-      if (!w) {
-        w = {
-          id: savedDraft.workout,
-          name: savedDraft.workoutName || "WIEDERHERGESTELLT",
-          routine_name: savedDraft.routineName || "LAUFEND",
-          is_template: false
-        };
-        availableWorkouts.push(w);
-        // Refresh selects to include this ghost
-        populateRoutineSelect();
-      }
+      if (resumePrompt) resumePrompt.style.display = "block";
 
-      if (w) {
-        // AUTO-RESUME IMPLEMENTATION
-        if (w.routine_name) routineSelect.value = w.routine_name;
-
-        // Ensure the workout is in the select list (might be filtered out if routine doesn't match, but we forced it above)
-        populateWorkoutSelect();
-        workoutSelect.value = savedDraft.workout;
-
-        await loadWorkout(savedDraft);
-        notify("SESSION ERFOLGREICH WIEDERHERGESTELLT");
-        return; // Skip normal flow suggestion
-      }
+      // Global reference for resume buttons
+      window._pendingDraft = savedDraft;
+    } else {
+      if (resumePrompt) resumePrompt.style.display = "none";
     }
 
-    // Normal Flow (Only if no resume)
+    // Normal Flow Setup (Suggestion)
     if (logs.length > 0) {
       const lastW = availableWorkouts.find(w => w.id == logs[0].workout);
       if (lastW) routineSelect.value = lastW.routine_name;
     }
+    populateWorkoutSelect();
+    suggestNextWorkout();
     populateWorkoutSelect();
     suggestNextWorkout();
 
@@ -1430,6 +1441,10 @@ window.saveSetManually = (btn) => {
 
   updateVolume();
 
+  // Penguin Motivation
+  const winAnims = ["flip", "flex", "happyDance"];
+  window.triggerPenguinAnim(winAnims[Math.floor(Math.random() * winAnims.length)]);
+
   // 3. Visual Feedback
   const originalText = btn.innerHTML;
   btn.innerHTML = "OK";
@@ -1498,7 +1513,7 @@ function startRestTimer(exName, setNum, customRest = null) {
 
   // Trigger funny penguin animation
   if (window.triggerPenguinAnim) {
-    const anims = ["spin", "slide", "happyDance"];
+    const anims = ["moonwalk", "happyDance", "flex"];
     window.triggerPenguinAnim(anims[Math.floor(Math.random() * anims.length)]);
   }
 
@@ -1822,18 +1837,69 @@ async function saveWorkout() {
 }
 
 // Abbrechen Button Logik
-document.getElementById("abort-workout-btn").addEventListener("click", () => {
+document.getElementById("abort-workout-btn").addEventListener("click", async () => {
   if (confirm("TRAINING WIRKLICH ABBRECHEN?")) {
     document.querySelector(".bottom-nav").style.display = "flex";
     document.querySelector(".selection-area").style.display = "block";
     document.getElementById("next-workout-hint").style.display = "block";
     document.getElementById("workout-actions").style.display = "none";
     contentArea.innerHTML = "";
+
+    // Clear Local
     localStorage.removeItem("workout_draft");
+
+    // Clear Cloud
+    const { data: { user } } = await client.auth.getUser();
+    if (user) {
+      await client.from("active_sessions").delete().eq("user_id", user.id);
+    }
+
     init();
     showPage("home");
     notify("PROZESS_ABGEBROCHEN");
   }
+});
+
+// RESUME ACTIONS
+document.getElementById("resume-yes-btn")?.addEventListener("click", async () => {
+  const savedDraft = window._pendingDraft;
+  if (!savedDraft) return;
+
+  // Offline fallback: If workout not found (because loadWorkouts failed), create a temporary "Ghost" workout
+  let w = availableWorkouts.find(x => x.id === savedDraft.workout);
+  if (!w) {
+    w = {
+      id: savedDraft.workout,
+      name: savedDraft.workoutName || "WIEDERHERGESTELLT",
+      routine_name: savedDraft.routineName || "LAUFEND",
+      is_template: false
+    };
+    availableWorkouts.push(w);
+    populateRoutineSelect();
+  }
+
+  if (w.routine_name) routineSelect.value = w.routine_name;
+  populateWorkoutSelect();
+  workoutSelect.value = savedDraft.workout;
+
+  // Hide Prompt
+  document.getElementById("resume-prompt-container").style.display = "none";
+
+  await loadWorkout(savedDraft);
+  notify("SESSION WIEDERHERGESTELLT");
+});
+
+document.getElementById("resume-no-btn")?.addEventListener("click", async () => {
+  if (!confirm("SESSION WIRKLICH LÖSCHEN?")) return;
+
+  localStorage.removeItem("workout_draft");
+  const { data: { user } } = await client.auth.getUser();
+  if (user) {
+    await client.from("active_sessions").delete().eq("user_id", user.id);
+  }
+
+  document.getElementById("resume-prompt-container").style.display = "none";
+  notify("SESSION VERWORFEN");
 });
 
 // Pause/Resume Toggle
@@ -1865,6 +1931,10 @@ document.getElementById("save-intermediate-btn")?.addEventListener("click", () =
     if (cloudSyncTimeout) clearTimeout(cloudSyncTimeout);
     syncDraftToCloud(savedData);
   }
+
+  const backAnims = ["moonwalk", "rave"];
+  window.triggerPenguinAnim(backAnims[Math.floor(Math.random() * backAnims.length)]);
+
   notify("SESSION IN CLOUD GESICHERT");
   // Trigger small animation
   const btn = document.getElementById("save-intermediate-btn");
