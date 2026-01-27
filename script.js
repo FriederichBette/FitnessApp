@@ -780,7 +780,9 @@ let cloudSyncTimeout = null;
 async function syncDraftToCloud(draftData) {
   if (cloudSyncTimeout) clearTimeout(cloudSyncTimeout);
 
-  // Debounce: Wait 2 seconds of inactivity before pushing to cloud
+  updateSyncIndicator("SYNCING...", "var(--secondary-color)");
+
+  // Debounce: Wait 1 second of inactivity before pushing to cloud
   // But save to localStorage is always instant
   cloudSyncTimeout = setTimeout(async () => {
     try {
@@ -793,12 +795,26 @@ async function syncDraftToCloud(draftData) {
         updated_at: new Date().toISOString()
       });
 
-      if (error) console.warn("CLOUD_SYNC_ERROR:", error.message);
-      else console.log("CLOUD_SYNC_SUCCESS");
+      if (error) {
+        console.warn("CLOUD_SYNC_ERROR:", error.message);
+        updateSyncIndicator("SYNC ERROR", "var(--error-color)");
+      } else {
+        console.log("CLOUD_SYNC_SUCCESS");
+        updateSyncIndicator("CLOUD: OK", "var(--primary-color)");
+      }
     } catch (err) {
       console.warn("CLOUD_SYNC_FAILED", err);
+      updateSyncIndicator("OFFLINE", "var(--text-muted)");
     }
-  }, 2000);
+  }, 1000);
+}
+
+function updateSyncIndicator(text, color) {
+  const el = document.getElementById("sync-indicator");
+  if (el) {
+    el.textContent = text;
+    el.style.color = color;
+  }
 }
 
 async function init() {
@@ -852,8 +868,6 @@ async function init() {
       const lastW = availableWorkouts.find(w => w.id == logs[0].workout);
       if (lastW) routineSelect.value = lastW.routine_name;
     }
-    populateWorkoutSelect();
-    suggestNextWorkout();
     populateWorkoutSelect();
     suggestNextWorkout();
 
@@ -1080,6 +1094,7 @@ async function loadWorkout(draftData = null) {
           logs.push(hLog);
         }
       });
+      // Global sort for getLastExerciseLogs to work
       logs.sort((a, b) => new Date(b.date) - new Date(a.date));
     }
   }
@@ -1890,32 +1905,44 @@ document.getElementById("abort-workout-btn").addEventListener("click", async () 
 });
 
 // RESUME ACTIONS
-document.getElementById("resume-yes-btn")?.addEventListener("click", async () => {
+document.getElementById("resume-yes-btn")?.addEventListener("click", async (e) => {
   const savedDraft = window._pendingDraft;
   if (!savedDraft) return;
 
-  // Offline fallback: If workout not found (because loadWorkouts failed), create a temporary "Ghost" workout
-  let w = availableWorkouts.find(x => x.id === savedDraft.workout);
-  if (!w) {
-    w = {
-      id: savedDraft.workout,
-      name: savedDraft.workoutName || "WIEDERHERGESTELLT",
-      routine_name: savedDraft.routineName || "LAUFEND",
-      is_template: false
-    };
-    availableWorkouts.push(w);
-    populateRoutineSelect();
+  const btn = e.target;
+  const originalText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = "LADE...";
+
+  try {
+    // Offline fallback: If workout not found (because loadWorkouts failed), create a temporary "Ghost" workout
+    let w = availableWorkouts.find(x => x.id === savedDraft.workout);
+    if (!w) {
+      w = {
+        id: savedDraft.workout,
+        name: savedDraft.workoutName || "WIEDERHERGESTELLT",
+        routine_name: savedDraft.routineName || "LAUFEND",
+        is_template: false
+      };
+      availableWorkouts.push(w);
+      populateRoutineSelect();
+    }
+
+    if (w.routine_name) routineSelect.value = w.routine_name;
+    populateWorkoutSelect();
+    workoutSelect.value = savedDraft.workout;
+
+    // Hide Prompt
+    document.getElementById("resume-prompt-container").style.display = "none";
+
+    await loadWorkout(savedDraft);
+    notify("SESSION WIEDERHERGESTELLT");
+  } catch (err) {
+    console.error(err);
+    notify("FEHLER BEI WIEDERHERSTELLUNG", "error");
+    btn.disabled = false;
+    btn.textContent = originalText;
   }
-
-  if (w.routine_name) routineSelect.value = w.routine_name;
-  populateWorkoutSelect();
-  workoutSelect.value = savedDraft.workout;
-
-  // Hide Prompt
-  document.getElementById("resume-prompt-container").style.display = "none";
-
-  await loadWorkout(savedDraft);
-  notify("SESSION WIEDERHERGESTELLT");
 });
 
 document.getElementById("resume-no-btn")?.addEventListener("click", async () => {
