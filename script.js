@@ -753,22 +753,44 @@ async function init() {
   if (actionEl) actionEl.style.display = "none";
 
   try {
-    await Promise.all([loadWorkouts(), loadPlan(), loadLogs()]);
+    // Attempt to load data, but don't block start if offline (draft might save us)
+    try {
+      await Promise.all([loadWorkouts(), loadPlan(), loadLogs()]);
+    } catch (loadErr) {
+      console.warn("SERVER CONNECTION FAILED - OFFLINE MODE INTIATED", loadErr);
+      notify("OFFLINE-MODUS: SERVER NICHT ERREICHBAR", "error");
+    }
+
     populateRoutineSelect();
 
     const savedDraft = JSON.parse(localStorage.getItem("workout_draft"));
 
     // Check for Resume
     if (savedDraft && savedDraft.workout) {
-      const w = availableWorkouts.find(x => x.id === savedDraft.workout);
+      // Offline fallback: If workout not found (because loadWorkouts failed), create a temporary "Ghost" workout
+      let w = availableWorkouts.find(x => x.id === savedDraft.workout);
+      if (!w) {
+        w = {
+          id: savedDraft.workout,
+          name: savedDraft.workoutName || "WIEDERHERGESTELLT",
+          routine_name: savedDraft.routineName || "LAUFEND",
+          is_template: false
+        };
+        availableWorkouts.push(w);
+        // Refresh selects to include this ghost
+        populateRoutineSelect();
+      }
+
       if (w) {
         // AUTO-RESUME IMPLEMENTATION
         if (w.routine_name) routineSelect.value = w.routine_name;
+
+        // Ensure the workout is in the select list (might be filtered out if routine doesn't match, but we forced it above)
         populateWorkoutSelect();
         workoutSelect.value = savedDraft.workout;
 
         await loadWorkout(savedDraft);
-        notify("SESSION AUTOMATICALLY RESTORED");
+        notify("SESSION ERFOLGREICH WIEDERHERGESTELLT");
         return; // Skip normal flow suggestion
       }
     }
@@ -937,14 +959,35 @@ async function loadWorkout(draftData = null) {
   const exercisesInWorkout = plan.filter(p => p.workout_id == workoutId);
 
   if (exercisesInWorkout.length === 0) {
-    // Fallback: Try to fetch specifically for this ID if local plan is incomplete
-    const { data: specificExercises } = await client.from("workout_exercises").select("*").eq("workout_id", workoutId);
+    // 1. Try Draft Snapshot (Offline Support)
+    if (draftData && draftData.snapshot && draftData.snapshot.length > 0) {
+      // Reconstruct from Snapshot
+      exercisesInWorkout.push(...draftData.snapshot.map(s => ({
+        workout_id: workoutId,
+        exercise: s.originalName, // Important: Use original name for ID
+        sets: s.sets,
+        reps: s.reps || 0,
+        weight: 0,
+        rest_time: s.rest_time || 60,
+        is_cardio: s.is_cardio,
+        is_dynamic: s.is_dynamic,
+        // We pass the display name via renames or just trust the render logic which handles renames separately
+      })));
+    } else {
+      // 2. Fallback: Try to fetch specifically for this ID if local plan is incomplete (Online Fetch)
+      const { data: specificExercises } = await client.from("workout_exercises").select("*").eq("workout_id", workoutId);
 
-    if (!specificExercises || specificExercises.length === 0) {
+      if (specificExercises && specificExercises.length > 0) {
+        exercisesInWorkout.push(...specificExercises);
+      }
+    }
+
+    // Final Check
+    if (exercisesInWorkout.length === 0) {
       contentArea.innerHTML = `
         <div style="text-align:center; margin-top: 50px;">
             <div class="crt-text" style="color:red; margin-bottom: 20px;">SYSTEM FEHLER: LEERER PLAN</div>
-            <p style="font-size: 0.8rem; margin-bottom: 20px;">Dieser Plan enthält keine Übungen.</p>
+            <p style="font-size: 0.8rem; margin-bottom: 20px;">Dieser Plan enthält keine Übungen und konnte nicht wiederhergestellt werden.</p>
             <button onclick="window.location.reload()" class="secondary">NEU LADEN</button>
         </div>
       `;
@@ -954,7 +997,6 @@ async function loadWorkout(draftData = null) {
       document.getElementById("workout-actions").style.display = "none";
       return;
     }
-    exercisesInWorkout.push(...specificExercises);
   }
 
   // --- PROGRESSIVE OVERLOAD FIX ---
@@ -1310,6 +1352,11 @@ function createSetRow(i, exName, isCardio, weight, reps, rest) {
         <input type="number" class="rest-edit" value="${rest}" style="width: 35px; padding: 4px; font-size:0.65rem; color:var(--text-muted); border:1px solid var(--secondary-color);">
         <button class="start-rest-btn" data-ex="${exName}" data-set="${i}" style="width: auto; padding: 4px 6px; font-size: 0.65rem;">PAUSE</button>
         
+        <!-- SAVE BUTTON (Text-Based) -->
+        <button class="save-set-btn" onclick="saveSetManually(this)" style="width: auto; padding: 4px 6px; margin-left: 5px; border-color: var(--secondary-color); color: var(--secondary-color); font-size: 0.6rem; letter-spacing: 1px;" title="SPEICHERN">
+            SAVE
+        </button>
+
         <!-- Delete Button (Hidden by default) -->
         <button class="delete-set-btn" style="display:none; color:red; border:1px solid red; background:transparent; padding:2px 6px; font-size:0.7rem; margin-left:5px;">X</button>
 
@@ -1326,6 +1373,32 @@ function createSetRow(i, exName, isCardio, weight, reps, rest) {
   container.appendChild(row);
   return container;
 }
+
+window.saveSetManually = (btn) => {
+  // 1. Trigger Save
+  saveDraft();
+  updateVolume();
+
+  // 2. Visual Feedback
+  const originalText = btn.innerHTML;
+  btn.innerHTML = "OK";
+  btn.style.borderColor = "var(--primary-color)";
+  btn.style.color = "var(--primary-color)";
+  btn.style.fontWeight = "bold";
+  // btn.style.boxShadow = "0 0 5px var(--primary-color)";
+
+  // 3. Notification (Debounced? No, explicit action = explicit feedback)
+  notify("DATENSATZ GESICHERT");
+
+  // 4. Reset Button after delay
+  setTimeout(() => {
+    btn.innerHTML = originalText;
+    btn.style.borderColor = "var(--secondary-color)";
+    btn.style.color = "var(--secondary-color)";
+    btn.style.fontWeight = "normal";
+    btn.style.boxShadow = "none";
+  }, 2000);
+};
 
 function attachInputListeners(container) {
   container.querySelectorAll("input").forEach(input => {
@@ -1430,7 +1503,24 @@ function getLastExerciseLogs(exerciseName, filterWorkoutId = null) {
   filtered = filtered.slice(0, 3);
 
   if (filtered.length === 0) return "KEINE DATEN";
-  return filtered.map(l => `${l.weight}KG x ${l.reps}`).join(" | ");
+  // Format: "100kg x 10 | 100kg x 10"
+  // Take top 3 most recent sets from the last session(s)
+  // Actually, users usually want to see what they did LAST SESSION.
+  // So we should find the last date, and show sets from that date.
+
+  const lastDate = filtered[0].date;
+  // Convert YYYY-MM-DD to DD.MM
+  const dateParts = lastDate.split("-");
+  const shortDate = `${dateParts[2]}.${dateParts[1]}`;
+
+  const lastSessionLogs = filtered.filter(l => l.date === lastDate).sort((a, b) => a.set - b.set);
+
+  const setsStr = lastSessionLogs.map(l => {
+    if (l.duration) return `${l.duration}m`; // Cardio
+    return `${l.weight}x${l.reps}`;
+  }).join(" | ");
+
+  return `[${shortDate}]: ${setsStr}`;
 }
 
 function updateVolume() {
@@ -1485,27 +1575,42 @@ function saveDraft() {
   const renames = {};
   const customExercises = [];
 
+  const snapshot = [];
+
   cards.forEach(card => {
     // 1. Capture Renames
     const titleInput = card.querySelector(".ex-title-edit");
+    let currentName = "";
+    let originalName = "";
+    let isDynamic = false;
+    let isCardio = false;
+
     if (titleInput) {
-      const currentName = titleInput.value.trim().toUpperCase();
-      const originalName = card.dataset.originalName;
-      const isDynamic = card.dataset.isDynamic === "true";
+      currentName = titleInput.value.trim().toUpperCase();
+      originalName = card.dataset.originalName;
+      isDynamic = card.dataset.isDynamic === "true";
+
+      const firstRowInput = card.querySelector(".set-row input.weight");
+      isCardio = firstRowInput ? firstRowInput.dataset.iscardio === "true" : false;
+
+      // Add to Snapshot (Structure)
+      snapshot.push({
+        originalName: originalName,
+        displayName: currentName,
+        sets: card.querySelectorAll(".set-row").length,
+        is_dynamic: isDynamic,
+        is_cardio: isCardio,
+        rest_time: 60 // Default, can be refined if needed
+      });
 
       if (isDynamic) {
         // Collect Custom Exercise Data to re-instantiate it
-        const setsCount = card.querySelectorAll(".set-row").length;
-        // Determine isCardio from first row (fallback to false)
-        const firstRowInput = card.querySelector(".set-row input.weight");
-        const isCardio = firstRowInput ? firstRowInput.dataset.iscardio === "true" : false;
-
         customExercises.push({
           name: currentName, // Use current name as the key
           originalName: originalName,
-          sets: setsCount,
+          sets: card.querySelectorAll(".set-row").length,
           is_cardio: isCardio,
-          rest_time: 60 // Default or scrape if needed, but not critical
+          rest_time: 60
         });
       } else {
         // Regular Plan Exercise
@@ -1540,12 +1645,24 @@ function saveDraft() {
 
   // REMOVED OLD FLATTENED LOOP
 
+  // Get Workout Name safely
+  let workoutName = "TRAINING";
+  let routineName = "ROUTINE";
+  if (workoutSelect.selectedIndex >= 0) {
+    workoutName = workoutSelect.options[workoutSelect.selectedIndex].text;
+  }
+  if (routineSelect.selectedIndex >= 0) {
+    routineName = routineSelect.options[routineSelect.selectedIndex].text;
+  }
 
   const draftData = {
     workout: workoutSelect.value,
+    workoutName: workoutName,
+    routineName: routineName,
     entries,
     renames,
     customExercises,
+    snapshot, // SAVES THE FULL STRUCTURE
     startTime: workoutStartTime,
     lastModified: Date.now()
   };
