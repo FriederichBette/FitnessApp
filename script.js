@@ -1,5 +1,9 @@
 // ---- MU-TH-UR 6.0 SYSTEM ----
-console.log("APP VERSION: 2.1.0 (CLOUD_SYNC) - ACTIVATED");
+console.log("APP VERSION: 2.1.1 (PATCH) - ACTIVATED");
+window.onerror = function (msg, url, line, col, error) {
+  alert("FATAL_ERROR: " + msg + "\nLINE: " + line + "\nURL: " + url);
+  return false;
+};
 const client = supabase.createClient(
   "https://yfqergfvydwfwyryggvo.supabase.co",
   "sb_publishable_auj_m_StlyxYK4uGiJYU3w_kll5T-lG"
@@ -61,9 +65,8 @@ function initPenguin() {
          <!-- Flippers -->
          <rect x="2" y="6" width="1" height="4" fill="var(--primary-color)" />
          <rect x="13" y="6" width="1" height="4" fill="var(--primary-color)" />
-         
-         <div class="penguin-bubble" id="penguin-bubble"></div>
       </svg>
+      <div class="penguin-bubble" id="penguin-bubble" style="display:none;"></div>
   `;
   document.body.appendChild(penguin);
 
@@ -1101,7 +1104,6 @@ async function loadWorkout(draftData = null) {
   }
 
   // --- RESTORE DRAFT STATE ---
-  const renames = draftData?.renames || {};
   const customExercises = draftData?.customExercises || [];
 
   // Merge Custom Exercises from Draft into the plan to be rendered
