@@ -746,6 +746,33 @@ document.getElementById("add-exercise-field-btn").addEventListener("click", addE
 
 // ---------------- INITIALISIERUNG ----------------
 
+// --- CLOUD SYNC LOGIC ---
+let cloudSyncTimeout = null;
+
+async function syncDraftToCloud(draftData) {
+  if (cloudSyncTimeout) clearTimeout(cloudSyncTimeout);
+
+  // Debounce: Wait 2 seconds of inactivity before pushing to cloud
+  // But save to localStorage is always instant
+  cloudSyncTimeout = setTimeout(async () => {
+    try {
+      const { data: { user } } = await client.auth.getUser();
+      if (!user) return;
+
+      const { error } = await client.from("active_sessions").upsert({
+        user_id: user.id,
+        session_data: draftData,
+        updated_at: new Date().toISOString()
+      });
+
+      if (error) console.warn("CLOUD_SYNC_ERROR:", error.message);
+      else console.log("CLOUD_SYNC_SUCCESS");
+    } catch (err) {
+      console.warn("CLOUD_SYNC_FAILED", err);
+    }
+  }, 2000);
+}
+
 async function init() {
   mainLoader.style.display = "block";
   contentArea.innerHTML = "";
@@ -763,7 +790,23 @@ async function init() {
 
     populateRoutineSelect();
 
-    const savedDraft = JSON.parse(localStorage.getItem("workout_draft"));
+    // 1. Try Local Draft
+    let savedDraft = JSON.parse(localStorage.getItem("workout_draft"));
+
+    // 2. Try Cloud Draft if Local is empty or older
+    const { data: { user } } = await client.auth.getUser();
+    if (user) {
+      const { data: cloudSession } = await client.from("active_sessions").select("*").eq("user_id", user.id).single();
+      if (cloudSession && cloudSession.session_data) {
+        const cloudDraft = cloudSession.session_data;
+        if (!savedDraft || (cloudDraft.lastModified > savedDraft.lastModified)) {
+          console.log("USING CLOUD SESSION (FEWER DATA LOSS RISKS)");
+          savedDraft = cloudDraft;
+          // Sync back to local for offline consistency
+          localStorage.setItem("workout_draft", JSON.stringify(savedDraft));
+        }
+      }
+    }
 
     // Check for Resume
     if (savedDraft && savedDraft.workout) {
@@ -1155,7 +1198,7 @@ async function loadWorkout(draftData = null) {
           defWeight = ex.weight;
         }
 
-        const setRow = createSetRow(i, effectiveName, ex.is_cardio, defWeight, defReps, ex.rest_time || 60);
+        const setRow = createSetRow(i, effectiveName, ex.is_cardio, defWeight, defReps, draft?.rest || ex.rest_time || 60);
         setsWrapper.appendChild(setRow);
       }
       card.appendChild(setsWrapper);
@@ -1375,20 +1418,26 @@ function createSetRow(i, exName, isCardio, weight, reps, rest) {
 }
 
 window.saveSetManually = (btn) => {
-  // 1. Trigger Save
+  // 1. Trigger Save (Local)
   saveDraft();
+
+  // 2. Force Cloud Sync immediately (Bypass debounce)
+  const savedData = JSON.parse(localStorage.getItem("workout_draft"));
+  if (savedData) {
+    if (cloudSyncTimeout) clearTimeout(cloudSyncTimeout);
+    syncDraftToCloud(savedData);
+  }
+
   updateVolume();
 
-  // 2. Visual Feedback
+  // 3. Visual Feedback
   const originalText = btn.innerHTML;
   btn.innerHTML = "OK";
   btn.style.borderColor = "var(--primary-color)";
   btn.style.color = "var(--primary-color)";
   btn.style.fontWeight = "bold";
-  // btn.style.boxShadow = "0 0 5px var(--primary-color)";
 
-  // 3. Notification (Debounced? No, explicit action = explicit feedback)
-  notify("DATENSATZ GESICHERT");
+  notify("DATENSATZ IN CLOUD GESICHERT");
 
   // 4. Reset Button after delay
   setTimeout(() => {
@@ -1630,13 +1679,15 @@ function saveDraft() {
       rows.forEach((row, index) => {
         const w = row.querySelector(".weight");
         const r = row.querySelector(".reps");
+        const restInput = row.querySelector(".rest-edit");
         if (w && r) {
           entries.push({
             ex: exName,
             set: index + 1, // Enforce sequential set numbers to avoid gaps
             weight: w.value,
             reps: r.value,
-            isCardio: w.dataset.iscardio === "true"
+            isCardio: w.dataset.iscardio === "true",
+            rest: restInput ? restInput.value : 60
           });
         }
       });
@@ -1667,6 +1718,9 @@ function saveDraft() {
     lastModified: Date.now()
   };
   localStorage.setItem("workout_draft", JSON.stringify(draftData));
+
+  // SYNC TO CLOUD (DEBOUNCED)
+  syncDraftToCloud(draftData);
 }
 
 // Global Auto-Save on Visibility Change (Mobile Screen Off)
@@ -1739,6 +1793,12 @@ async function saveWorkout() {
     notify("DATEN_ARCHIVIERT");
     localStorage.removeItem("workout_draft");
 
+    // Cleanup Cloud Session
+    const { data: { user: currentUser } } = await client.auth.getUser();
+    if (currentUser) {
+      await client.from("active_sessions").delete().eq("user_id", currentUser.id);
+    }
+
     // UI Reset
     document.querySelector(".bottom-nav").style.display = "flex";
     document.querySelector(".selection-area").style.display = "block";
@@ -1799,7 +1859,13 @@ document.getElementById("pause-btn")?.addEventListener("click", (e) => {
 // Intermediate Save Button
 document.getElementById("save-intermediate-btn")?.addEventListener("click", () => {
   saveDraft();
-  notify("ENTWURF GESICHERT");
+  // Bypass debounce for manual click
+  const savedData = JSON.parse(localStorage.getItem("workout_draft"));
+  if (savedData) {
+    if (cloudSyncTimeout) clearTimeout(cloudSyncTimeout);
+    syncDraftToCloud(savedData);
+  }
+  notify("SESSION IN CLOUD GESICHERT");
   // Trigger small animation
   const btn = document.getElementById("save-intermediate-btn");
   btn.textContent = "GESPEICHERT!";
