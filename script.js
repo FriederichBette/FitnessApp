@@ -1,9 +1,12 @@
 // ---- MU-TH-UR 6.0 SYSTEM ----
-console.log("APP VERSION: 2.2.0 (SESSION-FIX) - ACTIVATED");
+console.log("APP VERSION: 2.3.0 (DRAFT-FIX) - ACTIVATED");
 
 // --- SESSION STATE TRACKING ---
 let _activeWorkoutLoaded = false; // True when a workout is currently being displayed/trained
 let _currentSessionId = null; // Unique ID for the current workout session
+let _currentWorkoutId = null; // The workout ID of the active session (independent of dropdown)
+let _currentWorkoutName = null; // Display name of the active workout
+let _currentRoutineName = null; // Display name of the active routine
 window.onerror = function (msg, url, line, col, error) {
   alert("FATAL_ERROR: " + msg + "\nLINE: " + line + "\nURL: " + url);
   return false;
@@ -356,6 +359,9 @@ document.getElementById("logout-btn").addEventListener("click", async () => {
     // Reset session state on logout
     _activeWorkoutLoaded = false;
     _currentSessionId = null;
+    _currentWorkoutId = null;
+    _currentWorkoutName = null;
+    _currentRoutineName = null;
     await client.auth.signOut();
     document.body.classList.remove("crt-off");
     showLandingHero(); // Ensure we go back to hero
@@ -1049,9 +1055,15 @@ async function loadWorkout(draftData = null) {
   const workoutId = (draftData && draftData.workout) ? draftData.workout : workoutSelect.value;
   if (!workoutId) return;
 
+  // Store workout identity INTERNALLY (saveDraft reads these, NOT the dropdown)
+  _currentWorkoutId = workoutId;
+  const wObj = availableWorkouts.find(w => w.id == workoutId);
+  _currentWorkoutName = (draftData && draftData.workoutName) ? draftData.workoutName : (wObj ? wObj.name : "TRAINING");
+  _currentRoutineName = (draftData && draftData.routineName) ? draftData.routineName : (wObj ? wObj.routine_name : "ROUTINE");
+
   // Generate or restore session ID for this workout session
   _currentSessionId = (draftData && draftData.sessionId) ? draftData.sessionId : crypto.randomUUID();
-  console.log("SESSION ID:", _currentSessionId);
+  console.log("SESSION ID:", _currentSessionId, "WORKOUT:", _currentWorkoutId);
 
   const draftEntries = draftData ? draftData.entries : null;
 
@@ -1806,20 +1818,21 @@ function saveDraft() {
 
   // REMOVED OLD FLATTENED LOOP
 
-  // Get Workout Name safely
-  let workoutName = "TRAINING";
-  let routineName = "ROUTINE";
-  if (workoutSelect.selectedIndex >= 0) {
-    workoutName = workoutSelect.options[workoutSelect.selectedIndex].text;
-  }
-  if (routineSelect.selectedIndex >= 0) {
-    routineName = routineSelect.options[routineSelect.selectedIndex].text;
+  // FIX: Use internal state variables instead of dropdown (dropdown may be empty/wrong after resume)
+  const workoutIdToSave = _currentWorkoutId || workoutSelect.value;
+  const workoutNameToSave = _currentWorkoutName || (workoutSelect.selectedIndex >= 0 ? workoutSelect.options[workoutSelect.selectedIndex].text : "TRAINING");
+  const routineNameToSave = _currentRoutineName || (routineSelect.selectedIndex >= 0 ? routineSelect.options[routineSelect.selectedIndex].text : "ROUTINE");
+
+  // GUARD: Don't save draft without a valid workout ID
+  if (!workoutIdToSave) {
+    console.warn("SAVE_DRAFT SKIPPED: No workout ID");
+    return;
   }
 
   const draftData = {
-    workout: workoutSelect.value,
-    workoutName: workoutName,
-    routineName: routineName,
+    workout: workoutIdToSave,
+    workoutName: workoutNameToSave,
+    routineName: routineNameToSave,
     entries,
     renames,
     customExercises,
@@ -1829,6 +1842,7 @@ function saveDraft() {
     sessionId: _currentSessionId // Persist session identity across saves
   };
   localStorage.setItem("workout_draft", JSON.stringify(draftData));
+  console.log("DRAFT SAVED:", workoutIdToSave, "entries:", entries.length);
 
   // SYNC TO CLOUD (DEBOUNCED)
   syncDraftToCloud(draftData);
@@ -1838,16 +1852,14 @@ function saveDraft() {
 document.addEventListener("visibilitychange", async () => {
   if (document.visibilityState === "hidden") {
     // Screen is locking or app is going to background
-    // Save immediately to localStorage
-    saveDraft();
-
-    // CRITICAL: Force immediate cloud sync (bypass debounce!)
-    // The browser will freeze timers, so debounced sync would never fire
+    // ONLY save if a workout is actually active
     if (_activeWorkoutLoaded) {
+      saveDraft();
+
+      // CRITICAL: Force immediate cloud sync (bypass debounce!)
       const savedData = JSON.parse(localStorage.getItem("workout_draft"));
       if (savedData) {
         if (cloudSyncTimeout) clearTimeout(cloudSyncTimeout);
-        // Use immediate mode to bypass debounce
         syncDraftToCloud(savedData, true);
       }
     }
@@ -1932,8 +1944,9 @@ async function saveWorkout() {
     // Reset session state
     _activeWorkoutLoaded = false;
     _currentSessionId = null;
-
-    // Cleanup Cloud Session
+    _currentWorkoutId = null;
+    _currentWorkoutName = null;
+    _currentRoutineName = null;
     const { data: { user: currentUser } } = await client.auth.getUser();
     if (currentUser) {
       await client.from("active_sessions").delete().eq("user_id", currentUser.id);
@@ -1973,6 +1986,9 @@ document.getElementById("abort-workout-btn").addEventListener("click", async () 
     // Reset session state
     _activeWorkoutLoaded = false;
     _currentSessionId = null;
+    _currentWorkoutId = null;
+    _currentWorkoutName = null;
+    _currentRoutineName = null;
 
     // Clear Local
     localStorage.removeItem("workout_draft");
@@ -2042,6 +2058,9 @@ document.getElementById("resume-no-btn")?.addEventListener("click", async () => 
   // Reset session state
   _activeWorkoutLoaded = false;
   _currentSessionId = null;
+  _currentWorkoutId = null;
+  _currentWorkoutName = null;
+  _currentRoutineName = null;
 
   localStorage.removeItem("workout_draft");
   const { data: { user } } = await client.auth.getUser();
