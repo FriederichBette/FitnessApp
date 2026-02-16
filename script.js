@@ -1,5 +1,5 @@
 // ---- MU-TH-UR 6.0 SYSTEM ----
-console.log("APP VERSION: 2.3.0 (DRAFT-FIX) - ACTIVATED");
+console.log("APP VERSION: 2.3.1 (CASE-FIX) - ACTIVATED");
 
 // --- SESSION STATE TRACKING ---
 let _activeWorkoutLoaded = false; // True when a workout is currently being displayed/trained
@@ -1267,7 +1267,7 @@ async function loadWorkout(draftData = null) {
       // Easiest is to scan draftEntries for max set number for this exercise.
       let maxSetMap = 0;
       if (draftEntries) {
-        const related = draftEntries.filter(d => d.ex === effectiveName);
+        const related = draftEntries.filter(d => d.ex.toUpperCase() === effectiveName.toUpperCase());
         if (related.length > 0) {
           maxSetMap = Math.max(...related.map(r => r.set));
         }
@@ -1275,7 +1275,10 @@ async function loadWorkout(draftData = null) {
       const setsToRender = Math.max(targetSets, maxSetMap);
 
       for (let i = 1; i <= setsToRender; i++) {
-        const draft = draftEntries?.find(d => d.ex === effectiveName && d.set === i);
+        // FIX: Case-insensitive matching for draft entries
+        const draft = draftEntries?.find(d =>
+          d.ex.toUpperCase() === effectiveName.toUpperCase() && d.set === i
+        );
         // Use Draft weight OR Template weight OR empty
         let defWeight = "";
         let defReps = "";
@@ -1784,8 +1787,9 @@ function saveDraft() {
           rest_time: 60
         });
       } else {
-        // Regular Plan Exercise
-        if (originalName && currentName !== originalName) {
+        // Regular Plan Exercise - case-insensitive rename check
+        // (titleInput is always UPPERCASED, originalName from plan may be mixed-case)
+        if (originalName && currentName.toUpperCase() !== originalName.toUpperCase()) {
           renames[originalName] = currentName;
         }
       }

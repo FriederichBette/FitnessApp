@@ -1,4 +1,4 @@
-const CACHE_NAME = 'weyland-v13';
+const CACHE_NAME = 'weyland-v14';
 const ASSETS = [
     '/',
     '/index.html',
