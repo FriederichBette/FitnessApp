@@ -91,21 +91,50 @@
 body {
     background-color: var(--bg-color);
     background-image:
-        linear-gradient(rgba(0, 59, 0, 0.1) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0, 59, 0, 0.1) 1px, transparent 1px);
+        linear-gradient(rgba(0, 59, 0, 0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 59, 0, 0.08) 1px, transparent 1px);
     background-size: 30px 30px;
     color: var(--text-color);
     line-height: 1.4;
     min-height: 100vh;
-    /* Ensure full viewport for vignette */
-    box-shadow: inset 0 0 120px rgba(0, 0, 0, 0.9);
-    /* CRT Vignette */
-    text-shadow: 0 0 3px rgba(0, 255, 65, 0.4);
-    /* Global Phosphor Glow */
+    /* CRT Vignette - heavy dark edges like real CRT monitors */
+    box-shadow:
+        inset 0 0 150px rgba(0, 0, 0, 0.95),
+        inset 0 0 80px rgba(0, 0, 0, 0.6);
+    /* Phosphor Bloom - text glows like real phosphor dots */
+    text-shadow: 0 0 2px rgba(0, 255, 65, 0.5);
     touch-action: manipulation;
     overflow-x: hidden;
     font-variant-numeric: tabular-nums;
-    /* Stable numbers */
+    /* Subtle screen flicker */
+    animation: screenFlicker 0.15s infinite;
+}
+
+/* MU-TH-UR 6000 Screen Flicker */
+@keyframes screenFlicker {
+    0% {
+        opacity: 0.97;
+    }
+
+    5% {
+        opacity: 0.99;
+    }
+
+    10% {
+        opacity: 0.98;
+    }
+
+    50% {
+        opacity: 1;
+    }
+
+    90% {
+        opacity: 0.985;
+    }
+
+    100% {
+        opacity: 0.97;
+    }
 }
 
 input,
@@ -171,31 +200,31 @@ body::before {
     top: 0;
     left: 0;
     width: 100%;
-    height: 2px;
-    background: rgba(0, 255, 65, 0.05);
-    box-shadow: 0 0 5px rgba(0, 255, 65, 0.2);
+    height: 3px;
+    background: rgba(0, 255, 65, 0.06);
+    box-shadow: 0 0 8px rgba(0, 255, 65, 0.15);
     z-index: 1001;
     pointer-events: none;
-    animation: scan 10s linear infinite;
+    animation: scan 8s linear infinite;
 }
 
-/* Original Minimal Particles */
+/* Film Grain / CRT Noise Overlay */
 body::after {
     content: "";
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
     background-image:
-        radial-gradient(var(--primary-color) 1px, transparent 0),
-        radial-gradient(var(--primary-color) 1px, transparent 0);
-    background-size: 50px 50px;
-    background-position: 0 0, 25px 25px;
-    opacity: 0.03;
+        repeating-linear-gradient(0deg,
+            transparent,
+            transparent 2px,
+            rgba(0, 0, 0, 0.15) 2px,
+            rgba(0, 0, 0, 0.15) 4px);
+    opacity: 0.6;
     pointer-events: none;
     z-index: 1000;
-    animation: dataParticles 4s ease-in-out infinite;
 }
 
 .container {
@@ -1512,10 +1541,10 @@ button:active {
 
 /* --- SAVE BUTTON ACCENT --- */
 .save-set-btn:active {
-    border-color: var(--magenta) !important;
-    color: var(--magenta) !important;
-    box-shadow: 0 0 12px rgba(255, 62, 255, 0.3);
-    text-shadow: 0 0 8px var(--magenta);
+    border-color: var(--cyan) !important;
+    color: var(--cyan) !important;
+    box-shadow: 0 0 12px rgba(0, 229, 255, 0.3);
+    text-shadow: 0 0 8px var(--cyan);
 }
 
 /* --- START REST BUTTON ACCENT --- */
@@ -1637,8 +1666,8 @@ button:active {
 .chart-row-sessions {
     min-width: 22px;
     font-size: 0.5rem;
-    color: var(--magenta);
-    text-shadow: 0 0 4px rgba(255, 62, 255, 0.3);
+    color: var(--cyan);
+    text-shadow: 0 0 4px rgba(0, 229, 255, 0.3);
     flex-shrink: 0;
 }
 
@@ -1678,9 +1707,9 @@ button:active {
     box-shadow: 0 0 4px var(--primary-color);
 }
 
-.chart-legend-dot.magenta {
-    background: var(--magenta);
-    box-shadow: 0 0 4px var(--magenta);
+.chart-legend-dot.cyan {
+    background: var(--cyan);
+    box-shadow: 0 0 4px var(--cyan);
 }
 
 .chart-legend-dot.amber {
@@ -1847,10 +1876,10 @@ button:active {
     text-shadow: 0 0 6px rgba(0, 229, 255, 0.3);
 }
 
-/* Rest timer in magenta */
+/* Rest timer in amber (warning color) */
 .rest-zone {
-    color: var(--magenta) !important;
-    text-shadow: 0 0 4px rgba(255, 62, 255, 0.3);
+    color: var(--amber) !important;
+    text-shadow: 0 0 6px rgba(255, 176, 0, 0.4);
 }
 
 /* Sync indicator colors */

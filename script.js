@@ -1,5 +1,5 @@
 // ---- MU-TH-UR 6.0 SYSTEM ----
-console.log("APP VERSION: 2.3.1 (CASE-FIX) - ACTIVATED");
+console.log("APP VERSION: 2.5.0 (MU-TH-UR) - ACTIVATED");
 
 // --- SESSION STATE TRACKING ---
 let _activeWorkoutLoaded = false; // True when a workout is currently being displayed/trained
@@ -79,46 +79,52 @@ function initPenguin() {
     }
   }, 4000);
 
-  // --- EXTENDED MESSAGE POOL ---
+  // --- SARCASTIC PENGUIN MESSAGE POOL ---
   const idleMessages = [
-    // Hydration
-    "TRINK WASSER!", "H2O ALARM!", "WASSER. JETZT.",
-    "HYDRATION CHECK!", "DEIN KÖRPER WILL H2O",
-    // Motivation
-    "DU SCHAFFST DAS!", "MASCHINE!", "WEITER PUMPEN!",
-    "KEINE EXCUSES!", "BEAST MODE ON!", "FOKUS!",
-    "STARKES SET!", "SAUBER!", "KOMM SCHON!",
-    "LIGHT WEIGHT BABY!", "PENGUIN GAINS!",
-    "BLEIB DRAN!", "NOCH EINS!", "MEHR!",
-    // Sarcasm
-    "IST DAS ALLES?", "RUHETAG WAR GESTERN",
-    "MEIN OPA HEBT MEHR", "MEHR GEWICHT!",
-    "PAUSE VORBEI.", "HANDY WEG, PUMPEN!",
-    "LEICHTGEWICHT...", "SNACK VERDIENEN!",
-    "WAS WAR DAS?!", "NOCHMAL.",
-    // Fun
-    "ICH GLAUB AN DICH", "PENGUIN POWER!",
-    "DER PUMP KOMMT!", "GAINS INCOMING",
-    "LETZTE WIEDERHOLUNG!", "ADRENALIN!"
+    // Water (40%)
+    "TRINK WASSER.", "H2O. SOFORT.", "WASSER. NICHT OPTIONAL.",
+    "DEIN KÖRPER IST 60% WASSER. AUFFÜLLEN.",
+    "HYDRATION STATUS: KRITISCH",
+    "WASSER TRINKEN ODER KRÄMPFE KRIEGEN.",
+    "DEINE NIEREN HABEN ANGERUFEN.",
+    "TRINK. EINFACH TRINK.", "WASSER > PROTEINSHAKE",
+    "DEHYDRIERUNG IST KEIN LIFESTYLE.",
+    "WIE VIEL WASSER? MEHR.",
+    "H2O LEVEL: NIEDRIG", "WASSER. JETZT. DANKE.",
+    // Sarcasm (60%)
+    "IST DAS DEIN ERNST?", "NOCHMAL. RICHTIG DIESMAL.",
+    "MEIN OPA. SCHWERER. IM ROLLSTUHL.",
+    "RUHETAG WAR GESTERN.",
+    "DAS WAR... TECHNISCH EINE WIEDERHOLUNG.",
+    "HANDY WEG.", "WENIGER REDEN, MEHR HEBEN.",
+    "DIE HANTEL WARTET NICHT.",
+    "PAUSE VORBEI. AUFHÖREN ZU LESEN.",
+    "ICH ZÄHLE MIT. DAS WAREN NICHT 10.",
+    "DEIN FORMCHECK: MANGELHAFT.",
+    "WARM-UP ODER WAR DAS DAS SET?",
+    "KONZENTRATION. DU HAST NULL.",
+    "TOP LEISTUNG. IRONIE AUS.",
+    "DAS GEWICHT HEBT SICH NICHT ALLEIN.",
+    "SCHWITZEN IST ERLAUBT.",
+    "WENIGER SELFIES, MEHR SETS.",
+    "FOCUS.", "NÄCHSTES SET. LOS."
   ];
 
   // Click to Talk
   penguin.addEventListener("click", () => {
     const msg = idleMessages[Math.floor(Math.random() * idleMessages.length)];
     showPenguinBubble(msg);
-    const anims = ["wiggle", "spin", "slide", "happyDance", "moonwalk", "flip", "rave", "flex"];
+    const anims = ["wiggle", "spin", "slide", "happyDance", "moonwalk", "flip", "flex"];
     window.triggerPenguinAnim(anims[Math.floor(Math.random() * anims.length)]);
   });
 
   // --- AUTO-TALK (every 25-45s during active workout) ---
   setInterval(() => {
     if (!_activeWorkoutLoaded) return;
-    // 50% chance to talk
     if (Math.random() > 0.5) return;
     const msg = idleMessages[Math.floor(Math.random() * idleMessages.length)];
     showPenguinBubble(msg);
-    // Small animation
-    const smallAnims = ["wiggle", "flex", "happyDance"];
+    const smallAnims = ["wiggle", "flex"];
     window.triggerPenguinAnim(smallAnims[Math.floor(Math.random() * smallAnims.length)]);
   }, 30000 + Math.random() * 15000);
 
@@ -128,21 +134,19 @@ function initPenguin() {
     if (!penguin) return;
 
     penguin.style.animation = "none";
-    penguin.offsetHeight; // trigger reflow
+    penguin.offsetHeight;
 
     let duration = 500;
-    if (type === "rave") duration = 2000;
     if (type === "moonwalk") duration = 1500;
     if (type === "flip") duration = 800;
 
     penguin.style.animation = `${type} ${duration}ms ease-out`;
 
     const msgs = {
-      happyDance: ["GEILER TYP!", "MASCHINE!", "STARK!", "LÄUFT!"],
-      rave: ["PARTY PUR!", "SYSTEM RAVE!", "BEATS & GAINS!", "UNSTOPPABLE!"],
-      flip: ["BACKFLIP!", "WOHOOO!", "NICE!", "EXTREME!"],
-      moonwalk: ["SMOOTH...", "HEE-HEE!", "CLEAN MOVE", "KING OF GYM"],
-      flex: ["FLEX!", "PUMP IS REAL", "BREIT GEBAUT", "MASSE PHASE"]
+      happyDance: ["GEHT DOCH.", "ENDLICH.", "WAR DAS SO SCHWER?"],
+      flip: ["DRAMA.", "UNNÖTIG ABER OK.", "EFFEKTHASCHEREI."],
+      moonwalk: ["ABLENKUNG.", "FOKUS VERLOREN.", "ZURÜCK ANS EISEN."],
+      flex: ["SPIEGEL IST WOANDERS.", "WENIGER FLEXEN, MEHR HEBEN.", "JA JA, MUSKELN. WEITER."]
     };
 
     if (forcedMsg) {
@@ -157,9 +161,9 @@ function initPenguin() {
     }, duration);
   };
 
-  // VICTORY DANCE FUNCTION
+  // VICTORY DANCE
   window.penguinDance = () => {
-    window.triggerPenguinAnim("rave", "TRAINING COMPLETE!");
+    window.triggerPenguinAnim("happyDance", "ENDLICH FERTIG.");
     setTimeout(() => window.triggerPenguinAnim("flip"), 2000);
   };
 }
@@ -2260,7 +2264,7 @@ function renderHistory() {
       <div class="chart-footer">
         <div class="chart-legend">
           <span class="chart-legend-item"><span class="chart-legend-dot green"></span> VOL</span>
-          <span class="chart-legend-item"><span class="chart-legend-dot magenta"></span> SESSIONS</span>
+          <span class="chart-legend-item"><span class="chart-legend-dot cyan"></span> SESSIONS</span>
           <span class="chart-legend-item"><span class="chart-legend-dot amber"></span> KW</span>
         </div>
         <div>
