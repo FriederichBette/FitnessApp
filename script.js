@@ -2200,7 +2200,7 @@ function renderHistory() {
     weekWorkouts[key].add(`${l.date}_${l.workout}`);
   });
 
-  // --- TERMINAL CHART (last 4 weeks) ---
+  // --- TERMINAL CHART (last 4 weeks) - HORIZONTAL BARS ---
   const last4Weeks = Object.keys(weeks).sort().reverse().slice(0, 4).reverse();
   const chartDiv = document.createElement("div");
   chartDiv.className = "terminal-chart";
@@ -2208,37 +2208,78 @@ function renderHistory() {
   if (last4Weeks.length > 0) {
     const maxVol = Math.max(...last4Weeks.map(w => weeks[w].vol));
 
-    let barsHtml = "";
+    // Format volume for display
+    const fmtVol = (v) => {
+      if (v >= 10000) return (v / 1000).toFixed(0) + "K";
+      if (v >= 1000) return (v / 1000).toFixed(1) + "K";
+      return v.toString();
+    };
+
+    // Build horizontal bar rows
+    let rowsHtml = "";
     last4Weeks.forEach(w => {
       const vol = Math.round(weeks[w].vol);
-      const pct = maxVol > 0 ? Math.max(3, (vol / maxVol) * 100) : 3;
-      const volDisplay = vol >= 1000 ? Math.round(vol / 1000) + "K" : vol;
+      const pct = maxVol > 0 ? Math.max(2, (vol / maxVol) * 100) : 2;
       const sessions = weekWorkouts[w] ? weekWorkouts[w].size : 0;
-      const dateRange = weekDates[w];
       const shortLabel = w.split("-")[1]; // KW number
 
-      barsHtml += `
-        <div class="chart-bar-group">
-          <div class="chart-bar" style="height:${pct}%" data-vol="${volDisplay}"></div>
-          <div class="chart-bar-label">${shortLabel}</div>
-          <div class="chart-bar-count">${sessions}x</div>
+      rowsHtml += `
+        <div class="chart-row">
+          <div class="chart-row-label">${shortLabel}</div>
+          <div class="chart-row-bar-bg">
+            <div class="chart-row-bar-fill" style="width:${pct}%"></div>
+          </div>
+          <div class="chart-row-vol">${fmtVol(vol)} KG</div>
+          <div class="chart-row-sessions">${sessions}x</div>
         </div>
       `;
     });
 
+    // Calculate trend
+    let trendHtml = '<span class="chart-trend flat">— STABIL</span>';
+    if (last4Weeks.length >= 2) {
+      const recent = weeks[last4Weeks[last4Weeks.length - 1]].vol;
+      const prev = weeks[last4Weeks[last4Weeks.length - 2]].vol;
+      if (prev > 0) {
+        const change = ((recent - prev) / prev * 100).toFixed(0);
+        if (change > 5) trendHtml = `<span class="chart-trend up">▲ +${change}%</span>`;
+        else if (change < -5) trendHtml = `<span class="chart-trend down">▼ ${change}%</span>`;
+      }
+    }
+
+    // Total volume across all 4 weeks
+    const totalVol = last4Weeks.reduce((sum, w) => sum + weeks[w].vol, 0);
+    const totalSessions = last4Weeks.reduce((sum, w) => sum + (weekWorkouts[w] ? weekWorkouts[w].size : 0), 0);
+
     chartDiv.innerHTML = `
-      <div class="terminal-chart-title">VOLUMEN // LETZTE 4 WOCHEN</div>
-      <div class="chart-timeline">${barsHtml}</div>
+      <div class="terminal-chart-header">
+        <div class="terminal-chart-title">VOLUMEN // 4 WOCHEN</div>
+        <div class="terminal-chart-status">[LIVE]</div>
+      </div>
+      ${rowsHtml}
+      <div class="chart-footer">
+        <div class="chart-legend">
+          <span class="chart-legend-item"><span class="chart-legend-dot green"></span> VOL</span>
+          <span class="chart-legend-item"><span class="chart-legend-dot magenta"></span> SESSIONS</span>
+          <span class="chart-legend-item"><span class="chart-legend-dot amber"></span> KW</span>
+        </div>
+        <div>
+          TOTAL: ${fmtVol(Math.round(totalVol))} KG // ${totalSessions} SESSIONS ${trendHtml}
+        </div>
+      </div>
     `;
   } else {
     chartDiv.innerHTML = `
-      <div class="terminal-chart-title">VOLUMEN // LETZTE 4 WOCHEN</div>
-      <div class="chart-empty">KEINE DATEN VERFÜGBAR</div>
+      <div class="terminal-chart-header">
+        <div class="terminal-chart-title">VOLUMEN // 4 WOCHEN</div>
+        <div class="terminal-chart-status">[KEINE DATEN]</div>
+      </div>
+      <div class="chart-empty">KEINE TRAININGSDATEN VERFÜGBAR</div>
     `;
   }
   historyList.appendChild(chartDiv);
 
-  // Weekly Stats Text
+  // Weekly Stats Text (with accent colors)
   const statsDiv = document.createElement("div");
   statsDiv.className = "info-section";
   statsDiv.innerHTML = `<div class="editor-header">WOCHENSTATISTIK</div>`;
@@ -2247,9 +2288,9 @@ function renderHistory() {
     const vol = Math.round(weeks[w].vol);
     const sessions = weekWorkouts[w] ? weekWorkouts[w].size : 0;
     statsDiv.innerHTML += `
-        <div style="display:flex; justify-content:space-between; font-size:0.75rem; border-bottom:1px dashed var(--secondary-color); padding:5px 0;">
-            <span>${w}</span>
-            <span>VOL: ${vol.toLocaleString()} KG | ${sessions} SESSIONS</span>
+        <div class="week-stat-row">
+            <span class="week-stat-label">${w}</span>
+            <span><span class="week-stat-value">VOL: ${vol.toLocaleString()} KG</span> | <span class="week-stat-sessions">${sessions} SESSIONS</span></span>
         </div>
       `;
   });

@@ -6,6 +6,16 @@
     --text-muted: #008f11;
     --error-color: #ff3e3e;
     --terminal-font: 'Share Tech Mono', monospace;
+
+    /* Classic CRT Phosphor Accent Colors */
+    --amber: #FFB000;
+    /* P3 Amber Phosphor (IBM 3270) */
+    --cyan: #00E5FF;
+    /* VT220 Cyan */
+    --magenta: #FF3EFF;
+    /* VGA Magenta */
+    --hot-red: #FF2A2A;
+    /* Error Red (bright) */
 }
 
 * {
@@ -1471,9 +1481,13 @@ button:hover {
 }
 
 button:active {
-    background: rgba(0, 255, 65, 0.15);
-    transform: scale(0.98);
-    box-shadow: 0 0 10px rgba(0, 255, 65, 0.3);
+    background: rgba(255, 176, 0, 0.12);
+    transform: scale(0.97);
+    box-shadow: 0 0 20px rgba(255, 176, 0, 0.25), inset 0 0 30px rgba(255, 176, 0, 0.05);
+    border-color: var(--amber);
+    color: var(--amber);
+    text-shadow: 0 0 10px var(--amber);
+    transition: all 0.05s ease;
 }
 
 .secondary {
@@ -1489,16 +1503,39 @@ button:active {
     background: rgba(0, 255, 65, 0.05);
 }
 
+.secondary:active {
+    border-color: var(--cyan);
+    color: var(--cyan);
+    box-shadow: 0 0 12px rgba(0, 229, 255, 0.2);
+    text-shadow: 0 0 8px var(--cyan);
+}
+
+/* --- SAVE BUTTON ACCENT --- */
+.save-set-btn:active {
+    border-color: var(--magenta) !important;
+    color: var(--magenta) !important;
+    box-shadow: 0 0 12px rgba(255, 62, 255, 0.3);
+    text-shadow: 0 0 8px var(--magenta);
+}
+
+/* --- START REST BUTTON ACCENT --- */
+.start-rest-btn:active {
+    border-color: var(--cyan) !important;
+    color: var(--cyan) !important;
+    box-shadow: 0 0 12px rgba(0, 229, 255, 0.3);
+}
+
 /* --- TERMINAL CHART (4-Week History) --- */
 .terminal-chart {
     border: 1px solid var(--secondary-color);
-    padding: 15px;
-    margin-bottom: 25px;
+    padding: 16px 14px;
+    margin-bottom: 20px;
     position: relative;
     overflow: hidden;
-    background: rgba(0, 0, 0, 0.9);
+    background: rgba(0, 0, 0, 0.95);
 }
 
+/* CRT Scanlines over chart */
 .terminal-chart::before {
     content: '';
     position: absolute;
@@ -1509,110 +1546,230 @@ button:active {
     background: repeating-linear-gradient(0deg,
             transparent,
             transparent 2px,
-            rgba(0, 255, 65, 0.015) 2px,
-            rgba(0, 255, 65, 0.015) 4px);
+            rgba(0, 255, 65, 0.012) 2px,
+            rgba(0, 255, 65, 0.012) 4px);
     pointer-events: none;
     z-index: 1;
 }
 
-.terminal-chart-title {
-    font-size: 0.7rem;
-    color: var(--text-muted);
-    margin-bottom: 12px;
-    letter-spacing: 2px;
+.terminal-chart-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px dashed var(--secondary-color);
 }
 
-.terminal-chart-title::after {
-    content: '[AKTIV]';
+.terminal-chart-title {
+    font-size: 0.65rem;
+    color: var(--cyan);
+    letter-spacing: 2px;
+    text-shadow: 0 0 6px rgba(0, 229, 255, 0.4);
+}
+
+.terminal-chart-status {
+    font-size: 0.55rem;
     color: var(--primary-color);
-    font-size: 0.6rem;
     animation: blink 1.5s step-end infinite;
 }
 
-.chart-timeline {
+/* Horizontal bar chart rows */
+.chart-row {
     display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    height: 100px;
-    border-bottom: 1px solid var(--secondary-color);
-    border-left: 1px solid var(--secondary-color);
-    padding: 0 5px;
-    gap: 4px;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
     position: relative;
     z-index: 2;
 }
 
-.chart-bar-group {
+.chart-row-label {
+    min-width: 36px;
+    font-size: 0.6rem;
+    color: var(--amber);
+    text-shadow: 0 0 4px rgba(255, 176, 0, 0.3);
+    text-align: right;
+    flex-shrink: 0;
+}
+
+.chart-row-bar-bg {
     flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 3px;
-    max-width: 80px;
-}
-
-.chart-bar {
-    width: 100%;
-    min-height: 2px;
-    background: var(--primary-color);
-    box-shadow: 0 0 6px rgba(0, 255, 65, 0.4);
+    height: 16px;
+    background: rgba(0, 59, 0, 0.3);
+    border: 1px solid var(--secondary-color);
     position: relative;
-    transition: height 0.5s ease;
+    overflow: hidden;
 }
 
-.chart-bar::after {
-    content: attr(data-vol);
+.chart-row-bar-fill {
+    height: 100%;
+    background: var(--primary-color);
+    box-shadow: 0 0 8px rgba(0, 255, 65, 0.4), inset 0 0 4px rgba(0, 255, 65, 0.2);
+    transition: width 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    position: relative;
+}
+
+/* Block/pixelated bar fill effect */
+.chart-row-bar-fill::after {
+    content: '';
     position: absolute;
-    top: -16px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 0.5rem;
-    color: var(--primary-color);
-    white-space: nowrap;
-    text-shadow: 0 0 3px var(--primary-color);
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: repeating-linear-gradient(90deg,
+            transparent,
+            transparent 6px,
+            rgba(0, 0, 0, 0.25) 6px,
+            rgba(0, 0, 0, 0.25) 8px);
 }
 
-.chart-bar-label {
+.chart-row-vol {
+    min-width: 50px;
+    font-size: 0.55rem;
+    color: var(--primary-color);
+    text-align: right;
+    text-shadow: 0 0 4px rgba(0, 255, 65, 0.3);
+    flex-shrink: 0;
+}
+
+.chart-row-sessions {
+    min-width: 22px;
+    font-size: 0.5rem;
+    color: var(--magenta);
+    text-shadow: 0 0 4px rgba(255, 62, 255, 0.3);
+    flex-shrink: 0;
+}
+
+/* Chart footer with legend */
+.chart-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px dashed var(--secondary-color);
     font-size: 0.5rem;
     color: var(--text-muted);
-    margin-top: 6px;
-    text-align: center;
-    word-break: break-all;
-    line-height: 1.1;
-}
-
-.chart-bar-count {
-    font-size: 0.55rem;
-    color: var(--secondary-color);
-    text-align: center;
-}
-
-.chart-y-axis {
-    position: absolute;
-    left: 2px;
-    top: 0;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
+    position: relative;
     z-index: 2;
 }
 
-.chart-y-label {
-    font-size: 0.45rem;
-    color: var(--secondary-color);
+.chart-legend {
+    display: flex;
+    gap: 12px;
+}
+
+.chart-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.chart-legend-dot {
+    width: 6px;
+    height: 6px;
+    display: inline-block;
+}
+
+.chart-legend-dot.green {
+    background: var(--primary-color);
+    box-shadow: 0 0 4px var(--primary-color);
+}
+
+.chart-legend-dot.magenta {
+    background: var(--magenta);
+    box-shadow: 0 0 4px var(--magenta);
+}
+
+.chart-legend-dot.amber {
+    background: var(--amber);
+    box-shadow: 0 0 4px var(--amber);
+}
+
+/* Chart trend indicator */
+.chart-trend {
+    font-size: 0.55rem;
+    font-weight: bold;
+}
+
+.chart-trend.up {
+    color: var(--primary-color);
+    text-shadow: 0 0 6px var(--primary-color);
+}
+
+.chart-trend.down {
+    color: var(--hot-red);
+    text-shadow: 0 0 6px var(--hot-red);
+}
+
+.chart-trend.flat {
+    color: var(--amber);
+    text-shadow: 0 0 6px var(--amber);
 }
 
 /* Chart empty state */
 .chart-empty {
     text-align: center;
     padding: 20px;
-    font-size: 0.7rem;
+    font-size: 0.65rem;
     color: var(--text-muted);
-    font-style: italic;
+    letter-spacing: 2px;
+}
+
+/* Glitch effect for chart title */
+@keyframes chartGlitch {
+
+    0%,
+    95% {
+        opacity: 1;
+    }
+
+    96% {
+        opacity: 0.8;
+        transform: translateX(2px);
+    }
+
+    97% {
+        opacity: 1;
+        transform: translateX(-1px);
+    }
+
+    98% {
+        opacity: 0.9;
+        transform: translateX(0);
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+
+.terminal-chart-title {
+    animation: chartGlitch 8s infinite;
+}
+
+/* --- WEEKLY STATS ACCENT COLORS --- */
+.week-stat-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    border-bottom: 1px dashed var(--secondary-color);
+    padding: 5px 0;
+}
+
+.week-stat-label {
+    color: var(--amber);
+    text-shadow: 0 0 4px rgba(255, 176, 0, 0.2);
+}
+
+.week-stat-value {
+    color: var(--primary-color);
+}
+
+.week-stat-sessions {
+    color: var(--cyan);
 }
 
 /* --- MOBILE TEXT SAFETY --- */
@@ -1674,4 +1831,44 @@ button:active {
 /* Workout actions spacing */
 #workout-actions button {
     margin-bottom: 8px;
+}
+
+/* --- ACCENT COLORS ON SPECIFIC ELEMENTS --- */
+
+/* Timer display in amber */
+#timer-display {
+    color: var(--amber) !important;
+    text-shadow: 0 0 8px rgba(255, 176, 0, 0.4);
+}
+
+/* Volume display in cyan */
+#volume-display {
+    color: var(--cyan) !important;
+    text-shadow: 0 0 6px rgba(0, 229, 255, 0.3);
+}
+
+/* Rest timer in magenta */
+.rest-zone {
+    color: var(--magenta) !important;
+    text-shadow: 0 0 4px rgba(255, 62, 255, 0.3);
+}
+
+/* Sync indicator colors */
+#sync-indicator {
+    font-size: 0.55rem;
+    letter-spacing: 1px;
+}
+
+/* Exercise info rows in amber */
+.exercise-info {
+    color: var(--amber) !important;
+    font-size: 0.7rem;
+    text-shadow: 0 0 3px rgba(255, 176, 0, 0.2);
+}
+
+/* Last logs in cyan */
+.last-logs {
+    color: var(--cyan) !important;
+    font-size: 0.65rem;
+    text-shadow: 0 0 3px rgba(0, 229, 255, 0.15);
 }
