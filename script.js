@@ -1,5 +1,9 @@
 // ---- MU-TH-UR 6.0 SYSTEM ----
-console.log("APP VERSION: 2.1.1 (PATCH) - ACTIVATED");
+console.log("APP VERSION: 2.2.0 (SESSION-FIX) - ACTIVATED");
+
+// --- SESSION STATE TRACKING ---
+let _activeWorkoutLoaded = false; // True when a workout is currently being displayed/trained
+let _currentSessionId = null; // Unique ID for the current workout session
 window.onerror = function (msg, url, line, col, error) {
   alert("FATAL_ERROR: " + msg + "\nLINE: " + line + "\nURL: " + url);
   return false;
@@ -37,31 +41,23 @@ function initPenguin() {
   const penguin = document.createElement("div");
   penguin.id = "pixel-penguin";
   penguin.className = "pixel-penguin";
-  // Besserer Pixel-Pinguin (16x16 Grid) - OLD STYLE simple eyes
   penguin.innerHTML = `
       <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges" style="width:100%; height:100%;">
          <!-- Body -->
          <rect x="4" y="2" width="8" height="12" fill="var(--primary-color)" />
          <rect x="3" y="4" width="1" height="8" fill="var(--primary-color)" />
          <rect x="12" y="4" width="1" height="8" fill="var(--primary-color)" />
-         
-         <!-- Belly (Darker for contrast) -->
+         <!-- Belly -->
          <rect x="5" y="5" width="6" height="8" fill="#000" opacity="0.8" />
-         
-         <!-- Eyes (SIMPLE) -->
+         <!-- Eyes -->
          <rect id="p-eye-l" x="5" y="4" width="1" height="1" fill="#000" />
          <rect id="p-eye-r" x="9" y="4" width="1" height="1" fill="#000" />
-
-
-
          <!-- Beak -->
          <rect x="7" y="5" width="2" height="1" fill="var(--secondary-color)" />
          <rect x="8" y="6" width="1" height="1" fill="var(--secondary-color)" />
-
          <!-- Feet -->
          <rect x="4" y="14" width="3" height="1" fill="var(--secondary-color)" />
          <rect x="9" y="14" width="3" height="1" fill="var(--secondary-color)" />
-         
          <!-- Flippers -->
          <rect x="2" y="6" width="1" height="4" fill="var(--primary-color)" />
          <rect x="13" y="6" width="1" height="4" fill="var(--primary-color)" />
@@ -70,39 +66,58 @@ function initPenguin() {
   `;
   document.body.appendChild(penguin);
 
-  // Blinking Logic
+  // Blinking
   setInterval(() => {
     const l = document.getElementById("p-eye-l");
     const r = document.getElementById("p-eye-r");
     if (l && r) {
       l.style.opacity = "0"; r.style.opacity = "0";
-      setTimeout(() => {
-        l.style.opacity = "1"; r.style.opacity = "1";
-      }, 200);
+      setTimeout(() => { l.style.opacity = "1"; r.style.opacity = "1"; }, 200);
     }
   }, 4000);
 
-  const messages = [
-    "Trink Wasser!", "Du schaffst das!",
-    "Geiler Typ!", "Maschine!", "Bleib dran!",
-    "Starkes Set!", "Sauber!", "Weiter so!",
-    "Top Leistung!", "Gönn dir Wasser!",
-    "BEAST MODE!", "NUR NOCH EINE!",
-    "LIGHT WEIGHT BABY!", "KOMM SCHON!",
-    "PENGUIN GAINS!", "FOKUS!"
+  // --- EXTENDED MESSAGE POOL ---
+  const idleMessages = [
+    // Hydration
+    "TRINK WASSER!", "H2O ALARM!", "WASSER. JETZT.",
+    "HYDRATION CHECK!", "DEIN KÖRPER WILL H2O",
+    // Motivation
+    "DU SCHAFFST DAS!", "MASCHINE!", "WEITER PUMPEN!",
+    "KEINE EXCUSES!", "BEAST MODE ON!", "FOKUS!",
+    "STARKES SET!", "SAUBER!", "KOMM SCHON!",
+    "LIGHT WEIGHT BABY!", "PENGUIN GAINS!",
+    "BLEIB DRAN!", "NOCH EINS!", "MEHR!",
+    // Sarcasm
+    "IST DAS ALLES?", "RUHETAG WAR GESTERN",
+    "MEIN OPA HEBT MEHR", "MEHR GEWICHT!",
+    "PAUSE VORBEI.", "HANDY WEG, PUMPEN!",
+    "LEICHTGEWICHT...", "SNACK VERDIENEN!",
+    "WAS WAR DAS?!", "NOCHMAL.",
+    // Fun
+    "ICH GLAUB AN DICH", "PENGUIN POWER!",
+    "DER PUMP KOMMT!", "GAINS INCOMING",
+    "LETZTE WIEDERHOLUNG!", "ADRENALIN!"
   ];
 
   // Click to Talk
   penguin.addEventListener("click", () => {
-    const msg = messages[Math.floor(Math.random() * messages.length)];
+    const msg = idleMessages[Math.floor(Math.random() * idleMessages.length)];
     showPenguinBubble(msg);
-
-    // Random Animation on Click
     const anims = ["wiggle", "spin", "slide", "happyDance", "moonwalk", "flip", "rave", "flex"];
-    const chosen = anims[Math.floor(Math.random() * anims.length)];
-
-    window.triggerPenguinAnim(chosen);
+    window.triggerPenguinAnim(anims[Math.floor(Math.random() * anims.length)]);
   });
+
+  // --- AUTO-TALK (every 25-45s during active workout) ---
+  setInterval(() => {
+    if (!_activeWorkoutLoaded) return;
+    // 50% chance to talk
+    if (Math.random() > 0.5) return;
+    const msg = idleMessages[Math.floor(Math.random() * idleMessages.length)];
+    showPenguinBubble(msg);
+    // Small animation
+    const smallAnims = ["wiggle", "flex", "happyDance"];
+    window.triggerPenguinAnim(smallAnims[Math.floor(Math.random() * smallAnims.length)]);
+  }, 30000 + Math.random() * 15000);
 
   // Animation Trigger
   window.triggerPenguinAnim = (type, forcedMsg = null) => {
@@ -112,7 +127,6 @@ function initPenguin() {
     penguin.style.animation = "none";
     penguin.offsetHeight; // trigger reflow
 
-    // Duration mapping
     let duration = 500;
     if (type === "rave") duration = 2000;
     if (type === "moonwalk") duration = 1500;
@@ -122,7 +136,7 @@ function initPenguin() {
 
     const msgs = {
       happyDance: ["GEILER TYP!", "MASCHINE!", "STARK!", "LÄUFT!"],
-      rave: ["PARTY PUR!", "SYSTEM RAVE!", "BEATS & GAINS!", "UNSTOFFABLE!"],
+      rave: ["PARTY PUR!", "SYSTEM RAVE!", "BEATS & GAINS!", "UNSTOPPABLE!"],
       flip: ["BACKFLIP!", "WOHOOO!", "NICE!", "EXTREME!"],
       moonwalk: ["SMOOTH...", "HEE-HEE!", "CLEAN MOVE", "KING OF GYM"],
       flex: ["FLEX!", "PUMP IS REAL", "BREIT GEBAUT", "MASSE PHASE"]
@@ -140,25 +154,25 @@ function initPenguin() {
     }, duration);
   };
 
-  function showPenguinBubble(text) {
-    const bubble = document.getElementById("penguin-bubble");
-    if (!bubble) return;
-    bubble.textContent = text;
-    bubble.style.display = "block";
-
-    // Auto-hide
-    if (window.bubbleTimeout) clearTimeout(window.bubbleTimeout);
-    window.bubbleTimeout = setTimeout(() => {
-      bubble.style.display = "none";
-    }, 2500);
-  }
-
   // VICTORY DANCE FUNCTION
   window.penguinDance = () => {
     window.triggerPenguinAnim("rave", "TRAINING COMPLETE!");
     setTimeout(() => window.triggerPenguinAnim("flip"), 2000);
   };
 }
+
+// Global showPenguinBubble
+function showPenguinBubble(text) {
+  const bubble = document.getElementById("penguin-bubble");
+  if (!bubble) return;
+  bubble.textContent = text;
+  bubble.style.display = "block";
+  if (window.bubbleTimeout) clearTimeout(window.bubbleTimeout);
+  window.bubbleTimeout = setTimeout(() => {
+    bubble.style.display = "none";
+  }, 3000);
+}
+
 // Run immediately
 initPenguin();
 
@@ -339,6 +353,9 @@ document.getElementById("register-btn").addEventListener("click", async (e) => {
 document.getElementById("logout-btn").addEventListener("click", async () => {
   document.body.classList.add("crt-off");
   setTimeout(async () => {
+    // Reset session state on logout
+    _activeWorkoutLoaded = false;
+    _currentSessionId = null;
     await client.auth.signOut();
     document.body.classList.remove("crt-off");
     showLandingHero(); // Ensure we go back to hero
@@ -781,14 +798,12 @@ document.getElementById("add-exercise-field-btn").addEventListener("click", addE
 // --- CLOUD SYNC LOGIC ---
 let cloudSyncTimeout = null;
 
-async function syncDraftToCloud(draftData) {
+async function syncDraftToCloud(draftData, immediate = false) {
   if (cloudSyncTimeout) clearTimeout(cloudSyncTimeout);
 
   updateSyncIndicator("SYNCING...", "var(--secondary-color)");
 
-  // Debounce: Wait 1 second of inactivity before pushing to cloud
-  // But save to localStorage is always instant
-  cloudSyncTimeout = setTimeout(async () => {
+  const doSync = async () => {
     try {
       const { data: { user } } = await client.auth.getUser();
       if (!user) return;
@@ -810,7 +825,15 @@ async function syncDraftToCloud(draftData) {
       console.warn("CLOUD_SYNC_FAILED", err);
       updateSyncIndicator("OFFLINE", "var(--text-muted)");
     }
-  }, 1000);
+  };
+
+  if (immediate) {
+    // No debounce - sync right now (used when screen is about to lock)
+    await doSync();
+  } else {
+    // Debounce: Wait 1 second of inactivity before pushing to cloud
+    cloudSyncTimeout = setTimeout(doSync, 1000);
+  }
 }
 
 function updateSyncIndicator(text, color) {
@@ -822,6 +845,12 @@ function updateSyncIndicator(text, color) {
 }
 
 async function init() {
+  // GUARD: If a workout is actively loaded, do NOT re-init (prevents screen-lock restart)
+  if (_activeWorkoutLoaded) {
+    console.log("INIT SKIPPED: Active workout session detected");
+    return;
+  }
+
   mainLoader.style.display = "block";
   contentArea.innerHTML = "";
   const actionEl = document.getElementById("workout-actions");
@@ -844,15 +873,19 @@ async function init() {
     // 2. Try Cloud Draft if Local is empty or older
     const { data: { user } } = await client.auth.getUser();
     if (user) {
-      const { data: cloudSession } = await client.from("active_sessions").select("*").eq("user_id", user.id).single();
-      if (cloudSession && cloudSession.session_data) {
-        const cloudDraft = cloudSession.session_data;
-        if (!savedDraft || (cloudDraft.lastModified > savedDraft.lastModified)) {
-          console.log("USING CLOUD SESSION (FEWER DATA LOSS RISKS)");
-          savedDraft = cloudDraft;
-          // Sync back to local for offline consistency
-          localStorage.setItem("workout_draft", JSON.stringify(savedDraft));
+      try {
+        const { data: cloudSession } = await client.from("active_sessions").select("*").eq("user_id", user.id).single();
+        if (cloudSession && cloudSession.session_data) {
+          const cloudDraft = cloudSession.session_data;
+          if (!savedDraft || (cloudDraft.lastModified > savedDraft.lastModified)) {
+            console.log("USING CLOUD SESSION (FEWER DATA LOSS RISKS)");
+            savedDraft = cloudDraft;
+            // Sync back to local for offline consistency
+            localStorage.setItem("workout_draft", JSON.stringify(savedDraft));
+          }
         }
+      } catch (cloudErr) {
+        console.warn("Cloud session check failed (offline?)", cloudErr);
       }
     }
 
@@ -860,6 +893,13 @@ async function init() {
     const resumePrompt = document.getElementById("resume-prompt-container");
     if (savedDraft && savedDraft.workout) {
       if (resumePrompt) resumePrompt.style.display = "block";
+
+      // Show session info in prompt
+      const resumeInfo = document.getElementById("resume-info");
+      if (resumeInfo) {
+        const savedDate = savedDraft.lastModified ? new Date(savedDraft.lastModified).toLocaleString("de-DE") : "unbekannt";
+        resumeInfo.textContent = `${savedDraft.workoutName || "TRAINING"} (${savedDraft.routineName || ""}) - Zuletzt: ${savedDate}`;
+      }
 
       // Global reference for resume buttons
       window._pendingDraft = savedDraft;
@@ -1005,8 +1045,13 @@ document.getElementById("load-workout-btn").addEventListener("click", async () =
 });
 
 async function loadWorkout(draftData = null) {
-  const workoutId = workoutSelect.value;
+  // FIX: When resuming, use the workout ID from the draft (not the dropdown which may be wrong)
+  const workoutId = (draftData && draftData.workout) ? draftData.workout : workoutSelect.value;
   if (!workoutId) return;
+
+  // Generate or restore session ID for this workout session
+  _currentSessionId = (draftData && draftData.sessionId) ? draftData.sessionId : crypto.randomUUID();
+  console.log("SESSION ID:", _currentSessionId);
 
   const draftEntries = draftData ? draftData.entries : null;
 
@@ -1390,6 +1435,9 @@ async function loadWorkout(draftData = null) {
   } else {
     startTimer(true);
   }
+
+  // Mark that a workout is actively loaded (prevents init from re-running on screen wake)
+  _activeWorkoutLoaded = true;
 }
 
 // --- HELPER FUNCTIONS FOR DYNAMIC UI ---
@@ -1777,7 +1825,8 @@ function saveDraft() {
     customExercises,
     snapshot, // SAVES THE FULL STRUCTURE
     startTime: workoutStartTime,
-    lastModified: Date.now()
+    lastModified: Date.now(),
+    sessionId: _currentSessionId // Persist session identity across saves
   };
   localStorage.setItem("workout_draft", JSON.stringify(draftData));
 
@@ -1785,12 +1834,27 @@ function saveDraft() {
   syncDraftToCloud(draftData);
 }
 
-// Global Auto-Save on Visibility Change (Mobile Screen Off)
-// Global Auto-Save on Visibility Change (Mobile Screen Off)
+// Global Auto-Save on Visibility Change (Mobile Screen Off / Lock)
 document.addEventListener("visibilitychange", async () => {
   if (document.visibilityState === "hidden") {
+    // Screen is locking or app is going to background
+    // Save immediately to localStorage
     saveDraft();
+
+    // CRITICAL: Force immediate cloud sync (bypass debounce!)
+    // The browser will freeze timers, so debounced sync would never fire
+    if (_activeWorkoutLoaded) {
+      const savedData = JSON.parse(localStorage.getItem("workout_draft"));
+      if (savedData) {
+        if (cloudSyncTimeout) clearTimeout(cloudSyncTimeout);
+        // Use immediate mode to bypass debounce
+        syncDraftToCloud(savedData, true);
+      }
+    }
   } else if (document.visibilityState === "visible") {
+    // Screen is back on / app returned from background
+    console.log("APP RETURNED FROM BACKGROUND. Active session:", _activeWorkoutLoaded);
+
     // Re-acquire Wake Lock if it was active
     if (wakeLockBtn && wakeLockBtn.textContent === "BILDSCHIRM: IMMER AN" && !wakeLock) {
       try {
@@ -1798,6 +1862,16 @@ document.addEventListener("visibilitychange", async () => {
         console.log("Wake Lock re-acquired");
       } catch (err) {
         console.log("Wake Lock re-acquire failed", err);
+      }
+    }
+
+    // If a workout was active, just resume without re-initializing
+    // The session stays exactly as the user left it
+    if (_activeWorkoutLoaded) {
+      console.log("SESSION STILL ACTIVE - no re-init needed");
+      // Restart the timer display (interval was killed by browser)
+      if (workoutStartTime) {
+        startTimer(false, workoutStartTime);
       }
     }
   }
@@ -1855,6 +1929,10 @@ async function saveWorkout() {
     notify("DATEN_ARCHIVIERT");
     localStorage.removeItem("workout_draft");
 
+    // Reset session state
+    _activeWorkoutLoaded = false;
+    _currentSessionId = null;
+
     // Cleanup Cloud Session
     const { data: { user: currentUser } } = await client.auth.getUser();
     if (currentUser) {
@@ -1891,6 +1969,10 @@ document.getElementById("abort-workout-btn").addEventListener("click", async () 
     document.getElementById("next-workout-hint").style.display = "block";
     document.getElementById("workout-actions").style.display = "none";
     contentArea.innerHTML = "";
+
+    // Reset session state
+    _activeWorkoutLoaded = false;
+    _currentSessionId = null;
 
     // Clear Local
     localStorage.removeItem("workout_draft");
@@ -1931,6 +2013,7 @@ document.getElementById("resume-yes-btn")?.addEventListener("click", async (e) =
       populateRoutineSelect();
     }
 
+    // Set the dropdowns to match the saved session
     if (w.routine_name) routineSelect.value = w.routine_name;
     populateWorkoutSelect();
     workoutSelect.value = savedDraft.workout;
@@ -1938,6 +2021,11 @@ document.getElementById("resume-yes-btn")?.addEventListener("click", async (e) =
     // Hide Prompt
     document.getElementById("resume-prompt-container").style.display = "none";
 
+    // Restore session ID so we continue the SAME session
+    _currentSessionId = savedDraft.sessionId || crypto.randomUUID();
+    console.log("RESUMING SESSION:", _currentSessionId);
+
+    // loadWorkout will use savedDraft.workout as the ID (not dropdown)
     await loadWorkout(savedDraft);
     notify("SESSION WIEDERHERGESTELLT");
   } catch (err) {
@@ -1950,6 +2038,10 @@ document.getElementById("resume-yes-btn")?.addEventListener("click", async (e) =
 
 document.getElementById("resume-no-btn")?.addEventListener("click", async () => {
   if (!confirm("SESSION WIRKLICH LÖSCHEN?")) return;
+
+  // Reset session state
+  _activeWorkoutLoaded = false;
+  _currentSessionId = null;
 
   localStorage.removeItem("workout_draft");
   const { data: { user } } = await client.auth.getUser();
@@ -2063,9 +2155,10 @@ function renderHistory() {
 
   // --- WEEKLY STATS CALCULATION ---
   const weeks = {};
+  const weekDates = {}; // Track date ranges per week
+  const weekWorkouts = {}; // Track unique workouts per week
   logs.forEach(l => {
     const d = new Date(l.date);
-    // Rough ISO Week (simple version)
     const onejan = new Date(d.getFullYear(), 0, 1);
     const weekNum = Math.ceil((((d - onejan) / 86400000) + onejan.getDay() + 1) / 7);
     const key = `${d.getFullYear()}-KW${weekNum}`;
@@ -2073,24 +2166,71 @@ function renderHistory() {
     if (!weeks[key]) weeks[key] = { vol: 0, sets: 0 };
     weeks[key].vol += (Number(l.weight) || 0) * (Number(l.reps) || 0);
     weeks[key].sets++;
+
+    // Track date range
+    if (!weekDates[key]) weekDates[key] = { min: l.date, max: l.date };
+    if (l.date < weekDates[key].min) weekDates[key].min = l.date;
+    if (l.date > weekDates[key].max) weekDates[key].max = l.date;
+
+    // Track unique workout sessions
+    if (!weekWorkouts[key]) weekWorkouts[key] = new Set();
+    weekWorkouts[key].add(`${l.date}_${l.workout}`);
   });
 
-  // Render Weekly Stats Header
+  // --- TERMINAL CHART (last 4 weeks) ---
+  const last4Weeks = Object.keys(weeks).sort().reverse().slice(0, 4).reverse();
+  const chartDiv = document.createElement("div");
+  chartDiv.className = "terminal-chart";
+
+  if (last4Weeks.length > 0) {
+    const maxVol = Math.max(...last4Weeks.map(w => weeks[w].vol));
+
+    let barsHtml = "";
+    last4Weeks.forEach(w => {
+      const vol = Math.round(weeks[w].vol);
+      const pct = maxVol > 0 ? Math.max(3, (vol / maxVol) * 100) : 3;
+      const volDisplay = vol >= 1000 ? Math.round(vol / 1000) + "K" : vol;
+      const sessions = weekWorkouts[w] ? weekWorkouts[w].size : 0;
+      const dateRange = weekDates[w];
+      const shortLabel = w.split("-")[1]; // KW number
+
+      barsHtml += `
+        <div class="chart-bar-group">
+          <div class="chart-bar" style="height:${pct}%" data-vol="${volDisplay}"></div>
+          <div class="chart-bar-label">${shortLabel}</div>
+          <div class="chart-bar-count">${sessions}x</div>
+        </div>
+      `;
+    });
+
+    chartDiv.innerHTML = `
+      <div class="terminal-chart-title">VOLUMEN // LETZTE 4 WOCHEN</div>
+      <div class="chart-timeline">${barsHtml}</div>
+    `;
+  } else {
+    chartDiv.innerHTML = `
+      <div class="terminal-chart-title">VOLUMEN // LETZTE 4 WOCHEN</div>
+      <div class="chart-empty">KEINE DATEN VERFÜGBAR</div>
+    `;
+  }
+  historyList.appendChild(chartDiv);
+
+  // Weekly Stats Text
   const statsDiv = document.createElement("div");
   statsDiv.className = "info-section";
   statsDiv.innerHTML = `<div class="editor-header">WOCHENSTATISTIK</div>`;
 
-  // Show last 3 weeks
   Object.keys(weeks).sort().reverse().slice(0, 3).forEach(w => {
     const vol = Math.round(weeks[w].vol);
+    const sessions = weekWorkouts[w] ? weekWorkouts[w].size : 0;
     statsDiv.innerHTML += `
         <div style="display:flex; justify-content:space-between; font-size:0.75rem; border-bottom:1px dashed var(--secondary-color); padding:5px 0;">
             <span>${w}</span>
-            <span>VOL: ${vol.toLocaleString()} KG | SÄTZE: ${weeks[w].sets}</span>
+            <span>VOL: ${vol.toLocaleString()} KG | ${sessions} SESSIONS</span>
         </div>
       `;
   });
-  statsDiv.innerHTML += `<div class="safe-spacer" style="height:20px;"></div>`;
+  statsDiv.innerHTML += `<div style="height:15px;"></div>`;
   historyList.appendChild(statsDiv);
   const grouped = {};
   logs.forEach(log => {

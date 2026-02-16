@@ -150,8 +150,10 @@
                 style="display:none; margin-bottom: 20px; border: 1px solid var(--primary-color); padding: 15px; background: rgba(0, 255, 65, 0.05);">
                 <div class="editor-header" style="margin-top:0; border-left:none; padding-left:0; background:none;">
                     LÄUFENDE_SESSION_GEFUNDEN</div>
-                <p style="font-size:0.75rem; margin-bottom:15px;">Möchtest du dein letztes Training fortsetzen? (Stand
-                    aus Cloud/Local)</p>
+                <div id="resume-info"
+                    style="font-size:0.7rem; color: var(--primary-color); margin-bottom: 10px; font-style: italic;">
+                </div>
+                <p style="font-size:0.75rem; margin-bottom:15px;">Möchtest du dein letztes Training fortsetzen?</p>
                 <div style="display:flex; gap:10px;">
                     <button id="resume-yes-btn">FORTSETZEN</button>
                     <button id="resume-no-btn" class="secondary">VERWERFEN</button>
@@ -340,7 +342,7 @@
                 </div>
             </div>
             <div style="text-align: center; color: var(--text-muted); font-size: 0.5rem; margin-top: 10px;">
-                VERSION: 2.1.0 (CLOUD_SYNC)
+                VERSION: 2.2.0 (SESSION-FIX)
             </div>
             <div class="safe-spacer"></div>
         </div>
