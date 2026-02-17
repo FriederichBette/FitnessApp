@@ -1,24 +1,25 @@
 ﻿:root {
-    --bg-color: #000000;
-    /* Deep Black */
+    --bg-color: #020405;
+    /* Deep Space Black/Blue Tint */
     --primary-color: #33ff00;
-    /* Terminal Green */
-    --secondary-color: #002200;
-    /* Dark Green */
-    --accent-color: #1a5c1a;
-    /* Dim Green */
+    /* Terminal Green (Data) */
+    --secondary-color: #00aaff;
+    /* Command Blue (Structure/Frames) */
+    --accent-color: #004400;
+    /* Dim Green Backgrounds */
     --text-color: #ccffcc;
-    /* Pale Green */
-    --text-muted: #4d804d;
-    /* Muted Green */
-    --error-color: #ff3333;
+    /* Pale Phosphor */
+    --text-muted: #0077aa;
+    /* Muted Blue Text */
+    --error-color: #ffae00;
+    /* Safety Amber (Warnings) */
     --terminal-font: 'Share Tech Mono', monospace;
 
-    /* Legacy Colors mapped to new theme */
-    --amber: #ccff00;
-    --cyan: #33ff00;
-    --magenta: #1a5c1a;
-    --hot-red: #ff3333;
+    /* Legacy Colors mapped to new Nostromo theme */
+    --amber: #ffae00;
+    --cyan: #00aaff;
+    --magenta: #00aaff;
+    --hot-red: #ffae00;
 }
 
 * {
@@ -106,13 +107,37 @@ body {
     box-shadow:
         inset 0 0 100px rgba(0, 0, 0, 0.7),
         inset 0 0 50px rgba(0, 0, 0, 0.4);
-    /* Phosphor Bloom - Green */
-    text-shadow: 0 0 2px rgba(51, 255, 0, 0.5);
+    /* Phosphor Bloom - Green with slight Blue chromatic aberration */
+    text-shadow:
+        0 0 2px rgba(51, 255, 0, 0.5),
+        2px 0 1px rgba(0, 0, 255, 0.2),
+        -2px 0 1px rgba(255, 0, 0, 0.2);
     touch-action: manipulation;
     overflow-x: hidden;
     font-variant-numeric: tabular-nums;
     /* Subtle screen flicker */
     animation: screenFlicker 0.15s infinite;
+}
+
+/* Block Cursor Blink Animation */
+@keyframes cursorBlink {
+
+    0%,
+    49% {
+        opacity: 1;
+    }
+
+    50%,
+    100% {
+        opacity: 0;
+    }
+}
+
+.cursor-block::after {
+    content: '█';
+    margin-left: 5px;
+    color: var(--primary-color);
+    animation: cursorBlink 1s infinite step-end;
 }
 
 /* Page Transition Flicker Class */
@@ -680,11 +705,14 @@ button,
 }
 
 /* --- ALIEN CRT MONITOR (Thick Physical Casing) --- */
+/* --- ALIEN CRT MONITOR (Thick Physical Casing) --- */
 .exercise-card {
     /* === THE THICK MONITOR CASING === */
-    border: 12px solid;
-    border-color: #1e1e1e #181818 #111 #181818;
-    border-radius: 18px;
+    border: 14px solid;
+    border-color: #0a0a0a #000 #000 #050505;
+    /* Matte Black Casing */
+    border-radius: 6px;
+    /* Sharper/More Industrial */
     padding: 14px;
     margin-bottom: 28px;
     position: relative;
@@ -692,19 +720,52 @@ button,
 
     /* === THE SCREEN === */
     background:
-        repeating-conic-gradient(rgba(0, 255, 65, 0.008) 0% 25%, transparent 0% 50%) 0 0 / 4px 4px,
-        radial-gradient(ellipse at center, transparent 40%, rgba(0, 0, 0, 0.6) 100%),
-        rgba(0, 12, 0, 0.95);
+        repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.2) 0px, rgba(0, 0, 0, 0.2) 1px, transparent 1px, transparent 2px),
+        /* Scanlines */
+        radial-gradient(ellipse at center, rgba(0, 20, 0, 0.4) 0%, rgba(0, 0, 0, 0.8) 100%),
+        rgba(0, 5, 10, 0.95);
+    /* Deep Blue-Black Screen */
 
     /* === SCREEN DEPTH === */
     box-shadow:
-        inset 0 0 0 2px #0a0a0a,
-        inset 0 0 40px rgba(0, 0, 0, 0.6),
-        inset 0 0 6px rgba(0, 255, 65, 0.12),
+        /* Inner bezel shadow */
+        inset 0 0 0 2px #000,
+        inset 0 0 10px rgba(0, 0, 0, 1),
+        /* Screen glow reflection on casing (Blue) */
+        inset 0 0 5px rgba(0, 170, 255, 0.1),
+        /* Casing external shadow */
+        0 0 0 1px #111,
         0 8px 30px rgba(0, 0, 0, 0.95),
-        0 3px 8px rgba(0, 0, 0, 0.5);
+        0 3px 8px rgba(0, 0, 0, 0.8);
 
-    animation: crtBoot 0.5s ease-out both;
+    /* Boot + Rare Glitch Animation */
+    animation: crtBoot 0.5s ease-out both, monitorGlitch 15s infinite ease-in-out;
+}
+
+@keyframes monitorGlitch {
+    0% {
+        filter: brightness(1) contrast(1);
+    }
+
+    98% {
+        filter: brightness(1) contrast(1);
+    }
+
+    98.2% {
+        filter: brightness(1.3) contrast(0.8) skewX(2deg);
+    }
+
+    98.4% {
+        filter: brightness(0.8) contrast(1.2) skewX(-2deg);
+    }
+
+    98.6% {
+        filter: brightness(1.2) contrast(0.9);
+    }
+
+    100% {
+        filter: brightness(1) contrast(1);
+    }
 }
 
 /* Glass reflection */
@@ -1134,35 +1195,33 @@ button,
 /* Ensure Penguin is on TOP of everything */
 /* Ensure Penguin is on TOP of everything */
 /* Ensure Penguin is on TOP of everything */
+/* Ensure Penguin is on TOP of everything */
 .pixel-penguin {
     z-index: 10000 !important;
     position: fixed;
-    bottom: 70px;
-    /* Always visible above bottom nav */
+    bottom: 30px;
     right: 20px;
-    /* Bottom Right Corner */
-    width: 25px;
-    /* Mobile Size */
-    height: 25px;
+    width: 30px;
+    height: 30px;
     image-rendering: pixelated;
     pointer-events: auto;
-    /* CLICKABLE! */
     cursor: pointer;
     transition: transform 0.2s ease;
     animation: idleBounce 3s infinite ease-in-out;
 }
 
+.pixel-penguin svg {
+    filter: drop-shadow(0 0 2px var(--primary-color));
+}
+
 .pixel-penguin:active {
     transform: scale(0.9);
-    /* Click effect */
 }
 
 @media (min-width: 600px) {
     .pixel-penguin {
-        width: 35px;
-        height: 35px;
-        bottom: 30px;
-        /* Desktop can be lower */
+        width: 40px;
+        height: 40px;
     }
 }
 
@@ -1445,7 +1504,7 @@ button,
     max-width: 400px;
     box-shadow: 0 0 40px rgba(0, 0, 0, 0.9);
     position: relative;
-    animation: scanOpen 0.5s ease-out forwards;
+    animation: scanOpen 0.5s ease-out forwards, monitorGlitch 20s infinite ease-in-out;
 }
 
 @keyframes scanOpen {

@@ -49,30 +49,25 @@ function initPenguin() {
   const penguin = document.createElement("div");
   penguin.id = "pixel-penguin";
   penguin.className = "pixel-penguin";
+  /* Wireframe / Blueprint Style Penguin */
   penguin.innerHTML = `
-      <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges" style="width:100%; height:100%;">
-         <!-- Body -->
-         <rect x="4" y="2" width="8" height="12" fill="var(--primary-color)" />
-         <rect x="3" y="4" width="1" height="8" fill="var(--primary-color)" />
-         <rect x="12" y="4" width="1" height="8" fill="var(--primary-color)" />
-         <!-- Belly (Unique Color based on Seed) -->
-         <rect x="5" y="5" width="6" height="8" fill="hsl(${colorHash}, 70%, 50%)" opacity="0.6" />
-         <!-- Eyes -->
-         <rect id="p-eye-l" x="5" y="4" width="1" height="1" fill="#000" />
-         <rect id="p-eye-r" x="9" y="4" width="1" height="1" fill="#000" />
-         <!-- Beak -->
-         <rect x="7" y="5" width="2" height="1" fill="var(--accent-color)" />
-         <rect x="8" y="6" width="1" height="1" fill="var(--accent-color)" />
-         <!-- Feet -->
-         <rect x="4" y="14" width="3" height="1" fill="var(--accent-color)" />
-         <rect x="9" y="14" width="3" height="1" fill="var(--accent-color)" />
-         <!-- Flippers -->
-         <rect x="2" y="6" width="1" height="4" fill="var(--primary-color)" />
-         <rect x="13" y="6" width="1" height="4" fill="var(--primary-color)" />
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Body Outline -->
+        <rect x="5.5" y="3.5" width="13" height="17" rx="2" stroke="var(--primary-color)" stroke-width="1.2"/>
+        <!-- Belly Screen -->
+        <rect x="7.5" y="10.5" width="9" height="8" rx="1" stroke="var(--primary-color)" stroke-width="0.8" stroke-dasharray="2 1"/>
+        <!-- Eyes (Dark Squares) -->
+        <rect x="7" y="6" width="3" height="2" fill="var(--bg-color)" stroke="var(--primary-color)" stroke-width="0.8"/>
+        <rect x="14" y="6" width="3" height="2" fill="var(--bg-color)" stroke="var(--primary-color)" stroke-width="0.8"/>
+        <!-- Beak (Amber) -->
+        <path d="M10 8H14L12 10L10 8Z" fill="var(--error-color)"/>
+        <!-- Feet (Amber) -->
+        <rect x="5" y="21" width="4" height="2" fill="var(--error-color)"/>
+        <rect x="15" y="21" width="4" height="2" fill="var(--error-color)"/>
       </svg>
-      <div class="penguin-bubble" id="penguin-bubble" style="display:none;"></div>
-      <div style="position:absolute; bottom:-10px; width:100%; text-align:center; font-size:0.4rem; color:var(--text-muted); opacity:0.5;">
-        BOT_${userSeed.substring(0, 4)}
+      <div class="penguin-bubble" id="penguin-bubble" style="display:none;">
+        <div style="border-bottom:1px solid var(--primary-color); font-size:0.5rem; margin-bottom:2px; padding-bottom:2px; opacity:0.7;">DATA_STREAM:</div>
+        <span id="penguin-msg-text"></span>
       </div>
   `;
   document.body.appendChild(penguin);
@@ -206,13 +201,27 @@ function initPenguin() {
 // Global showPenguinBubble
 function showPenguinBubble(text) {
   const bubble = document.getElementById("penguin-bubble");
-  if (!bubble) return;
-  bubble.textContent = text;
+  const msgSpan = document.getElementById("penguin-msg-text");
+  if (!bubble || !msgSpan) return;
+
+  msgSpan.textContent = "";
   bubble.style.display = "block";
+
+  // Typewriter effect
+  let i = 0;
+  function type() {
+    if (i < text.length) {
+      msgSpan.textContent += text.charAt(i);
+      i++;
+      setTimeout(type, 50); // Typing speed
+    }
+  }
+  type();
+
   if (window.bubbleTimeout) clearTimeout(window.bubbleTimeout);
   window.bubbleTimeout = setTimeout(() => {
     bubble.style.display = "none";
-  }, 3000);
+  }, 4000);
 }
 
 // Run immediately
