@@ -1,5 +1,5 @@
 // ---- MU-TH-UR 6.0 SYSTEM ----
-console.log("APP VERSION: 2.7.0 (NOSTROMO) - ACTIVATED");
+console.log("APP VERSION: 2.8.0 (NOSTROMO) - ACTIVATED");
 
 // --- SESSION STATE TRACKING ---
 let _activeWorkoutLoaded = false; // True when a workout is currently being displayed/trained
@@ -1371,23 +1371,17 @@ async function loadWorkout(draftData = null) {
       const exName = prompt("NAME DER ÜBUNG:", "");
       if (!exName || exName.trim().length === 0) return;
 
-      const isCardio = confirm("IST DAS EINE CARDIO-ÜBUNG?\nOK = JA, ABBRECHEN = NEIN (KRAFT)");
+      // Default to KRAFT, user can toggle on card
+      let isCardio = false;
 
-      // Append Card Manually (reusing logic would be better but keeping it contained)
-      // We essentially mock a plan entry
       const mockEx = {
         exercise: exName.trim(),
         sets: 3,
-        reps: isCardio ? 0 : 10,
+        reps: 10,
         weight: 0,
         rest_time: 60,
-        is_cardio: isCardio
+        is_cardio: false
       };
-
-      // Reuse the generator logic by extracting it? 
-      // For now, let's just append a card using the same structure
-      // NOTE: We need to trigger the DOM creation similar to above.
-      // Copy-paste pattern for stability in this tool usage.
 
       const card = document.createElement("div");
       card.className = "exercise-card";
@@ -1404,10 +1398,35 @@ async function loadWorkout(draftData = null) {
       titleInput.type = "text";
       titleInput.className = "ex-title-edit";
       titleInput.value = mockEx.exercise.toUpperCase();
-      titleInput.style.cssText = "font-weight:bold; color:var(--primary-color); background:transparent; border:none; width:70%; font-size:1rem;";
+      titleInput.style.cssText = "font-weight:bold; color:var(--primary-color); background:transparent; border:none; width:55%; font-size:1rem;";
       titleInput.onchange = (e) => updateExerciseName(e.target, mockEx.exercise);
 
       const controls = document.createElement("div");
+      controls.style.display = "flex";
+      controls.style.gap = "6px";
+      controls.style.alignItems = "center";
+
+      // CARDIO TOGGLE BUTTON
+      const cardioToggle = document.createElement("button");
+      cardioToggle.className = "secondary";
+      cardioToggle.textContent = "KRAFT";
+      cardioToggle.style.cssText = "padding:2px 6px; font-size:0.55rem; font-weight:bold; letter-spacing:1px; width:auto; min-height:0;";
+      cardioToggle.onclick = () => {
+        isCardio = !isCardio;
+        cardioToggle.textContent = isCardio ? "CARDIO" : "KRAFT";
+        cardioToggle.style.borderColor = isCardio ? "var(--cyan)" : "";
+        cardioToggle.style.color = isCardio ? "var(--cyan)" : "";
+        card.dataset.isCardio = isCardio;
+        // Rebuild sets with correct fields
+        setsWrapper.innerHTML = "";
+        for (let i = 1; i <= 3; i++) {
+          setsWrapper.appendChild(createSetRow(i, titleInput.value.trim(), isCardio, "", "", 60));
+        }
+        attachInputListeners(card);
+        saveDraft();
+      };
+      controls.appendChild(cardioToggle);
+
       const editBtn = document.createElement("button");
       editBtn.textContent = "BEARBEITEN";
       editBtn.className = "secondary";
@@ -1452,8 +1471,8 @@ async function loadWorkout(draftData = null) {
       card.appendChild(addSetBtn);
 
       contentArea.insertBefore(card, addExContainer);
-      attachInputListeners(card); // Attach to all new inputs
-      saveDraft(); // Trigger immediate save
+      attachInputListeners(card);
+      saveDraft();
     };
     addExContainer.appendChild(addExBtn);
     contentArea.appendChild(addExContainer);
