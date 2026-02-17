@@ -1,5 +1,5 @@
 // ---- MU-TH-UR 6.0 SYSTEM ----
-console.log("APP VERSION: 2.8.0 (NOSTROMO) - ACTIVATED");
+console.log("APP VERSION: 2.9.0 (BRIDGE) - ACTIVATED");
 
 // --- SESSION STATE TRACKING ---
 let _activeWorkoutLoaded = false; // True when a workout is currently being displayed/trained
