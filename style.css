@@ -632,27 +632,37 @@ button,
     touch-action: manipulation;
 }
 
-/* --- CRT MONITOR PANELS --- */
+/* --- PHYSICAL CRT MONITOR --- */
 .exercise-card {
-    border: 2px solid #1a3a1a;
+    /* The screen */
+    background: rgba(0, 4, 0, 0.95);
     padding: 14px;
-    margin-bottom: 18px;
-    background: rgba(0, 4, 0, 0.9);
+    margin-bottom: 28px;
     position: relative;
     border-radius: 3px;
+
+    /* Screen edge */
+    border: 2px solid #333;
+
+    /* Monitor casing built from shadow layers */
     box-shadow:
-        /* Inner screen phosphor glow */
-        inset 0 0 30px rgba(0, 255, 65, 0.02),
-        inset 0 0 2px rgba(0, 255, 65, 0.08),
-        /* Monitor bezel layers */
-        0 0 0 1px #0a0a0a,
-        0 0 0 3px #151515,
-        0 0 0 4px #1a1a1a,
-        /* Drop shadow (monitor depth) */
-        0 4px 15px rgba(0, 0, 0, 0.7);
+        /* Screen phosphor recess */
+        inset 0 0 25px rgba(0, 255, 65, 0.03),
+        inset 0 0 3px rgba(0, 255, 65, 0.08),
+        /* Dark gap between screen and casing */
+        0 0 0 3px #080808,
+        /* CASING BODY (the thick plastic frame) */
+        0 0 0 7px #1c1c1c,
+        /* Casing edge highlight (light reflection on plastic) */
+        0 0 0 8px #2a2a2a,
+        /* Outer casing edge */
+        0 0 0 9px #111,
+        /* Monitor sitting on surface (physical depth) */
+        0 12px 30px rgba(0, 0, 0, 0.9),
+        0 4px 8px rgba(0, 0, 0, 0.4);
 }
 
-/* Screen top-edge glow (like CRT electron beam start) */
+/* Screen top-edge scanline glow */
 .exercise-card::before {
     content: '';
     position: absolute;
@@ -663,6 +673,19 @@ button,
     background: linear-gradient(90deg, var(--primary-color), transparent 50%);
     opacity: 0.5;
     border-radius: 3px 3px 0 0;
+}
+
+/* Power LED */
+.exercise-card::after {
+    content: '';
+    position: absolute;
+    bottom: -14px;
+    right: 18px;
+    width: 4px;
+    height: 4px;
+    background: var(--primary-color);
+    border-radius: 50%;
+    box-shadow: 0 0 4px var(--primary-color), 0 0 8px rgba(0, 255, 65, 0.3);
 }
 
 .exercise-card h3 {
@@ -1972,24 +1995,26 @@ button:active {
     text-shadow: 0 0 3px rgba(0, 229, 255, 0.15);
 }
 
-/* --- WORKOUT OVERVIEW MINI-PANEL (Bridge HUD) --- */
+/* --- PHYSICAL CRT: OVERVIEW HUD (Cyan Screen) --- */
 .workout-overview {
     position: sticky;
     top: 0;
     z-index: 50;
-    background: rgba(0, 3, 0, 0.97);
-    border: 2px solid #1a2a3a;
+    background: rgba(0, 3, 4, 0.97);
+    border: 2px solid #2a3333;
     padding: 8px 10px;
-    margin-bottom: 18px;
+    margin-bottom: 28px;
     border-radius: 3px;
     backdrop-filter: blur(4px);
     box-shadow:
-        inset 0 0 20px rgba(0, 229, 255, 0.02),
-        inset 0 0 2px rgba(0, 229, 255, 0.06),
-        0 0 0 1px #0a0a0a,
-        0 0 0 3px #151515,
-        0 0 0 4px #1a1a1a,
-        0 4px 15px rgba(0, 0, 0, 0.7);
+        inset 0 0 20px rgba(0, 229, 255, 0.03),
+        inset 0 0 3px rgba(0, 229, 255, 0.08),
+        0 0 0 3px #080808,
+        0 0 0 7px #1c1c1c,
+        0 0 0 8px #2a2a2a,
+        0 0 0 9px #111,
+        0 10px 25px rgba(0, 0, 0, 0.9),
+        0 4px 8px rgba(0, 0, 0, 0.4);
 }
 
 .workout-overview::before {
@@ -2052,21 +2077,23 @@ button:active {
     opacity: 0.5;
 }
 
-/* --- CRT MONITOR: INFO SECTIONS (Amber Screen) --- */
+/* --- PHYSICAL CRT: INFO SECTIONS (Amber Screen) --- */
 .info-section {
-    border: 2px solid #2a2a1a;
+    border: 2px solid #333020;
     padding: 14px;
-    margin-bottom: 18px;
-    background: rgba(0, 4, 0, 0.85);
+    margin-bottom: 28px;
+    background: rgba(4, 3, 0, 0.95);
     position: relative;
     border-radius: 3px;
     box-shadow:
-        inset 0 0 25px rgba(255, 176, 0, 0.01),
-        inset 0 0 2px rgba(255, 176, 0, 0.04),
-        0 0 0 1px #0a0a0a,
-        0 0 0 3px #151515,
-        0 0 0 4px #1a1a1a,
-        0 4px 15px rgba(0, 0, 0, 0.7);
+        inset 0 0 25px rgba(255, 176, 0, 0.02),
+        inset 0 0 3px rgba(255, 176, 0, 0.06),
+        0 0 0 3px #080808,
+        0 0 0 7px #1c1c1c,
+        0 0 0 8px #2a2a2a,
+        0 0 0 9px #111,
+        0 12px 30px rgba(0, 0, 0, 0.9),
+        0 4px 8px rgba(0, 0, 0, 0.4);
 }
 
 .info-section::before {
@@ -2092,21 +2119,23 @@ button:active {
     text-shadow: 0 0 4px rgba(255, 176, 0, 0.2);
 }
 
-/* --- CRT MONITOR: SELECTION AREA --- */
+/* --- PHYSICAL CRT: SELECTION AREA --- */
 .selection-area {
-    border: 2px solid #1a3a1a;
+    border: 2px solid #333;
     padding: 14px;
-    margin-bottom: 18px;
-    background: rgba(0, 4, 0, 0.85);
+    margin-bottom: 28px;
+    background: rgba(0, 4, 0, 0.95);
     position: relative;
     border-radius: 3px;
     box-shadow:
-        inset 0 0 25px rgba(0, 255, 65, 0.02),
-        inset 0 0 2px rgba(0, 255, 65, 0.06),
-        0 0 0 1px #0a0a0a,
-        0 0 0 3px #151515,
-        0 0 0 4px #1a1a1a,
-        0 4px 15px rgba(0, 0, 0, 0.7);
+        inset 0 0 25px rgba(0, 255, 65, 0.03),
+        inset 0 0 3px rgba(0, 255, 65, 0.08),
+        0 0 0 3px #080808,
+        0 0 0 7px #1c1c1c,
+        0 0 0 8px #2a2a2a,
+        0 0 0 9px #111,
+        0 12px 30px rgba(0, 0, 0, 0.9),
+        0 4px 8px rgba(0, 0, 0, 0.4);
 }
 
 .selection-area::before {
@@ -2121,33 +2150,40 @@ button:active {
     border-radius: 3px 3px 0 0;
 }
 
-/* --- CRT MONITOR: WORKOUT ACTIONS --- */
+/* --- PHYSICAL CRT: WORKOUT ACTIONS --- */
 #workout-actions {
-    border: 2px solid #1a3a1a !important;
+    border: 2px solid #333 !important;
     padding: 14px !important;
-    background: rgba(0, 4, 0, 0.85);
+    margin-bottom: 10px;
+    background: rgba(0, 4, 0, 0.95);
     border-radius: 3px;
     box-shadow:
-        inset 0 0 20px rgba(0, 255, 65, 0.02),
-        0 0 0 1px #0a0a0a,
-        0 0 0 3px #151515,
-        0 0 0 4px #1a1a1a,
-        0 4px 15px rgba(0, 0, 0, 0.7);
+        inset 0 0 20px rgba(0, 255, 65, 0.03),
+        0 0 0 3px #080808,
+        0 0 0 7px #1c1c1c,
+        0 0 0 8px #2a2a2a,
+        0 0 0 9px #111,
+        0 12px 30px rgba(0, 0, 0, 0.9),
+        0 4px 8px rgba(0, 0, 0, 0.4);
 }
 
-/* --- CRT MONITOR: HISTORY ITEMS --- */
+/* --- PHYSICAL CRT: HISTORY ITEMS --- */
 .history-item {
-    border: 2px solid #1a2a1a;
+    border: 2px solid #333;
     padding: 12px;
-    margin-bottom: 14px;
-    background: rgba(0, 4, 0, 0.85);
+    margin-bottom: 24px;
+    background: rgba(0, 4, 0, 0.95);
     position: relative;
     border-radius: 3px;
     box-shadow:
-        inset 0 0 20px rgba(0, 255, 65, 0.01),
-        0 0 0 1px #0a0a0a,
-        0 0 0 3px #151515,
-        0 4px 12px rgba(0, 0, 0, 0.6);
+        inset 0 0 20px rgba(0, 255, 65, 0.02),
+        inset 0 0 2px rgba(0, 255, 65, 0.06),
+        0 0 0 3px #080808,
+        0 0 0 7px #1c1c1c,
+        0 0 0 8px #2a2a2a,
+        0 0 0 9px #111,
+        0 10px 25px rgba(0, 0, 0, 0.8),
+        0 3px 6px rgba(0, 0, 0, 0.4);
 }
 
 .history-item::before {
@@ -2161,31 +2197,37 @@ button:active {
     border-radius: 3px 0 0 0;
 }
 
-/* --- CRT MONITOR: PLAN ITEMS --- */
+/* --- PHYSICAL CRT: PLAN ITEMS --- */
 .plan-manage-item {
-    border: 2px solid #1a2a1a;
+    border: 2px solid #333;
     padding: 12px;
-    margin-bottom: 14px;
-    background: rgba(0, 4, 0, 0.85);
+    margin-bottom: 24px;
+    background: rgba(0, 4, 0, 0.95);
     border-radius: 3px;
     box-shadow:
-        inset 0 0 20px rgba(0, 255, 65, 0.01),
-        0 0 0 1px #0a0a0a,
-        0 0 0 3px #151515,
-        0 4px 12px rgba(0, 0, 0, 0.6);
+        inset 0 0 20px rgba(0, 255, 65, 0.02),
+        0 0 0 3px #080808,
+        0 0 0 7px #1c1c1c,
+        0 0 0 8px #2a2a2a,
+        0 0 0 9px #111,
+        0 10px 25px rgba(0, 0, 0, 0.8),
+        0 3px 6px rgba(0, 0, 0, 0.4);
 }
 
-/* --- CRT MONITOR: CHART CONTAINER --- */
+/* --- PHYSICAL CRT: CHART CONTAINER --- */
 .terminal-chart-container {
-    border: 2px solid #1a2a3a;
+    border: 2px solid #2a3333;
     padding: 14px;
-    background: rgba(0, 2, 4, 0.9);
+    margin-bottom: 28px;
+    background: rgba(0, 2, 4, 0.95);
     border-radius: 3px;
     box-shadow:
         inset 0 0 30px rgba(0, 229, 255, 0.02),
-        inset 0 0 2px rgba(0, 229, 255, 0.05),
-        0 0 0 1px #0a0a0a,
-        0 0 0 3px #151515,
-        0 0 0 4px #1a1a1a,
-        0 4px 15px rgba(0, 0, 0, 0.7);
+        inset 0 0 3px rgba(0, 229, 255, 0.06),
+        0 0 0 3px #080808,
+        0 0 0 7px #1c1c1c,
+        0 0 0 8px #2a2a2a,
+        0 0 0 9px #111,
+        0 12px 30px rgba(0, 0, 0, 0.9),
+        0 4px 8px rgba(0, 0, 0, 0.4);
 }
