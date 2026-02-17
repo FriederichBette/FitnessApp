@@ -1,21 +1,23 @@
 ﻿:root {
-    --bg-color: #000000;
-    --primary-color: #00ff41;
-    --secondary-color: #003b00;
-    --text-color: #00ff41;
-    --text-muted: #008f11;
-    --error-color: #ff3e3e;
+    --bg-color: #05050a;
+    --primary-color: #00f2ff;
+    /* Neon Cyan */
+    --secondary-color: #1a0033;
+    /* Very Dark Purple */
+    --accent-color: #b200ff;
+    /* Vivid Purple */
+    --text-color: #e0faff;
+    /* Ice Blue White */
+    --text-muted: #7a89ff;
+    /* Muted Blue-Purple */
+    --error-color: #ff0055;
     --terminal-font: 'Share Tech Mono', monospace;
 
-    /* Classic CRT Phosphor Accent Colors */
-    --amber: #FFB000;
-    /* P3 Amber Phosphor (IBM 3270) */
-    --cyan: #00E5FF;
-    /* VT220 Cyan */
-    --magenta: #FF3EFF;
-    /* VGA Magenta */
-    --hot-red: #FF2A2A;
-    /* Error Red (bright) */
+    /* Legacy Colors mapped to new theme */
+    --amber: #b200ff;
+    --cyan: #00f2ff;
+    --magenta: #ff00ff;
+    --hot-red: #ff0055;
 }
 
 * {
@@ -101,8 +103,8 @@ body {
     box-shadow:
         inset 0 0 150px rgba(0, 0, 0, 0.95),
         inset 0 0 80px rgba(0, 0, 0, 0.6);
-    /* Phosphor Bloom - text glows like real phosphor dots */
-    text-shadow: 0 0 2px rgba(0, 255, 65, 0.5);
+    /* Phosphor Bloom - Blue/Purple */
+    text-shadow: 0 0 2px rgba(0, 242, 255, 0.5);
     touch-action: manipulation;
     overflow-x: hidden;
     font-variant-numeric: tabular-nums;
@@ -201,8 +203,8 @@ body::before {
     left: 0;
     width: 100%;
     height: 3px;
-    background: rgba(0, 255, 65, 0.06);
-    box-shadow: 0 0 8px rgba(0, 255, 65, 0.15);
+    background: rgba(0, 242, 255, 0.06);
+    box-shadow: 0 0 8px rgba(0, 242, 255, 0.15);
     z-index: 1001;
     pointer-events: none;
     animation: scan 8s linear infinite;
@@ -2363,4 +2365,65 @@ button:active {
     z-index: 2;
     filter: drop-shadow(0 0 4px rgba(0, 229, 255, 0.5));
     animation: ledPulse 3s ease-in-out infinite;
+}
+
+/* --- PIXEL PENGUIN 2.0 (The Waddling Glitch) --- */
+.pixel-penguin {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 60px;
+    height: 60px;
+    z-index: 10000;
+    cursor: pointer;
+    transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    filter: drop-shadow(0 0 5px var(--primary-color));
+}
+
+.pixel-penguin:hover {
+    filter: drop-shadow(0 0 15px var(--accent-color));
+}
+
+.penguin-bubble {
+    position: absolute;
+    bottom: 70px;
+    right: 0;
+    background: var(--bg-color);
+    border: 1px solid var(--primary-color);
+    padding: 6px 10px;
+    font-size: 0.7rem;
+    color: var(--primary-color);
+    white-space: nowrap;
+    text-transform: uppercase;
+    box-shadow: 0 0 10px rgba(0, 242, 255, 0.2);
+    pointer-events: none;
+    z-index: 10001;
+    animation: terminalPulse 2s infinite ease-in-out;
+}
+
+.penguin-bubble::after {
+    content: '';
+    position: absolute;
+    bottom: -6px;
+    right: 20px;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 6px solid var(--primary-color);
+}
+
+@keyframes idleBounce {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-5px);
+    }
+}
+
+#p-eye-l,
+#p-eye-r {
+    transition: opacity 0.1s;
 }

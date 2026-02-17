@@ -36,10 +36,15 @@ const routineSelect = document.getElementById("routine-select");
 // Creation Elements
 const exerciseListEditor = document.getElementById("exercise-list-editor");
 
-// --- PENGUIN LOGIC (INITIALIZED EARLY) ---
+// --- PENGUIN LOGIC (GLITCH-BOT 2.0) ---
 function initPenguin() {
   const existing = document.getElementById("pixel-penguin");
   if (existing) existing.remove();
+
+  // Create unique seed from user email or random
+  const userSeed = localStorage.getItem("penguin_seed") || Math.floor(Math.random() * 99999).toString();
+  localStorage.setItem("penguin_seed", userSeed);
+  const colorHash = (parseInt(userSeed) % 360);
 
   const penguin = document.createElement("div");
   penguin.id = "pixel-penguin";
@@ -50,24 +55,58 @@ function initPenguin() {
          <rect x="4" y="2" width="8" height="12" fill="var(--primary-color)" />
          <rect x="3" y="4" width="1" height="8" fill="var(--primary-color)" />
          <rect x="12" y="4" width="1" height="8" fill="var(--primary-color)" />
-         <!-- Belly -->
-         <rect x="5" y="5" width="6" height="8" fill="#000" opacity="0.8" />
+         <!-- Belly (Unique Color based on Seed) -->
+         <rect x="5" y="5" width="6" height="8" fill="hsl(${colorHash}, 70%, 50%)" opacity="0.6" />
          <!-- Eyes -->
          <rect id="p-eye-l" x="5" y="4" width="1" height="1" fill="#000" />
          <rect id="p-eye-r" x="9" y="4" width="1" height="1" fill="#000" />
          <!-- Beak -->
-         <rect x="7" y="5" width="2" height="1" fill="var(--secondary-color)" />
-         <rect x="8" y="6" width="1" height="1" fill="var(--secondary-color)" />
+         <rect x="7" y="5" width="2" height="1" fill="var(--accent-color)" />
+         <rect x="8" y="6" width="1" height="1" fill="var(--accent-color)" />
          <!-- Feet -->
-         <rect x="4" y="14" width="3" height="1" fill="var(--secondary-color)" />
-         <rect x="9" y="14" width="3" height="1" fill="var(--secondary-color)" />
+         <rect x="4" y="14" width="3" height="1" fill="var(--accent-color)" />
+         <rect x="9" y="14" width="3" height="1" fill="var(--accent-color)" />
          <!-- Flippers -->
          <rect x="2" y="6" width="1" height="4" fill="var(--primary-color)" />
          <rect x="13" y="6" width="1" height="4" fill="var(--primary-color)" />
       </svg>
       <div class="penguin-bubble" id="penguin-bubble" style="display:none;"></div>
+      <div style="position:absolute; bottom:-10px; width:100%; text-align:center; font-size:0.4rem; color:var(--text-muted); opacity:0.5;">
+        BOT_${userSeed.substring(0, 4)}
+      </div>
   `;
   document.body.appendChild(penguin);
+
+  const shortPhrases = [
+    "WAS?", "WEITER.", "LAHM.", "HANTEL!", "GEH.", "FISCH?", "LOG ES.", "ZACK.", "PULS?", "SYSTEM.", "DATA.", "NULL."
+  ];
+
+  function waddleToRandomPos() {
+    const margin = 50;
+    const x = Math.random() * (window.innerWidth - 100) + margin;
+    const y = Math.random() * (window.innerHeight - 100) + margin;
+
+    // Sometimes go to corners
+    const corners = [
+      { b: '20px', r: '20px', t: 'auto', l: 'auto' },
+      { b: 'auto', r: '20px', t: '20px', l: 'auto' },
+      { b: '20px', r: 'auto', t: 'auto', l: '20px' },
+      { b: 'auto', r: 'auto', t: '20px', l: '20px' }
+    ];
+
+    if (Math.random() > 0.6) {
+      const c = corners[Math.floor(Math.random() * corners.length)];
+      penguin.style.bottom = c.b;
+      penguin.style.right = c.r;
+      penguin.style.top = c.t;
+      penguin.style.left = c.l;
+    } else {
+      penguin.style.bottom = `${Math.random() * 80 + 10}vh`;
+      penguin.style.right = `${Math.random() * 80 + 10}vw`;
+      penguin.style.top = 'auto';
+      penguin.style.left = 'auto';
+    }
+  }
 
   // Blinking
   setInterval(() => {
@@ -75,103 +114,39 @@ function initPenguin() {
     const r = document.getElementById("p-eye-r");
     if (l && r) {
       l.style.opacity = "0"; r.style.opacity = "0";
-      setTimeout(() => { l.style.opacity = "1"; r.style.opacity = "1"; }, 200);
+      setTimeout(() => { l.style.opacity = "1"; r.style.opacity = "1"; }, 150);
     }
-  }, 4000);
+  }, 3500);
 
-  // --- CUSTOM PENGUIN MESSAGES ---
-  const allMessages = [
-    // Teil A: Schelte
-    "Erbärmliches Gewatschel.",
-    "Peinlich für uns.",
-    "Lachnummer auf Eis.",
-    "Gott, wie lahm.",
-    "Bürzel hoch, Loser!",
-    "Echt jetzt, Kevin?",
-    // Teil B: Wasser-Befehl
-    "Sauf, du Trockenfisch!",
-    "Dein Hirn staubt.",
-    "Trink, du Wüstenratte!",
-    "Wasser rein, Klops!",
-    "Hydrieren oder krepieren.",
-    "Schütt Wasser nach!",
-    // Teil C: Gnädiger Abschluss
-    "Kriegst 'n Keks.",
-    "Bist mein Projekt.",
-    "Irgendwie süß, leider.",
-    "Darfst weiteratmen.",
-    "Hübsch bist du.",
-    "Bin fast stolz."
-  ];
-
-  // Seed-based shuffle (unique per user per day)
-  const seed = (localStorage.getItem("penguin_seed") || (() => {
-    const s = Math.floor(Math.random() * 99999).toString();
-    localStorage.setItem("penguin_seed", s);
-    return s;
-  })());
-  const daySeed = new Date().getDate() + parseInt(seed);
-  const idleMessages = [...allMessages].sort((a, b) => {
-    const ha = (a.charCodeAt(0) * 31 + daySeed) % 100;
-    const hb = (b.charCodeAt(0) * 31 + daySeed) % 100;
-    return ha - hb;
-  });
-
-  // Click to Talk
+  // Interaction
   penguin.addEventListener("click", () => {
-    const msg = idleMessages[Math.floor(Math.random() * idleMessages.length)];
+    const msg = shortPhrases[Math.floor(Math.random() * shortPhrases.length)];
     showPenguinBubble(msg);
-    const anims = ["wiggle", "spin", "slide", "happyDance", "moonwalk", "flip", "flex"];
-    window.triggerPenguinAnim(anims[Math.floor(Math.random() * anims.length)]);
-  });
 
-  // --- AUTO-TALK (every 25-45s during active workout) ---
-  setInterval(() => {
-    if (!_activeWorkoutLoaded) return;
-    if (Math.random() > 0.5) return;
-    const msg = idleMessages[Math.floor(Math.random() * idleMessages.length)];
-    showPenguinBubble(msg);
-    const smallAnims = ["wiggle", "flex"];
-    window.triggerPenguinAnim(smallAnims[Math.floor(Math.random() * smallAnims.length)]);
-  }, 30000 + Math.random() * 15000);
+    const anims = ["wiggle", "happyDance", "flip", "flex"];
+    window.triggerPenguinAnim(anims[Math.floor(Math.random() * anims.length)]);
+
+    // Waddle away!
+    setTimeout(waddleToRandomPos, 400);
+  });
 
   // Animation Trigger
   window.triggerPenguinAnim = (type, forcedMsg = null) => {
-    const penguin = document.getElementById("pixel-penguin");
-    if (!penguin) return;
-
     penguin.style.animation = "none";
     penguin.offsetHeight;
-
     let duration = 500;
-    if (type === "moonwalk") duration = 1500;
-    if (type === "flip") duration = 800;
-
     penguin.style.animation = `${type} ${duration}ms ease-out`;
-
-    const msgs = {
-      happyDance: ["GEHT DOCH.", "ENDLICH.", "OK."],
-      flip: ["DRAMA.", "UNNÖTIG.", "WIESO."],
-      moonwalk: ["FOKUS.", "ABLENKUNG.", "HEY."],
-      flex: ["SPIEGEL.", "JA JA.", "WEITER."]
-    };
-
-    if (forcedMsg) {
-      showPenguinBubble(forcedMsg);
-    } else if (msgs[type]) {
-      const msg = msgs[type][Math.floor(Math.random() * msgs[type].length)];
-      showPenguinBubble(msg);
-    }
-
-    setTimeout(() => {
-      penguin.style.animation = "idleBounce 3s infinite ease-in-out";
-    }, duration);
+    if (forcedMsg) showPenguinBubble(forcedMsg);
+    setTimeout(() => { penguin.style.animation = "idleBounce 3s infinite ease-in-out"; }, duration);
   };
 
-  // VICTORY DANCE
+  // Victory Dance
   window.penguinDance = () => {
-    window.triggerPenguinAnim("happyDance", "FERTIG.");
-    setTimeout(() => window.triggerPenguinAnim("flip"), 2000);
+    window.triggerPenguinAnim("happyDance", "SOLIDE.");
+    setTimeout(() => {
+      window.triggerPenguinAnim("flex");
+      waddleToRandomPos();
+    }, 2000);
   };
 }
 
