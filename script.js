@@ -44,7 +44,7 @@ function initPenguin() {
   // Create unique seed from user email or random
   const userSeed = localStorage.getItem("penguin_seed") || Math.floor(Math.random() * 99999).toString();
   localStorage.setItem("penguin_seed", userSeed);
-  const colorHash = (parseInt(userSeed) % 360);
+  const colorHash = 100 + (parseInt(userSeed) % 50); // Green Spectrum (100-150)
 
   const penguin = document.createElement("div");
   penguin.id = "pixel-penguin";
@@ -77,76 +77,129 @@ function initPenguin() {
   `;
   document.body.appendChild(penguin);
 
-  const shortPhrases = [
-    "WAS?", "WEITER.", "LAHM.", "HANTEL!", "GEH.", "FISCH?", "LOG ES.", "ZACK.", "PULS?", "SYSTEM.", "DATA.", "NULL."
-  ];
+  // --- DRAGGABLE PENGUIN LOGIC ---
+  let isDragging = false;
+  let dragOffsetX, dragOffsetY;
 
-  function waddleToRandomPos() {
-    const margin = 50;
-    const x = Math.random() * (window.innerWidth - 100) + margin;
-    const y = Math.random() * (window.innerHeight - 100) + margin;
+  // Initial Position: Bottom Right (Fixed, but movable)
+  penguin.style.position = "fixed";
+  penguin.style.bottom = "20px";
+  penguin.style.right = "20px";
+  penguin.style.left = "auto";
+  penguin.style.top = "auto";
+  penguin.style.touchAction = "none"; // Important for drag
 
-    // Sometimes go to corners
-    const corners = [
-      { b: '20px', r: '20px', t: 'auto', l: 'auto' },
-      { b: 'auto', r: '20px', t: '20px', l: 'auto' },
-      { b: '20px', r: 'auto', t: 'auto', l: '20px' },
-      { b: 'auto', r: 'auto', t: '20px', l: '20px' }
-    ];
-
-    if (Math.random() > 0.6) {
-      const c = corners[Math.floor(Math.random() * corners.length)];
-      penguin.style.bottom = c.b;
-      penguin.style.right = c.r;
-      penguin.style.top = c.t;
-      penguin.style.left = c.l;
-    } else {
-      penguin.style.bottom = `${Math.random() * 80 + 10}vh`;
-      penguin.style.right = `${Math.random() * 80 + 10}vw`;
-      penguin.style.top = 'auto';
-      penguin.style.left = 'auto';
-    }
+  function startDrag(e) {
+    isDragging = true;
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    const rect = penguin.getBoundingClientRect();
+    dragOffsetX = clientX - rect.left;
+    dragOffsetY = clientY - rect.top;
+    penguin.style.animation = "none"; // Stop bouncing while dragging
+    penguin.style.cursor = "grabbing";
   }
 
-  // Blinking
-  setInterval(() => {
-    const l = document.getElementById("p-eye-l");
-    const r = document.getElementById("p-eye-r");
-    if (l && r) {
-      l.style.opacity = "0"; r.style.opacity = "0";
-      setTimeout(() => { l.style.opacity = "1"; r.style.opacity = "1"; }, 150);
-    }
-  }, 3500);
+  function doDrag(e) {
+    if (!isDragging) return;
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
 
-  // Interaction
-  penguin.addEventListener("click", () => {
+    // Calculate new position relative to viewport
+    let newX = clientX - dragOffsetX;
+    let newY = clientY - dragOffsetY;
+
+    // Boundary checks (Keep on screen)
+    const maxX = window.innerWidth - penguin.offsetWidth;
+    const maxY = window.innerHeight - penguin.offsetHeight;
+
+    newX = Math.max(0, Math.min(newX, maxX));
+    newY = Math.max(0, Math.min(newY, maxY));
+
+    // Apply as fixed top/left
+    penguin.style.left = newX + "px";
+    penguin.style.top = newY + "px";
+    penguin.style.bottom = "auto";
+    penguin.style.right = "auto";
+  }
+
+  function endDrag() {
+    if (!isDragging) return;
+    isDragging = false;
+    penguin.style.cursor = "pointer";
+    penguin.style.animation = "idleBounce 3s infinite ease-in-out";
+  }
+
+  // Mouse Events
+  penguin.addEventListener("mousedown", startDrag);
+  document.addEventListener("mousemove", doDrag);
+  document.addEventListener("mouseup", endDrag);
+
+  // Touch Events
+  penguin.addEventListener("touchstart", (e) => {
+    // Prevent scrolling while dragging penguin
+    // simple tap detection vs drag:
+    startDrag(e);
+  }, { passive: false });
+  document.addEventListener("touchmove", (e) => {
+    if (isDragging) e.preventDefault();
+    doDrag(e);
+  }, { passive: false });
+  document.addEventListener("touchend", endDrag);
+
+
+  const shortPhrases = [
+    // 6x HYDRATION (3 Words)
+    "TRINK ETWAS WASSER",
+    "WASSER TANKEN JETZT",
+    "DEIN KÖRPER DANKT",
+    "FEUCHTIGKEIT IST WICHTIG",
+    "SCHLUCK WASSER BITTE",
+    "H2O LEVEL PRÜFEN",
+
+    // 6x PRAISE (3 Words)
+    "DU BIST MASCHINE",
+    "GUTE ARBEIT CHAMP",
+    "STARKES TRAINING HEUTE",
+    "ECHT GUTE FORM",
+    "SYSTEM IST STOLZ",
+    "WEITER SO MEISTER"
+  ];
+
+  // Interaction (Click/Tap without Drag)
+  // We need to distinguish click from drag end
+  let startX, startY;
+  penguin.addEventListener("pointerdown", (e) => {
+    startX = e.clientX;
+    startY = e.clientY;
+  });
+
+  penguin.addEventListener("click", (e) => {
+    // If moved significantly, it was a drag, not a click
+    const dist = Math.sqrt(Math.pow(e.clientX - startX, 2) + Math.pow(e.clientY - startY, 2));
+    if (dist > 5) return;
+
     const msg = shortPhrases[Math.floor(Math.random() * shortPhrases.length)];
     showPenguinBubble(msg);
 
     const anims = ["wiggle", "happyDance", "flip", "flex"];
     window.triggerPenguinAnim(anims[Math.floor(Math.random() * anims.length)]);
-
-    // Waddle away!
-    setTimeout(waddleToRandomPos, 400);
   });
 
   // Animation Trigger
   window.triggerPenguinAnim = (type, forcedMsg = null) => {
+    if (isDragging) return; // Don't animate while dragging
     penguin.style.animation = "none";
     penguin.offsetHeight;
     let duration = 500;
     penguin.style.animation = `${type} ${duration}ms ease-out`;
     if (forcedMsg) showPenguinBubble(forcedMsg);
-    setTimeout(() => { penguin.style.animation = "idleBounce 3s infinite ease-in-out"; }, duration);
+    setTimeout(() => { if (!isDragging) penguin.style.animation = "idleBounce 3s infinite ease-in-out"; }, duration);
   };
 
   // Victory Dance
   window.penguinDance = () => {
-    window.triggerPenguinAnim("happyDance", "SOLIDE.");
-    setTimeout(() => {
-      window.triggerPenguinAnim("flex");
-      waddleToRandomPos();
-    }, 2000);
+    window.triggerPenguinAnim("happyDance", "DU BIST MASCHINE");
   };
 }
 
@@ -382,6 +435,16 @@ navItems.forEach(item => {
 });
 
 function showPage(pageId) {
+  // CRT Flicker Trigger
+  document.body.classList.remove("page-flicker");
+  void document.body.offsetWidth; // Trigger reflow
+  document.body.classList.add("page-flicker");
+
+  // Remove class after animation to prevent sticky artifacts
+  setTimeout(() => {
+    document.body.classList.remove("page-flicker");
+  }, 300);
+
   navItems.forEach(i => {
     i.classList.remove("active");
     if (i.dataset.page === pageId) i.classList.add("active");

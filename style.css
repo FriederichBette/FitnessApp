@@ -1,23 +1,24 @@
 ﻿:root {
-    --bg-color: #05050a;
-    --primary-color: #00f2ff;
-    /* Neon Cyan */
-    --secondary-color: #1a0033;
-    /* Very Dark Purple */
-    --accent-color: #b200ff;
-    /* Vivid Purple */
-    --text-color: #e0faff;
-    /* Ice Blue White */
-    --text-muted: #7a89ff;
-    /* Muted Blue-Purple */
-    --error-color: #ff0055;
+    --bg-color: #000000;
+    /* Deep Black */
+    --primary-color: #33ff00;
+    /* Terminal Green */
+    --secondary-color: #002200;
+    /* Dark Green */
+    --accent-color: #1a5c1a;
+    /* Dim Green */
+    --text-color: #ccffcc;
+    /* Pale Green */
+    --text-muted: #4d804d;
+    /* Muted Green */
+    --error-color: #ff3333;
     --terminal-font: 'Share Tech Mono', monospace;
 
     /* Legacy Colors mapped to new theme */
-    --amber: #b200ff;
-    --cyan: #00f2ff;
-    --magenta: #ff00ff;
-    --hot-red: #ff0055;
+    --amber: #ccff00;
+    --cyan: #33ff00;
+    --magenta: #1a5c1a;
+    --hot-red: #ff3333;
 }
 
 * {
@@ -93,18 +94,20 @@
 body {
     background-color: var(--bg-color);
     background-image:
-        linear-gradient(rgba(0, 59, 0, 0.08) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0, 59, 0, 0.08) 1px, transparent 1px);
-    background-size: 30px 30px;
+        radial-gradient(circle at center, transparent 60%, #000000 130%),
+        /* Extra vignette layer */
+        linear-gradient(rgba(0, 20, 0, 0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 20, 0, 0.06) 1px, transparent 1px);
+    background-size: 100% 100%, 30px 30px, 30px 30px;
     color: var(--text-color);
     line-height: 1.4;
     min-height: 100vh;
-    /* CRT Vignette - heavy dark edges like real CRT monitors */
+    /* CRT Vignette - Subtler for usability */
     box-shadow:
-        inset 0 0 150px rgba(0, 0, 0, 0.95),
-        inset 0 0 80px rgba(0, 0, 0, 0.6);
-    /* Phosphor Bloom - Blue/Purple */
-    text-shadow: 0 0 2px rgba(0, 242, 255, 0.5);
+        inset 0 0 100px rgba(0, 0, 0, 0.7),
+        inset 0 0 50px rgba(0, 0, 0, 0.4);
+    /* Phosphor Bloom - Green */
+    text-shadow: 0 0 2px rgba(51, 255, 0, 0.5);
     touch-action: manipulation;
     overflow-x: hidden;
     font-variant-numeric: tabular-nums;
@@ -112,10 +115,52 @@ body {
     animation: screenFlicker 0.15s infinite;
 }
 
+/* Page Transition Flicker Class */
+body.page-flicker .container {
+    animation: pageJump 0.25s cubic-bezier(0.1, 0.9, 0.2, 1);
+}
+
+@keyframes pageJump {
+    0% {
+        opacity: 1;
+        transform: scaleY(1);
+        filter: brightness(1);
+    }
+
+    10% {
+        opacity: 0.8;
+        transform: scaleY(0.98);
+        filter: brightness(2) blur(1px);
+    }
+
+    40% {
+        opacity: 0;
+        transform: scaleY(0.1);
+        filter: brightness(0);
+    }
+
+    50% {
+        opacity: 0;
+        transform: scaleY(0);
+    }
+
+    60% {
+        opacity: 0.9;
+        transform: scaleY(1.02);
+        filter: brightness(1.5);
+    }
+
+    100% {
+        opacity: 1;
+        transform: scaleY(1);
+        filter: brightness(1);
+    }
+}
+
 /* MU-TH-UR 6000 Screen Flicker */
 @keyframes screenFlicker {
     0% {
-        opacity: 0.97;
+        opacity: 0.96;
     }
 
     5% {
@@ -123,7 +168,7 @@ body {
     }
 
     10% {
-        opacity: 0.98;
+        opacity: 0.97;
     }
 
     50% {
@@ -131,11 +176,11 @@ body {
     }
 
     90% {
-        opacity: 0.985;
+        opacity: 0.98;
     }
 
     100% {
-        opacity: 0.97;
+        opacity: 0.96;
     }
 }
 
@@ -203,8 +248,8 @@ body::before {
     left: 0;
     width: 100%;
     height: 3px;
-    background: rgba(0, 242, 255, 0.06);
-    box-shadow: 0 0 8px rgba(0, 242, 255, 0.15);
+    background: rgba(51, 255, 0, 0.06);
+    box-shadow: 0 0 8px rgba(51, 255, 0, 0.15);
     z-index: 1001;
     pointer-events: none;
     animation: scan 8s linear infinite;
@@ -826,7 +871,7 @@ button,
 }
 
 .nav-item:active {
-    background: rgba(255, 176, 0, 0.08);
+    background: rgba(204, 255, 0, 0.08);
     border-top-color: var(--amber);
 }
 
@@ -1096,9 +1141,9 @@ button,
     /* Always visible above bottom nav */
     right: 20px;
     /* Bottom Right Corner */
-    width: 35px;
+    width: 25px;
     /* Mobile Size */
-    height: 35px;
+    height: 25px;
     image-rendering: pixelated;
     pointer-events: auto;
     /* CLICKABLE! */
@@ -1114,8 +1159,8 @@ button,
 
 @media (min-width: 600px) {
     .pixel-penguin {
-        width: 50px;
-        height: 50px;
+        width: 35px;
+        height: 35px;
         bottom: 30px;
         /* Desktop can be lower */
     }
@@ -1202,7 +1247,7 @@ button,
     word-wrap: break-word;
     pointer-events: none;
     text-shadow: 0 0 4px var(--primary-color);
-    box-shadow: 0 0 10px rgba(255, 176, 0, 0.2), inset 0 0 8px rgba(0, 255, 65, 0.03);
+    box-shadow: 0 0 10px rgba(204, 255, 0, 0.2), inset 0 0 8px rgba(0, 255, 65, 0.03);
     z-index: 10002;
     animation: bubbleFadeIn 0.2s ease-out;
     max-width: 180px;
@@ -1213,14 +1258,14 @@ button,
 .rest-zone {
     font-size: 0.7rem;
     color: var(--amber);
-    background: rgba(255, 176, 0, 0.08);
-    border: 1px solid rgba(255, 176, 0, 0.3);
+    background: rgba(204, 255, 0, 0.08);
+    border: 1px solid rgba(204, 255, 0, 0.3);
     padding: 3px 6px;
     margin-top: 5px;
     overflow: hidden;
     text-align: center;
     font-weight: bold;
-    text-shadow: 0 0 6px rgba(255, 176, 0, 0.4);
+    text-shadow: 0 0 6px rgba(204, 255, 0, 0.4);
 }
 
 
