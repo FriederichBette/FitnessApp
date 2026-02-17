@@ -1,5 +1,5 @@
 // ---- MU-TH-UR 6.0 SYSTEM ----
-console.log("APP VERSION: 2.6.0 (TERMINAL-UI) - ACTIVATED");
+console.log("APP VERSION: 2.7.0 (NOSTROMO) - ACTIVATED");
 
 // --- SESSION STATE TRACKING ---
 let _activeWorkoutLoaded = false; // True when a workout is currently being displayed/trained
@@ -79,21 +79,29 @@ function initPenguin() {
     }
   }, 4000);
 
-  // --- SHORT PENGUIN MESSAGES (max 3 words, user-seeded rotation) ---
+  // --- CUSTOM PENGUIN MESSAGES ---
   const allMessages = [
-    // Water
-    "TRINK.", "H2O.", "WASSER.", "TRINK WASSER.",
-    "HYDRATION.", "FLASCHE.", "SCHLUCK.",
-    "TROCKEN.", "DURST.",
-    // Sarcasm
-    "NOCHMAL.", "FORM.", "FALSCH.", "ERNSTHAFT?",
-    "HANDY WEG.", "FOKUS.", "WEITER.",
-    "SCHWACH.", "OPA HEBT MEHR.",
-    "WAS WAR DAS.", "AUFHÖREN.",
-    "WARM-UP?", "NÄCHSTES SET.",
-    "MEHR.", "NOCH EINS.", "HÖHER.",
-    "KOMM.", "LÄCHERLICH.", "PEINLICH.",
-    "LOS.", "LETZTE.", "SAUBER."
+    // Teil A: Schelte
+    "Erbärmliches Gewatschel.",
+    "Peinlich für uns.",
+    "Lachnummer auf Eis.",
+    "Gott, wie lahm.",
+    "Bürzel hoch, Loser!",
+    "Echt jetzt, Kevin?",
+    // Teil B: Wasser-Befehl
+    "Sauf, du Trockenfisch!",
+    "Dein Hirn staubt.",
+    "Trink, du Wüstenratte!",
+    "Wasser rein, Klops!",
+    "Hydrieren oder krepieren.",
+    "Schütt Wasser nach!",
+    // Teil C: Gnädiger Abschluss
+    "Kriegst 'n Keks.",
+    "Bist mein Projekt.",
+    "Irgendwie süß, leider.",
+    "Darfst weiteratmen.",
+    "Hübsch bist du.",
+    "Bin fast stolz."
   ];
 
   // Seed-based shuffle (unique per user per day)
@@ -1333,11 +1341,10 @@ async function loadWorkout(draftData = null) {
     const allCards = contentArea.querySelectorAll(".exercise-card");
     allCards.forEach((card, idx) => {
       const name = card.dataset.exerciseName || card.dataset.originalName || `EX${idx + 1}`;
-      const shortName = name.length > 8 ? name.substring(0, 7) + "." : name;
 
       const item = document.createElement("button");
       item.className = "workout-overview-item";
-      item.textContent = shortName.toUpperCase();
+      item.textContent = name.toUpperCase();
       item.title = name;
       item.onclick = () => {
         card.scrollIntoView({ behavior: "smooth", block: "center" });
