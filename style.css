@@ -233,8 +233,12 @@ body::after {
     padding: 20px;
     position: relative;
     z-index: 5;
-    border: 1px solid rgba(0, 59, 0, 0.4);
-    box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
+    border: 2px solid var(--secondary-color);
+    box-shadow:
+        0 0 50px rgba(0, 0, 0, 0.8),
+        inset 0 0 60px rgba(0, 0, 0, 0.4),
+        0 0 2px var(--secondary-color);
+    background: rgba(0, 0, 0, 0.97);
 }
 
 .page {
@@ -611,18 +615,29 @@ button,
     touch-action: manipulation;
 }
 
-/* --- MINIMAL CARDS (MOBILE OPTIMIZED) --- */
+/* --- TERMINAL PANEL CARDS --- */
 .exercise-card {
-    border-bottom: 1px dashed var(--secondary-color);
-    padding: 10px 0;
-    /* Reduced padding */
-    margin-bottom: 5px;
-    background: transparent;
+    border: 1px solid var(--secondary-color);
+    padding: 12px;
+    margin-bottom: 12px;
+    background: rgba(0, 10, 0, 0.6);
+    position: relative;
+}
+
+/* Terminal panel top-line accent */
+.exercise-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, var(--primary-color), transparent 60%);
+    opacity: 0.5;
 }
 
 .exercise-card h3 {
     font-size: 1.0rem;
-    /* Slightly smaller header */
     margin-bottom: 4px;
     color: var(--primary-color);
     display: flex;
@@ -633,7 +648,6 @@ button,
     font-size: 0.7rem;
     color: var(--text-muted);
     margin-bottom: 8px;
-    /* Compact */
     display: flex;
     gap: 10px;
 }
@@ -1900,4 +1914,160 @@ button:active {
     color: var(--cyan) !important;
     font-size: 0.65rem;
     text-shadow: 0 0 3px rgba(0, 229, 255, 0.15);
+}
+
+/* --- WORKOUT OVERVIEW MINI-PANEL --- */
+.workout-overview {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(0, 0, 0, 0.95);
+    border: 1px solid var(--secondary-color);
+    padding: 8px 10px;
+    margin-bottom: 14px;
+    backdrop-filter: blur(4px);
+}
+
+.workout-overview::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, var(--cyan), transparent 70%);
+    opacity: 0.6;
+}
+
+.workout-overview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+    font-size: 0.55rem;
+    color: var(--text-muted);
+    letter-spacing: 2px;
+}
+
+.workout-overview-status {
+    color: var(--primary-color);
+    animation: blink 1.5s step-end infinite;
+}
+
+.workout-overview-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.workout-overview-item {
+    font-size: 0.55rem;
+    padding: 3px 6px;
+    border: 1px solid var(--secondary-color);
+    cursor: pointer;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+    transition: all 0.15s ease;
+    background: transparent;
+    width: auto;
+    min-height: 0;
+}
+
+.workout-overview-item:hover,
+.workout-overview-item:active {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+    text-shadow: 0 0 4px var(--primary-color);
+    background: rgba(0, 255, 65, 0.05);
+}
+
+.workout-overview-item.completed {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+    opacity: 0.5;
+}
+
+/* --- TERMINAL PANEL: INFO SECTIONS --- */
+.info-section {
+    border: 1px solid var(--secondary-color);
+    padding: 12px;
+    margin-bottom: 12px;
+    background: rgba(0, 10, 0, 0.4);
+    position: relative;
+}
+
+.info-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, var(--amber), transparent 50%);
+    opacity: 0.4;
+}
+
+/* --- EDITOR HEADER (Panel title bar) --- */
+.editor-header {
+    font-size: 0.65rem;
+    color: var(--amber);
+    letter-spacing: 2px;
+    padding-bottom: 6px;
+    margin-bottom: 8px;
+    border-bottom: 1px dashed var(--secondary-color);
+    text-shadow: 0 0 4px rgba(255, 176, 0, 0.2);
+}
+
+/* --- SELECTION AREA (Routine/Workout picker) --- */
+.selection-area {
+    border: 1px solid var(--secondary-color);
+    padding: 12px;
+    margin-bottom: 14px;
+    background: rgba(0, 10, 0, 0.4);
+    position: relative;
+}
+
+.selection-area::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, var(--primary-color), transparent 50%);
+    opacity: 0.4;
+}
+
+/* --- WORKOUT ACTIONS PANEL --- */
+#workout-actions {
+    border: 1px solid var(--secondary-color) !important;
+    padding: 14px !important;
+    background: rgba(0, 10, 0, 0.3);
+}
+
+/* --- HISTORY ITEMS as terminal panels --- */
+.history-item {
+    border: 1px solid var(--secondary-color);
+    padding: 10px;
+    margin-bottom: 8px;
+    background: rgba(0, 10, 0, 0.3);
+    position: relative;
+}
+
+.history-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 40%;
+    height: 1px;
+    background: var(--secondary-color);
+}
+
+/* --- PLAN MANAGE ITEMS as panels --- */
+.plan-manage-item {
+    border: 1px solid var(--secondary-color);
+    padding: 10px;
+    margin-bottom: 8px;
+    background: rgba(0, 10, 0, 0.3);
 }

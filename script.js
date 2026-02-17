@@ -1,5 +1,5 @@
 // ---- MU-TH-UR 6.0 SYSTEM ----
-console.log("APP VERSION: 2.5.0 (MU-TH-UR) - ACTIVATED");
+console.log("APP VERSION: 2.6.0 (TERMINAL-UI) - ACTIVATED");
 
 // --- SESSION STATE TRACKING ---
 let _activeWorkoutLoaded = false; // True when a workout is currently being displayed/trained
@@ -79,36 +79,35 @@ function initPenguin() {
     }
   }, 4000);
 
-  // --- SARCASTIC PENGUIN MESSAGE POOL ---
-  const idleMessages = [
-    // Water (40%)
-    "TRINK WASSER.", "H2O. SOFORT.", "WASSER. NICHT OPTIONAL.",
-    "DEIN KÖRPER IST 60% WASSER. AUFFÜLLEN.",
-    "HYDRATION STATUS: KRITISCH",
-    "WASSER TRINKEN ODER KRÄMPFE KRIEGEN.",
-    "DEINE NIEREN HABEN ANGERUFEN.",
-    "TRINK. EINFACH TRINK.", "WASSER > PROTEINSHAKE",
-    "DEHYDRIERUNG IST KEIN LIFESTYLE.",
-    "WIE VIEL WASSER? MEHR.",
-    "H2O LEVEL: NIEDRIG", "WASSER. JETZT. DANKE.",
-    // Sarcasm (60%)
-    "IST DAS DEIN ERNST?", "NOCHMAL. RICHTIG DIESMAL.",
-    "MEIN OPA. SCHWERER. IM ROLLSTUHL.",
-    "RUHETAG WAR GESTERN.",
-    "DAS WAR... TECHNISCH EINE WIEDERHOLUNG.",
-    "HANDY WEG.", "WENIGER REDEN, MEHR HEBEN.",
-    "DIE HANTEL WARTET NICHT.",
-    "PAUSE VORBEI. AUFHÖREN ZU LESEN.",
-    "ICH ZÄHLE MIT. DAS WAREN NICHT 10.",
-    "DEIN FORMCHECK: MANGELHAFT.",
-    "WARM-UP ODER WAR DAS DAS SET?",
-    "KONZENTRATION. DU HAST NULL.",
-    "TOP LEISTUNG. IRONIE AUS.",
-    "DAS GEWICHT HEBT SICH NICHT ALLEIN.",
-    "SCHWITZEN IST ERLAUBT.",
-    "WENIGER SELFIES, MEHR SETS.",
-    "FOCUS.", "NÄCHSTES SET. LOS."
+  // --- SHORT PENGUIN MESSAGES (max 3 words, user-seeded rotation) ---
+  const allMessages = [
+    // Water
+    "TRINK.", "H2O.", "WASSER.", "TRINK WASSER.",
+    "HYDRATION.", "FLASCHE.", "SCHLUCK.",
+    "TROCKEN.", "DURST.",
+    // Sarcasm
+    "NOCHMAL.", "FORM.", "FALSCH.", "ERNSTHAFT?",
+    "HANDY WEG.", "FOKUS.", "WEITER.",
+    "SCHWACH.", "OPA HEBT MEHR.",
+    "WAS WAR DAS.", "AUFHÖREN.",
+    "WARM-UP?", "NÄCHSTES SET.",
+    "MEHR.", "NOCH EINS.", "HÖHER.",
+    "KOMM.", "LÄCHERLICH.", "PEINLICH.",
+    "LOS.", "LETZTE.", "SAUBER."
   ];
+
+  // Seed-based shuffle (unique per user per day)
+  const seed = (localStorage.getItem("penguin_seed") || (() => {
+    const s = Math.floor(Math.random() * 99999).toString();
+    localStorage.setItem("penguin_seed", s);
+    return s;
+  })());
+  const daySeed = new Date().getDate() + parseInt(seed);
+  const idleMessages = [...allMessages].sort((a, b) => {
+    const ha = (a.charCodeAt(0) * 31 + daySeed) % 100;
+    const hb = (b.charCodeAt(0) * 31 + daySeed) % 100;
+    return ha - hb;
+  });
 
   // Click to Talk
   penguin.addEventListener("click", () => {
@@ -143,10 +142,10 @@ function initPenguin() {
     penguin.style.animation = `${type} ${duration}ms ease-out`;
 
     const msgs = {
-      happyDance: ["GEHT DOCH.", "ENDLICH.", "WAR DAS SO SCHWER?"],
-      flip: ["DRAMA.", "UNNÖTIG ABER OK.", "EFFEKTHASCHEREI."],
-      moonwalk: ["ABLENKUNG.", "FOKUS VERLOREN.", "ZURÜCK ANS EISEN."],
-      flex: ["SPIEGEL IST WOANDERS.", "WENIGER FLEXEN, MEHR HEBEN.", "JA JA, MUSKELN. WEITER."]
+      happyDance: ["GEHT DOCH.", "ENDLICH.", "OK."],
+      flip: ["DRAMA.", "UNNÖTIG.", "WIESO."],
+      moonwalk: ["FOKUS.", "ABLENKUNG.", "HEY."],
+      flex: ["SPIEGEL.", "JA JA.", "WEITER."]
     };
 
     if (forcedMsg) {
@@ -163,7 +162,7 @@ function initPenguin() {
 
   // VICTORY DANCE
   window.penguinDance = () => {
-    window.triggerPenguinAnim("happyDance", "ENDLICH FERTIG.");
+    window.triggerPenguinAnim("happyDance", "FERTIG.");
     setTimeout(() => window.triggerPenguinAnim("flip"), 2000);
   };
 }
@@ -1316,6 +1315,42 @@ async function loadWorkout(draftData = null) {
 
       contentArea.appendChild(card);
     });
+
+    // --- MINI OVERVIEW PANEL (shows all exercises at a glance) ---
+    const overviewPanel = document.createElement("div");
+    overviewPanel.className = "workout-overview";
+    overviewPanel.id = "workout-overview-panel";
+
+    const overviewHeader = document.createElement("div");
+    overviewHeader.className = "workout-overview-header";
+    overviewHeader.innerHTML = `<span>PROTOKOLL</span><span class="workout-overview-status">[AKTIV]</span>`;
+    overviewPanel.appendChild(overviewHeader);
+
+    const overviewList = document.createElement("div");
+    overviewList.className = "workout-overview-list";
+
+    // Add each exercise as a clickable mini-button
+    const allCards = contentArea.querySelectorAll(".exercise-card");
+    allCards.forEach((card, idx) => {
+      const name = card.dataset.exerciseName || card.dataset.originalName || `EX${idx + 1}`;
+      const shortName = name.length > 8 ? name.substring(0, 7) + "." : name;
+
+      const item = document.createElement("button");
+      item.className = "workout-overview-item";
+      item.textContent = shortName.toUpperCase();
+      item.title = name;
+      item.onclick = () => {
+        card.scrollIntoView({ behavior: "smooth", block: "center" });
+        // Brief highlight
+        card.style.borderColor = "var(--primary-color)";
+        setTimeout(() => { card.style.borderColor = ""; }, 1500);
+      };
+      overviewList.appendChild(item);
+    });
+
+    overviewPanel.appendChild(overviewList);
+    // Insert at TOP of content area
+    contentArea.insertBefore(overviewPanel, contentArea.firstChild);
 
     // --- BUTTON: ADD DYNAMIC EXERCISE ---
     const addExContainer = document.createElement("div");
