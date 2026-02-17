@@ -634,58 +634,120 @@ button,
 
 /* --- PHYSICAL CRT MONITOR --- */
 .exercise-card {
-    /* The screen */
-    background: rgba(0, 4, 0, 0.95);
+    /* The curved glass screen */
+    background:
+        /* Screen vignette (darkened corners = CRT curvature) */
+        radial-gradient(ellipse at center, transparent 60%, rgba(0, 0, 0, 0.4) 100%),
+        /* Base screen color */
+        rgba(0, 4, 0, 0.95);
     padding: 14px;
-    margin-bottom: 28px;
+    margin-bottom: 32px;
     position: relative;
-    border-radius: 3px;
+    border-radius: 8px;
+    overflow: visible;
 
-    /* Screen edge */
-    border: 2px solid #333;
+    /* Screen glass edge */
+    border: 2px solid #3a3a3a;
 
-    /* Monitor casing built from shadow layers */
+    /* 3D CASING with directional lighting */
     box-shadow:
         /* Screen phosphor recess */
-        inset 0 0 25px rgba(0, 255, 65, 0.03),
-        inset 0 0 3px rgba(0, 255, 65, 0.08),
-        /* Dark gap between screen and casing */
+        inset 0 0 30px rgba(0, 255, 65, 0.03),
+        inset 0 0 4px rgba(0, 255, 65, 0.1),
+        /* Dark gap screen → casing */
         0 0 0 3px #080808,
-        /* CASING BODY (the thick plastic frame) */
-        0 0 0 7px #1c1c1c,
-        /* Casing edge highlight (light reflection on plastic) */
-        0 0 0 8px #2a2a2a,
+        /* Casing body - TOP (light hits from above = lighter) */
+        0 -1px 0 6px #252525,
+        /* Casing body - SIDES */
+        -1px 0 0 6px #1e1e1e,
+        1px 0 0 6px #1e1e1e,
+        /* Casing body - BOTTOM (in shadow = darker, + thicker for control panel) */
+        0 3px 0 8px #181818,
+        /* Casing edge highlight */
+        0 0 0 9px #2a2a2a,
         /* Outer casing edge */
-        0 0 0 9px #111,
-        /* Monitor sitting on surface (physical depth) */
-        0 12px 30px rgba(0, 0, 0, 0.9),
-        0 4px 8px rgba(0, 0, 0, 0.4);
+        0 0 0 10px #0e0e0e,
+        /* Monitor shadow on desk */
+        0 14px 35px rgba(0, 0, 0, 0.95),
+        0 5px 10px rgba(0, 0, 0, 0.5);
+
+    /* CRT boot animation */
+    animation: crtBoot 0.5s ease-out both;
 }
 
-/* Screen top-edge scanline glow */
+/* Glass reflection (diagonal glare across screen) */
 .exercise-card::before {
     content: '';
     position: absolute;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 1px;
-    background: linear-gradient(90deg, var(--primary-color), transparent 50%);
-    opacity: 0.5;
-    border-radius: 3px 3px 0 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(125deg,
+            rgba(255, 255, 255, 0.06) 0%,
+            rgba(255, 255, 255, 0.02) 25%,
+            transparent 45%,
+            transparent 100%);
+    pointer-events: none;
+    z-index: 1;
+    border-radius: 6px;
 }
 
-/* Power LED */
+/* Bottom bezel control buttons (Power LED + 2 knobs) */
 .exercise-card::after {
     content: '';
     position: absolute;
-    bottom: -14px;
-    right: 18px;
-    width: 4px;
-    height: 4px;
-    background: var(--primary-color);
-    border-radius: 50%;
-    box-shadow: 0 0 4px var(--primary-color), 0 0 8px rgba(0, 255, 65, 0.3);
+    bottom: -15px;
+    right: 14px;
+    width: 50px;
+    height: 8px;
+    background:
+        /* Power LED (green, glowing) */
+        radial-gradient(circle at 44px 4px, #00ff41 2px, transparent 2px),
+        /* Knob 2 */
+        radial-gradient(circle at 26px 4px, #2a2a2a 2px, transparent 2px),
+        /* Knob 1 */
+        radial-gradient(circle at 8px 4px, #222 2px, transparent 2px);
+    background-repeat: no-repeat;
+    z-index: 2;
+    filter: drop-shadow(0 0 3px rgba(0, 255, 65, 0.4));
+    animation: ledPulse 3s ease-in-out infinite;
+}
+
+/* CRT Power-On: horizontal line expands to full screen */
+@keyframes crtBoot {
+    0% {
+        clip-path: inset(49% 15% 49% 15%);
+        filter: brightness(0);
+    }
+
+    20% {
+        clip-path: inset(49% 0 49% 0);
+        filter: brightness(3);
+    }
+
+    50% {
+        clip-path: inset(5% 0 5% 0);
+        filter: brightness(1.5);
+    }
+
+    100% {
+        clip-path: inset(0 0 0 0);
+        filter: brightness(1);
+    }
+}
+
+/* Power LED breathing */
+@keyframes ledPulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.4;
+    }
 }
 
 .exercise-card h3 {
@@ -2000,33 +2062,41 @@ button:active {
     position: sticky;
     top: 0;
     z-index: 50;
-    background: rgba(0, 3, 4, 0.97);
-    border: 2px solid #2a3333;
+    background:
+        radial-gradient(ellipse at center, transparent 60%, rgba(0, 0, 0, 0.35) 100%),
+        rgba(0, 3, 4, 0.97);
+    border: 2px solid #3a3a3a;
     padding: 8px 10px;
-    margin-bottom: 28px;
-    border-radius: 3px;
+    margin-bottom: 32px;
+    border-radius: 8px;
     backdrop-filter: blur(4px);
     box-shadow:
-        inset 0 0 20px rgba(0, 229, 255, 0.03),
-        inset 0 0 3px rgba(0, 229, 255, 0.08),
+        inset 0 0 25px rgba(0, 229, 255, 0.03),
+        inset 0 0 4px rgba(0, 229, 255, 0.08),
         0 0 0 3px #080808,
-        0 0 0 7px #1c1c1c,
-        0 0 0 8px #2a2a2a,
-        0 0 0 9px #111,
-        0 10px 25px rgba(0, 0, 0, 0.9),
+        0 -1px 0 6px #252525,
+        -1px 0 0 6px #1e1e1e,
+        1px 0 0 6px #1e1e1e,
+        0 3px 0 8px #181818,
+        0 0 0 9px #2a2a2a,
+        0 0 0 10px #0e0e0e,
+        0 12px 30px rgba(0, 0, 0, 0.9),
         0 4px 8px rgba(0, 0, 0, 0.4);
+    animation: crtBoot 0.4s ease-out both;
 }
 
+/* Glass reflection */
 .workout-overview::before {
     content: '';
     position: absolute;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 1px;
-    background: linear-gradient(90deg, var(--cyan), transparent 60%);
-    opacity: 0.5;
-    border-radius: 3px 3px 0 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(125deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.015) 25%, transparent 45%);
+    pointer-events: none;
+    z-index: 1;
+    border-radius: 6px;
 }
 
 .workout-overview-header {
@@ -2079,33 +2149,58 @@ button:active {
 
 /* --- PHYSICAL CRT: INFO SECTIONS (Amber Screen) --- */
 .info-section {
-    border: 2px solid #333020;
+    background:
+        radial-gradient(ellipse at center, transparent 60%, rgba(0, 0, 0, 0.35) 100%),
+        rgba(4, 3, 0, 0.95);
+    border: 2px solid #3a3a3a;
     padding: 14px;
-    margin-bottom: 28px;
-    background: rgba(4, 3, 0, 0.95);
+    margin-bottom: 32px;
     position: relative;
-    border-radius: 3px;
+    border-radius: 8px;
     box-shadow:
-        inset 0 0 25px rgba(255, 176, 0, 0.02),
-        inset 0 0 3px rgba(255, 176, 0, 0.06),
+        inset 0 0 30px rgba(255, 176, 0, 0.02),
+        inset 0 0 4px rgba(255, 176, 0, 0.06),
         0 0 0 3px #080808,
-        0 0 0 7px #1c1c1c,
-        0 0 0 8px #2a2a2a,
-        0 0 0 9px #111,
-        0 12px 30px rgba(0, 0, 0, 0.9),
-        0 4px 8px rgba(0, 0, 0, 0.4);
+        0 -1px 0 6px #252525,
+        -1px 0 0 6px #1e1e1e,
+        1px 0 0 6px #1e1e1e,
+        0 3px 0 8px #181818,
+        0 0 0 9px #2a2a2a,
+        0 0 0 10px #0e0e0e,
+        0 14px 35px rgba(0, 0, 0, 0.95),
+        0 5px 10px rgba(0, 0, 0, 0.5);
+    animation: crtBoot 0.5s ease-out both;
 }
 
+/* Glass reflection */
 .info-section::before {
     content: '';
     position: absolute;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 1px;
-    background: linear-gradient(90deg, var(--amber), transparent 40%);
-    opacity: 0.4;
-    border-radius: 3px 3px 0 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(125deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 25%, transparent 45%);
+    pointer-events: none;
+    z-index: 1;
+    border-radius: 6px;
+}
+
+/* Amber power LED + knob */
+.info-section::after {
+    content: '';
+    position: absolute;
+    bottom: -15px;
+    right: 14px;
+    width: 35px;
+    height: 8px;
+    background:
+        radial-gradient(circle at 29px 4px, var(--amber) 2px, transparent 2px),
+        radial-gradient(circle at 8px 4px, #222 2px, transparent 2px);
+    background-repeat: no-repeat;
+    z-index: 2;
+    filter: drop-shadow(0 0 3px rgba(255, 176, 0, 0.4));
+    animation: ledPulse 3s ease-in-out infinite;
 }
 
 /* --- EDITOR HEADER (Panel title bar) --- */
@@ -2121,113 +2216,212 @@ button:active {
 
 /* --- PHYSICAL CRT: SELECTION AREA --- */
 .selection-area {
-    border: 2px solid #333;
+    background:
+        radial-gradient(ellipse at center, transparent 60%, rgba(0, 0, 0, 0.35) 100%),
+        rgba(0, 4, 0, 0.95);
+    border: 2px solid #3a3a3a;
     padding: 14px;
-    margin-bottom: 28px;
-    background: rgba(0, 4, 0, 0.95);
+    margin-bottom: 32px;
     position: relative;
-    border-radius: 3px;
+    border-radius: 8px;
     box-shadow:
-        inset 0 0 25px rgba(0, 255, 65, 0.03),
-        inset 0 0 3px rgba(0, 255, 65, 0.08),
+        inset 0 0 30px rgba(0, 255, 65, 0.03),
+        inset 0 0 4px rgba(0, 255, 65, 0.1),
         0 0 0 3px #080808,
-        0 0 0 7px #1c1c1c,
-        0 0 0 8px #2a2a2a,
-        0 0 0 9px #111,
-        0 12px 30px rgba(0, 0, 0, 0.9),
-        0 4px 8px rgba(0, 0, 0, 0.4);
+        0 -1px 0 6px #252525,
+        -1px 0 0 6px #1e1e1e,
+        1px 0 0 6px #1e1e1e,
+        0 3px 0 8px #181818,
+        0 0 0 9px #2a2a2a,
+        0 0 0 10px #0e0e0e,
+        0 14px 35px rgba(0, 0, 0, 0.95),
+        0 5px 10px rgba(0, 0, 0, 0.5);
+    animation: crtBoot 0.5s ease-out both;
 }
 
+/* Glass reflection */
 .selection-area::before {
     content: '';
     position: absolute;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 1px;
-    background: linear-gradient(90deg, var(--primary-color), transparent 40%);
-    opacity: 0.4;
-    border-radius: 3px 3px 0 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(125deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 25%, transparent 45%);
+    pointer-events: none;
+    z-index: 1;
+    border-radius: 6px;
+}
+
+/* Green power LED */
+.selection-area::after {
+    content: '';
+    position: absolute;
+    bottom: -15px;
+    right: 14px;
+    width: 35px;
+    height: 8px;
+    background:
+        radial-gradient(circle at 29px 4px, #00ff41 2px, transparent 2px),
+        radial-gradient(circle at 8px 4px, #222 2px, transparent 2px);
+    background-repeat: no-repeat;
+    z-index: 2;
+    filter: drop-shadow(0 0 3px rgba(0, 255, 65, 0.4));
+    animation: ledPulse 3s ease-in-out infinite;
 }
 
 /* --- PHYSICAL CRT: WORKOUT ACTIONS --- */
 #workout-actions {
-    border: 2px solid #333 !important;
+    border: 2px solid #3a3a3a !important;
     padding: 14px !important;
-    margin-bottom: 10px;
-    background: rgba(0, 4, 0, 0.95);
-    border-radius: 3px;
+    margin-bottom: 14px;
+    background:
+        radial-gradient(ellipse at center, transparent 60%, rgba(0, 0, 0, 0.3) 100%),
+        rgba(0, 4, 0, 0.95);
+    border-radius: 8px;
     box-shadow:
-        inset 0 0 20px rgba(0, 255, 65, 0.03),
+        inset 0 0 25px rgba(0, 255, 65, 0.03),
         0 0 0 3px #080808,
-        0 0 0 7px #1c1c1c,
-        0 0 0 8px #2a2a2a,
-        0 0 0 9px #111,
-        0 12px 30px rgba(0, 0, 0, 0.9),
-        0 4px 8px rgba(0, 0, 0, 0.4);
+        0 -1px 0 6px #252525,
+        -1px 0 0 6px #1e1e1e,
+        1px 0 0 6px #1e1e1e,
+        0 3px 0 8px #181818,
+        0 0 0 9px #2a2a2a,
+        0 0 0 10px #0e0e0e,
+        0 14px 35px rgba(0, 0, 0, 0.95),
+        0 5px 10px rgba(0, 0, 0, 0.5);
+    animation: crtBoot 0.45s ease-out both;
 }
 
 /* --- PHYSICAL CRT: HISTORY ITEMS --- */
 .history-item {
-    border: 2px solid #333;
+    background:
+        radial-gradient(ellipse at center, transparent 60%, rgba(0, 0, 0, 0.3) 100%),
+        rgba(0, 4, 0, 0.95);
+    border: 2px solid #3a3a3a;
     padding: 12px;
-    margin-bottom: 24px;
-    background: rgba(0, 4, 0, 0.95);
+    margin-bottom: 28px;
     position: relative;
-    border-radius: 3px;
+    border-radius: 8px;
     box-shadow:
-        inset 0 0 20px rgba(0, 255, 65, 0.02),
-        inset 0 0 2px rgba(0, 255, 65, 0.06),
+        inset 0 0 25px rgba(0, 255, 65, 0.02),
+        inset 0 0 3px rgba(0, 255, 65, 0.06),
         0 0 0 3px #080808,
-        0 0 0 7px #1c1c1c,
-        0 0 0 8px #2a2a2a,
-        0 0 0 9px #111,
-        0 10px 25px rgba(0, 0, 0, 0.8),
-        0 3px 6px rgba(0, 0, 0, 0.4);
+        0 -1px 0 6px #252525,
+        -1px 0 0 6px #1e1e1e,
+        1px 0 0 6px #1e1e1e,
+        0 3px 0 8px #181818,
+        0 0 0 9px #2a2a2a,
+        0 0 0 10px #0e0e0e,
+        0 12px 30px rgba(0, 0, 0, 0.9),
+        0 4px 8px rgba(0, 0, 0, 0.4);
+    animation: crtBoot 0.5s ease-out both;
 }
 
+/* Glass reflection */
 .history-item::before {
     content: '';
     position: absolute;
     top: 0;
     left: 0;
-    width: 30%;
-    height: 1px;
-    background: var(--secondary-color);
-    border-radius: 3px 0 0 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(125deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 25%, transparent 45%);
+    pointer-events: none;
+    z-index: 1;
+    border-radius: 6px;
+}
+
+/* Green LED */
+.history-item::after {
+    content: '';
+    position: absolute;
+    bottom: -13px;
+    right: 14px;
+    width: 6px;
+    height: 6px;
+    background: radial-gradient(circle, #00ff41 1.5px, transparent 1.5px);
+    z-index: 2;
+    filter: drop-shadow(0 0 3px rgba(0, 255, 65, 0.5));
+    animation: ledPulse 3s ease-in-out infinite;
 }
 
 /* --- PHYSICAL CRT: PLAN ITEMS --- */
 .plan-manage-item {
-    border: 2px solid #333;
+    background:
+        radial-gradient(ellipse at center, transparent 60%, rgba(0, 0, 0, 0.3) 100%),
+        rgba(0, 4, 0, 0.95);
+    border: 2px solid #3a3a3a;
     padding: 12px;
-    margin-bottom: 24px;
-    background: rgba(0, 4, 0, 0.95);
-    border-radius: 3px;
+    margin-bottom: 28px;
+    border-radius: 8px;
+    position: relative;
     box-shadow:
-        inset 0 0 20px rgba(0, 255, 65, 0.02),
+        inset 0 0 25px rgba(0, 255, 65, 0.02),
         0 0 0 3px #080808,
-        0 0 0 7px #1c1c1c,
-        0 0 0 8px #2a2a2a,
-        0 0 0 9px #111,
-        0 10px 25px rgba(0, 0, 0, 0.8),
-        0 3px 6px rgba(0, 0, 0, 0.4);
+        0 -1px 0 6px #252525,
+        -1px 0 0 6px #1e1e1e,
+        1px 0 0 6px #1e1e1e,
+        0 3px 0 8px #181818,
+        0 0 0 9px #2a2a2a,
+        0 0 0 10px #0e0e0e,
+        0 12px 30px rgba(0, 0, 0, 0.9),
+        0 4px 8px rgba(0, 0, 0, 0.4);
+    animation: crtBoot 0.5s ease-out both;
+}
+
+/* Glass reflection */
+.plan-manage-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(125deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 25%, transparent 45%);
+    pointer-events: none;
+    z-index: 1;
+    border-radius: 6px;
 }
 
 /* --- PHYSICAL CRT: CHART CONTAINER --- */
 .terminal-chart-container {
-    border: 2px solid #2a3333;
+    background:
+        radial-gradient(ellipse at center, transparent 60%, rgba(0, 0, 0, 0.35) 100%),
+        rgba(0, 2, 4, 0.95);
+    border: 2px solid #3a3a3a;
     padding: 14px;
-    margin-bottom: 28px;
-    background: rgba(0, 2, 4, 0.95);
-    border-radius: 3px;
+    margin-bottom: 32px;
+    border-radius: 8px;
+    position: relative;
     box-shadow:
         inset 0 0 30px rgba(0, 229, 255, 0.02),
-        inset 0 0 3px rgba(0, 229, 255, 0.06),
+        inset 0 0 4px rgba(0, 229, 255, 0.06),
         0 0 0 3px #080808,
-        0 0 0 7px #1c1c1c,
-        0 0 0 8px #2a2a2a,
-        0 0 0 9px #111,
-        0 12px 30px rgba(0, 0, 0, 0.9),
-        0 4px 8px rgba(0, 0, 0, 0.4);
+        0 -1px 0 6px #252525,
+        -1px 0 0 6px #1e1e1e,
+        1px 0 0 6px #1e1e1e,
+        0 3px 0 8px #181818,
+        0 0 0 9px #2a2a2a,
+        0 0 0 10px #0e0e0e,
+        0 14px 35px rgba(0, 0, 0, 0.95),
+        0 5px 10px rgba(0, 0, 0, 0.5);
+    animation: crtBoot 0.5s ease-out both;
+}
+
+/* Cyan LED + knob */
+.terminal-chart-container::after {
+    content: '';
+    position: absolute;
+    bottom: -15px;
+    right: 14px;
+    width: 35px;
+    height: 8px;
+    background:
+        radial-gradient(circle at 29px 4px, var(--cyan) 2px, transparent 2px),
+        radial-gradient(circle at 8px 4px, #222 2px, transparent 2px);
+    background-repeat: no-repeat;
+    z-index: 2;
+    filter: drop-shadow(0 0 3px rgba(0, 229, 255, 0.4));
+    animation: ledPulse 3s ease-in-out infinite;
 }
