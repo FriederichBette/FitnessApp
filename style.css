@@ -1,4 +1,4 @@
-:root {
+﻿:root {
     --bg-color: #000000;
     --primary-color: #00ff41;
     --secondary-color: #003b00;
@@ -632,50 +632,35 @@ button,
     touch-action: manipulation;
 }
 
-/* --- PHYSICAL CRT MONITOR --- */
+/* --- ALIEN CRT MONITOR (Thick Physical Casing) --- */
 .exercise-card {
-    /* The curved glass screen */
-    background:
-        /* Screen vignette (darkened corners = CRT curvature) */
-        radial-gradient(ellipse at center, transparent 60%, rgba(0, 0, 0, 0.4) 100%),
-        /* Base screen color */
-        rgba(0, 4, 0, 0.95);
+    /* === THE THICK MONITOR CASING === */
+    border: 12px solid;
+    border-color: #1e1e1e #181818 #111 #181818;
+    border-radius: 18px;
     padding: 14px;
-    margin-bottom: 32px;
+    margin-bottom: 28px;
     position: relative;
-    border-radius: 8px;
     overflow: visible;
 
-    /* Screen glass edge */
-    border: 2px solid #3a3a3a;
+    /* === THE SCREEN === */
+    background:
+        repeating-conic-gradient(rgba(0, 255, 65, 0.008) 0% 25%, transparent 0% 50%) 0 0 / 4px 4px,
+        radial-gradient(ellipse at center, transparent 40%, rgba(0, 0, 0, 0.6) 100%),
+        rgba(0, 12, 0, 0.95);
 
-    /* 3D CASING with directional lighting */
+    /* === SCREEN DEPTH === */
     box-shadow:
-        /* Screen phosphor recess */
-        inset 0 0 30px rgba(0, 255, 65, 0.03),
-        inset 0 0 4px rgba(0, 255, 65, 0.1),
-        /* Dark gap screen → casing */
-        0 0 0 3px #080808,
-        /* Casing body - TOP (light hits from above = lighter) */
-        0 -1px 0 6px #252525,
-        /* Casing body - SIDES */
-        -1px 0 0 6px #1e1e1e,
-        1px 0 0 6px #1e1e1e,
-        /* Casing body - BOTTOM (in shadow = darker, + thicker for control panel) */
-        0 3px 0 8px #181818,
-        /* Casing edge highlight */
-        0 0 0 9px #2a2a2a,
-        /* Outer casing edge */
-        0 0 0 10px #0e0e0e,
-        /* Monitor shadow on desk */
-        0 14px 35px rgba(0, 0, 0, 0.95),
-        0 5px 10px rgba(0, 0, 0, 0.5);
+        inset 0 0 0 2px #0a0a0a,
+        inset 0 0 40px rgba(0, 0, 0, 0.6),
+        inset 0 0 6px rgba(0, 255, 65, 0.12),
+        0 8px 30px rgba(0, 0, 0, 0.95),
+        0 3px 8px rgba(0, 0, 0, 0.5);
 
-    /* CRT boot animation */
     animation: crtBoot 0.5s ease-out both;
 }
 
-/* Glass reflection (diagonal glare across screen) */
+/* Glass reflection */
 .exercise-card::before {
     content: '';
     position: absolute;
@@ -683,34 +668,30 @@ button,
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(125deg,
-            rgba(255, 255, 255, 0.06) 0%,
-            rgba(255, 255, 255, 0.02) 25%,
-            transparent 45%,
-            transparent 100%);
+    background: linear-gradient(120deg,
+            rgba(255, 255, 255, 0.07) 0%,
+            rgba(255, 255, 255, 0.02) 20%,
+            transparent 40%);
     pointer-events: none;
     z-index: 1;
     border-radius: 6px;
 }
 
-/* Bottom bezel control buttons (Power LED + 2 knobs) */
+/* Power LED + knobs on thick casing */
 .exercise-card::after {
     content: '';
     position: absolute;
-    bottom: -15px;
-    right: 14px;
-    width: 50px;
+    bottom: -20px;
+    right: 20px;
+    width: 55px;
     height: 8px;
     background:
-        /* Power LED (green, glowing) */
-        radial-gradient(circle at 44px 4px, #00ff41 2px, transparent 2px),
-        /* Knob 2 */
-        radial-gradient(circle at 26px 4px, #2a2a2a 2px, transparent 2px),
-        /* Knob 1 */
-        radial-gradient(circle at 8px 4px, #222 2px, transparent 2px);
+        radial-gradient(circle at 48px 4px, #00ff41 2.5px, transparent 2.5px),
+        radial-gradient(circle at 28px 4px, #2a2a2a 2.5px, transparent 2.5px),
+        radial-gradient(circle at 8px 4px, #222 2.5px, transparent 2.5px);
     background-repeat: no-repeat;
     z-index: 2;
-    filter: drop-shadow(0 0 3px rgba(0, 255, 65, 0.4));
+    filter: drop-shadow(0 0 4px rgba(0, 255, 65, 0.5));
     animation: ledPulse 3s ease-in-out infinite;
 }
 
@@ -2057,35 +2038,29 @@ button:active {
     text-shadow: 0 0 3px rgba(0, 229, 255, 0.15);
 }
 
-/* --- PHYSICAL CRT: OVERVIEW HUD (Cyan Screen) --- */
+/* --- ALIEN CRT: OVERVIEW HUD --- */
 .workout-overview {
     position: sticky;
     top: 0;
     z-index: 50;
-    background:
-        radial-gradient(ellipse at center, transparent 60%, rgba(0, 0, 0, 0.35) 100%),
-        rgba(0, 3, 4, 0.97);
-    border: 2px solid #3a3a3a;
+    border: 10px solid;
+    border-color: #1e1e1e #181818 #111 #181818;
+    border-radius: 16px;
     padding: 8px 10px;
-    margin-bottom: 32px;
-    border-radius: 8px;
+    margin-bottom: 28px;
     backdrop-filter: blur(4px);
+    background:
+        repeating-conic-gradient(rgba(0, 229, 255, 0.005) 0% 25%, transparent 0% 50%) 0 0 / 4px 4px,
+        radial-gradient(ellipse at center, transparent 40%, rgba(0, 0, 0, 0.5) 100%),
+        rgba(0, 6, 8, 0.97);
     box-shadow:
-        inset 0 0 25px rgba(0, 229, 255, 0.03),
-        inset 0 0 4px rgba(0, 229, 255, 0.08),
-        0 0 0 3px #080808,
-        0 -1px 0 6px #252525,
-        -1px 0 0 6px #1e1e1e,
-        1px 0 0 6px #1e1e1e,
-        0 3px 0 8px #181818,
-        0 0 0 9px #2a2a2a,
-        0 0 0 10px #0e0e0e,
-        0 12px 30px rgba(0, 0, 0, 0.9),
-        0 4px 8px rgba(0, 0, 0, 0.4);
+        inset 0 0 0 2px #0a0a0a,
+        inset 0 0 30px rgba(0, 0, 0, 0.5),
+        inset 0 0 4px rgba(0, 229, 255, 0.1),
+        0 6px 25px rgba(0, 0, 0, 0.9);
     animation: crtBoot 0.4s ease-out both;
 }
 
-/* Glass reflection */
 .workout-overview::before {
     content: '';
     position: absolute;
@@ -2147,32 +2122,26 @@ button:active {
     opacity: 0.5;
 }
 
-/* --- PHYSICAL CRT: INFO SECTIONS (Amber Screen) --- */
+/* --- ALIEN CRT: INFO SECTIONS (Amber) --- */
 .info-section {
-    background:
-        radial-gradient(ellipse at center, transparent 60%, rgba(0, 0, 0, 0.35) 100%),
-        rgba(4, 3, 0, 0.95);
-    border: 2px solid #3a3a3a;
+    border: 12px solid;
+    border-color: #1e1e1e #181818 #111 #181818;
+    border-radius: 18px;
     padding: 14px;
-    margin-bottom: 32px;
+    margin-bottom: 28px;
     position: relative;
-    border-radius: 8px;
+    background:
+        repeating-conic-gradient(rgba(255, 176, 0, 0.005) 0% 25%, transparent 0% 50%) 0 0 / 4px 4px,
+        radial-gradient(ellipse at center, transparent 40%, rgba(0, 0, 0, 0.6) 100%),
+        rgba(6, 4, 0, 0.95);
     box-shadow:
-        inset 0 0 30px rgba(255, 176, 0, 0.02),
-        inset 0 0 4px rgba(255, 176, 0, 0.06),
-        0 0 0 3px #080808,
-        0 -1px 0 6px #252525,
-        -1px 0 0 6px #1e1e1e,
-        1px 0 0 6px #1e1e1e,
-        0 3px 0 8px #181818,
-        0 0 0 9px #2a2a2a,
-        0 0 0 10px #0e0e0e,
-        0 14px 35px rgba(0, 0, 0, 0.95),
-        0 5px 10px rgba(0, 0, 0, 0.5);
+        inset 0 0 0 2px #0a0a0a,
+        inset 0 0 40px rgba(0, 0, 0, 0.6),
+        inset 0 0 6px rgba(255, 176, 0, 0.06),
+        0 8px 30px rgba(0, 0, 0, 0.95);
     animation: crtBoot 0.5s ease-out both;
 }
 
-/* Glass reflection */
 .info-section::before {
     content: '';
     position: absolute;
@@ -2180,30 +2149,29 @@ button:active {
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(125deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 25%, transparent 45%);
+    background: linear-gradient(120deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.015) 20%, transparent 40%);
     pointer-events: none;
     z-index: 1;
     border-radius: 6px;
 }
 
-/* Amber power LED + knob */
 .info-section::after {
     content: '';
     position: absolute;
-    bottom: -15px;
-    right: 14px;
-    width: 35px;
+    bottom: -20px;
+    right: 20px;
+    width: 40px;
     height: 8px;
     background:
-        radial-gradient(circle at 29px 4px, var(--amber) 2px, transparent 2px),
-        radial-gradient(circle at 8px 4px, #222 2px, transparent 2px);
+        radial-gradient(circle at 34px 4px, var(--amber) 2.5px, transparent 2.5px),
+        radial-gradient(circle at 8px 4px, #222 2.5px, transparent 2.5px);
     background-repeat: no-repeat;
     z-index: 2;
-    filter: drop-shadow(0 0 3px rgba(255, 176, 0, 0.4));
+    filter: drop-shadow(0 0 4px rgba(255, 176, 0, 0.5));
     animation: ledPulse 3s ease-in-out infinite;
 }
 
-/* --- EDITOR HEADER (Panel title bar) --- */
+/* --- EDITOR HEADER --- */
 .editor-header {
     font-size: 0.65rem;
     color: var(--amber);
@@ -2214,32 +2182,26 @@ button:active {
     text-shadow: 0 0 4px rgba(255, 176, 0, 0.2);
 }
 
-/* --- PHYSICAL CRT: SELECTION AREA --- */
+/* --- ALIEN CRT: SELECTION AREA --- */
 .selection-area {
-    background:
-        radial-gradient(ellipse at center, transparent 60%, rgba(0, 0, 0, 0.35) 100%),
-        rgba(0, 4, 0, 0.95);
-    border: 2px solid #3a3a3a;
+    border: 12px solid;
+    border-color: #1e1e1e #181818 #111 #181818;
+    border-radius: 18px;
     padding: 14px;
-    margin-bottom: 32px;
+    margin-bottom: 28px;
     position: relative;
-    border-radius: 8px;
+    background:
+        repeating-conic-gradient(rgba(0, 255, 65, 0.008) 0% 25%, transparent 0% 50%) 0 0 / 4px 4px,
+        radial-gradient(ellipse at center, transparent 40%, rgba(0, 0, 0, 0.6) 100%),
+        rgba(0, 12, 0, 0.95);
     box-shadow:
-        inset 0 0 30px rgba(0, 255, 65, 0.03),
-        inset 0 0 4px rgba(0, 255, 65, 0.1),
-        0 0 0 3px #080808,
-        0 -1px 0 6px #252525,
-        -1px 0 0 6px #1e1e1e,
-        1px 0 0 6px #1e1e1e,
-        0 3px 0 8px #181818,
-        0 0 0 9px #2a2a2a,
-        0 0 0 10px #0e0e0e,
-        0 14px 35px rgba(0, 0, 0, 0.95),
-        0 5px 10px rgba(0, 0, 0, 0.5);
+        inset 0 0 0 2px #0a0a0a,
+        inset 0 0 40px rgba(0, 0, 0, 0.6),
+        inset 0 0 6px rgba(0, 255, 65, 0.12),
+        0 8px 30px rgba(0, 0, 0, 0.95);
     animation: crtBoot 0.5s ease-out both;
 }
 
-/* Glass reflection */
 .selection-area::before {
     content: '';
     position: absolute;
@@ -2247,78 +2209,67 @@ button:active {
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(125deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 25%, transparent 45%);
+    background: linear-gradient(120deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.015) 20%, transparent 40%);
     pointer-events: none;
     z-index: 1;
     border-radius: 6px;
 }
 
-/* Green power LED */
 .selection-area::after {
     content: '';
     position: absolute;
-    bottom: -15px;
-    right: 14px;
-    width: 35px;
+    bottom: -20px;
+    right: 20px;
+    width: 40px;
     height: 8px;
     background:
-        radial-gradient(circle at 29px 4px, #00ff41 2px, transparent 2px),
-        radial-gradient(circle at 8px 4px, #222 2px, transparent 2px);
+        radial-gradient(circle at 34px 4px, #00ff41 2.5px, transparent 2.5px),
+        radial-gradient(circle at 8px 4px, #222 2.5px, transparent 2.5px);
     background-repeat: no-repeat;
     z-index: 2;
-    filter: drop-shadow(0 0 3px rgba(0, 255, 65, 0.4));
+    filter: drop-shadow(0 0 4px rgba(0, 255, 65, 0.5));
     animation: ledPulse 3s ease-in-out infinite;
 }
 
-/* --- PHYSICAL CRT: WORKOUT ACTIONS --- */
+/* --- ALIEN CRT: WORKOUT ACTIONS --- */
 #workout-actions {
-    border: 2px solid #3a3a3a !important;
+    border: 12px solid !important;
+    border-color: #1e1e1e #181818 #111 #181818 !important;
+    border-radius: 18px;
     padding: 14px !important;
     margin-bottom: 14px;
     background:
-        radial-gradient(ellipse at center, transparent 60%, rgba(0, 0, 0, 0.3) 100%),
-        rgba(0, 4, 0, 0.95);
-    border-radius: 8px;
+        repeating-conic-gradient(rgba(0, 255, 65, 0.008) 0% 25%, transparent 0% 50%) 0 0 / 4px 4px,
+        radial-gradient(ellipse at center, transparent 40%, rgba(0, 0, 0, 0.5) 100%),
+        rgba(0, 12, 0, 0.95);
     box-shadow:
-        inset 0 0 25px rgba(0, 255, 65, 0.03),
-        0 0 0 3px #080808,
-        0 -1px 0 6px #252525,
-        -1px 0 0 6px #1e1e1e,
-        1px 0 0 6px #1e1e1e,
-        0 3px 0 8px #181818,
-        0 0 0 9px #2a2a2a,
-        0 0 0 10px #0e0e0e,
-        0 14px 35px rgba(0, 0, 0, 0.95),
-        0 5px 10px rgba(0, 0, 0, 0.5);
+        inset 0 0 0 2px #0a0a0a,
+        inset 0 0 35px rgba(0, 0, 0, 0.5),
+        inset 0 0 5px rgba(0, 255, 65, 0.1),
+        0 8px 30px rgba(0, 0, 0, 0.95);
     animation: crtBoot 0.45s ease-out both;
 }
 
-/* --- PHYSICAL CRT: HISTORY ITEMS --- */
+/* --- ALIEN CRT: HISTORY ITEMS --- */
 .history-item {
-    background:
-        radial-gradient(ellipse at center, transparent 60%, rgba(0, 0, 0, 0.3) 100%),
-        rgba(0, 4, 0, 0.95);
-    border: 2px solid #3a3a3a;
+    border: 10px solid;
+    border-color: #1e1e1e #181818 #111 #181818;
+    border-radius: 16px;
     padding: 12px;
-    margin-bottom: 28px;
+    margin-bottom: 24px;
     position: relative;
-    border-radius: 8px;
+    background:
+        repeating-conic-gradient(rgba(0, 255, 65, 0.008) 0% 25%, transparent 0% 50%) 0 0 / 4px 4px,
+        radial-gradient(ellipse at center, transparent 40%, rgba(0, 0, 0, 0.5) 100%),
+        rgba(0, 10, 0, 0.95);
     box-shadow:
-        inset 0 0 25px rgba(0, 255, 65, 0.02),
-        inset 0 0 3px rgba(0, 255, 65, 0.06),
-        0 0 0 3px #080808,
-        0 -1px 0 6px #252525,
-        -1px 0 0 6px #1e1e1e,
-        1px 0 0 6px #1e1e1e,
-        0 3px 0 8px #181818,
-        0 0 0 9px #2a2a2a,
-        0 0 0 10px #0e0e0e,
-        0 12px 30px rgba(0, 0, 0, 0.9),
-        0 4px 8px rgba(0, 0, 0, 0.4);
+        inset 0 0 0 2px #0a0a0a,
+        inset 0 0 30px rgba(0, 0, 0, 0.5),
+        inset 0 0 4px rgba(0, 255, 65, 0.1),
+        0 6px 25px rgba(0, 0, 0, 0.9);
     animation: crtBoot 0.5s ease-out both;
 }
 
-/* Glass reflection */
 .history-item::before {
     content: '';
     position: absolute;
@@ -2326,51 +2277,45 @@ button:active {
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(125deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 25%, transparent 45%);
+    background: linear-gradient(120deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 20%, transparent 40%);
     pointer-events: none;
     z-index: 1;
     border-radius: 6px;
 }
 
-/* Green LED */
 .history-item::after {
     content: '';
     position: absolute;
-    bottom: -13px;
-    right: 14px;
+    bottom: -18px;
+    right: 18px;
     width: 6px;
     height: 6px;
-    background: radial-gradient(circle, #00ff41 1.5px, transparent 1.5px);
+    background: radial-gradient(circle, #00ff41 2px, transparent 2px);
     z-index: 2;
-    filter: drop-shadow(0 0 3px rgba(0, 255, 65, 0.5));
+    filter: drop-shadow(0 0 4px rgba(0, 255, 65, 0.6));
     animation: ledPulse 3s ease-in-out infinite;
 }
 
-/* --- PHYSICAL CRT: PLAN ITEMS --- */
+/* --- ALIEN CRT: PLAN ITEMS --- */
 .plan-manage-item {
-    background:
-        radial-gradient(ellipse at center, transparent 60%, rgba(0, 0, 0, 0.3) 100%),
-        rgba(0, 4, 0, 0.95);
-    border: 2px solid #3a3a3a;
+    border: 10px solid;
+    border-color: #1e1e1e #181818 #111 #181818;
+    border-radius: 16px;
     padding: 12px;
-    margin-bottom: 28px;
-    border-radius: 8px;
+    margin-bottom: 24px;
     position: relative;
+    background:
+        repeating-conic-gradient(rgba(0, 255, 65, 0.008) 0% 25%, transparent 0% 50%) 0 0 / 4px 4px,
+        radial-gradient(ellipse at center, transparent 40%, rgba(0, 0, 0, 0.5) 100%),
+        rgba(0, 10, 0, 0.95);
     box-shadow:
-        inset 0 0 25px rgba(0, 255, 65, 0.02),
-        0 0 0 3px #080808,
-        0 -1px 0 6px #252525,
-        -1px 0 0 6px #1e1e1e,
-        1px 0 0 6px #1e1e1e,
-        0 3px 0 8px #181818,
-        0 0 0 9px #2a2a2a,
-        0 0 0 10px #0e0e0e,
-        0 12px 30px rgba(0, 0, 0, 0.9),
-        0 4px 8px rgba(0, 0, 0, 0.4);
+        inset 0 0 0 2px #0a0a0a,
+        inset 0 0 30px rgba(0, 0, 0, 0.5),
+        inset 0 0 4px rgba(0, 255, 65, 0.1),
+        0 6px 25px rgba(0, 0, 0, 0.9);
     animation: crtBoot 0.5s ease-out both;
 }
 
-/* Glass reflection */
 .plan-manage-item::before {
     content: '';
     position: absolute;
@@ -2378,50 +2323,44 @@ button:active {
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(125deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 25%, transparent 45%);
+    background: linear-gradient(120deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 20%, transparent 40%);
     pointer-events: none;
     z-index: 1;
     border-radius: 6px;
 }
 
-/* --- PHYSICAL CRT: CHART CONTAINER --- */
+/* --- ALIEN CRT: CHART --- */
 .terminal-chart-container {
-    background:
-        radial-gradient(ellipse at center, transparent 60%, rgba(0, 0, 0, 0.35) 100%),
-        rgba(0, 2, 4, 0.95);
-    border: 2px solid #3a3a3a;
+    border: 12px solid;
+    border-color: #1e1e1e #181818 #111 #181818;
+    border-radius: 18px;
     padding: 14px;
-    margin-bottom: 32px;
-    border-radius: 8px;
+    margin-bottom: 28px;
     position: relative;
+    background:
+        repeating-conic-gradient(rgba(0, 229, 255, 0.005) 0% 25%, transparent 0% 50%) 0 0 / 4px 4px,
+        radial-gradient(ellipse at center, transparent 40%, rgba(0, 0, 0, 0.6) 100%),
+        rgba(0, 4, 8, 0.95);
     box-shadow:
-        inset 0 0 30px rgba(0, 229, 255, 0.02),
-        inset 0 0 4px rgba(0, 229, 255, 0.06),
-        0 0 0 3px #080808,
-        0 -1px 0 6px #252525,
-        -1px 0 0 6px #1e1e1e,
-        1px 0 0 6px #1e1e1e,
-        0 3px 0 8px #181818,
-        0 0 0 9px #2a2a2a,
-        0 0 0 10px #0e0e0e,
-        0 14px 35px rgba(0, 0, 0, 0.95),
-        0 5px 10px rgba(0, 0, 0, 0.5);
+        inset 0 0 0 2px #0a0a0a,
+        inset 0 0 40px rgba(0, 0, 0, 0.6),
+        inset 0 0 6px rgba(0, 229, 255, 0.08),
+        0 8px 30px rgba(0, 0, 0, 0.95);
     animation: crtBoot 0.5s ease-out both;
 }
 
-/* Cyan LED + knob */
 .terminal-chart-container::after {
     content: '';
     position: absolute;
-    bottom: -15px;
-    right: 14px;
-    width: 35px;
+    bottom: -20px;
+    right: 20px;
+    width: 40px;
     height: 8px;
     background:
-        radial-gradient(circle at 29px 4px, var(--cyan) 2px, transparent 2px),
-        radial-gradient(circle at 8px 4px, #222 2px, transparent 2px);
+        radial-gradient(circle at 34px 4px, var(--cyan) 2.5px, transparent 2.5px),
+        radial-gradient(circle at 8px 4px, #222 2.5px, transparent 2.5px);
     background-repeat: no-repeat;
     z-index: 2;
-    filter: drop-shadow(0 0 3px rgba(0, 229, 255, 0.4));
+    filter: drop-shadow(0 0 4px rgba(0, 229, 255, 0.5));
     animation: ledPulse 3s ease-in-out infinite;
 }
