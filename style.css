@@ -98,30 +98,20 @@
 }
 
 body {
-    background-color: var(--bg-color);
-    background-image:
-        radial-gradient(circle at center, transparent 60%, #000000 130%),
-        /* Extra vignette layer */
-        linear-gradient(rgba(0, 20, 0, 0.06) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0, 20, 0, 0.06) 1px, transparent 1px);
-    background-size: 100% 100%, 30px 30px, 30px 30px;
+    background-color: #000;
+    background-image: none;
     color: var(--text-color);
     line-height: 1.4;
     min-height: 100vh;
-    /* CRT Vignette - Subtler for usability */
-    box-shadow:
-        inset 0 0 100px rgba(0, 0, 0, 0.7),
-        inset 0 0 50px rgba(0, 0, 0, 0.4);
-    /* Phosphor Bloom - Green with slight Blue chromatic aberration */
-    text-shadow:
-        0 0 2px rgba(51, 255, 0, 0.5),
-        2px 0 1px rgba(0, 0, 255, 0.2),
-        -2px 0 1px rgba(255, 0, 0, 0.2);
+    /* Clean flat look - no vignette */
+    box-shadow: none;
+    /* Sharp Text - no chromatic aberration */
+    text-shadow: none;
     touch-action: manipulation;
     overflow-x: hidden;
     font-variant-numeric: tabular-nums;
-    /* Subtle screen flicker */
-    animation: screenFlicker 0.15s infinite;
+    /* No flicker */
+    animation: none;
 }
 
 /* Block Cursor Blink Animation */
@@ -1773,69 +1763,50 @@ button,
     }
 }
 
-/* --- TACTILE BUTTONS --- */
+/* --- FLAT BUTTONS --- */
 button {
-    /* Physical Key Shape */
-    background: linear-gradient(180deg, #1a1a1a 0%, #0d0d0d 100%);
-    border: 1px solid #333;
-    border-top: 1px solid #444;
-    /* Bevel Highlight */
-    border-bottom: 1px solid #000;
-    /* Bevel Shadow */
-
-    border-radius: 6px;
-    /* Blocky Industrial Keys */
-    padding: 12px 24px;
-
+    background: #000;
+    border: 1px solid var(--primary-color);
+    border-radius: 0;
+    padding: 10px 20px;
     color: var(--primary-color);
     font-size: 1rem;
-    font-weight: bold;
+    font-weight: normal;
     text-transform: uppercase;
     letter-spacing: 1px;
-
-    box-shadow:
-        0 4px 0 #000,
-        /* 3D Height */
-        0 5px 10px rgba(0, 0, 0, 0.5);
-    /* Drop Shadow */
-
+    box-shadow: none;
     cursor: pointer;
     transition: all 0.1s ease;
-    text-shadow: 0 0 5px var(--primary-color);
+    text-shadow: none;
     position: relative;
-    overflow: visible;
+    overflow: hidden;
+    /* Changed from visible to hidden to contain hover glow */
 }
 
 button:active,
 .active-button {
-    transform: translateY(4px);
-    box-shadow:
-        0 0 0 #000,
-        /* Height Collapsed */
-        inset 0 2px 5px rgba(0, 0, 0, 0.8);
-    /* Inner Depression */
-    background: #050505;
-    color: #fff;
-    border-color: #222;
+    transform: none;
+    background: var(--primary-color);
+    color: #000;
+    box-shadow: none;
+    border-color: var(--primary-color);
+    /* Ensure border color is primary on active */
+}
+
+button:hover {
+    background: var(--primary-color);
+    color: #000;
+    box-shadow: 0 0 10px var(--primary-color);
+    /* Slight glow on hover */
 }
 
 button::after {
-    /* LED Indicator on Button */
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 10px;
-    width: 6px;
-    height: 6px;
-    background: #111;
-    border-radius: 50%;
-    transform: translateY(-50%);
-    box-shadow: inset 0 0 2px #000;
+    /* Remove LED */
+    display: none;
 }
 
 button:hover::after {
-    background: var(--primary-color);
-    box-shadow: 0 0 5px var(--primary-color);
+    display: none;
 }
 
 .secondary {
@@ -1849,28 +1820,34 @@ button:hover::after {
     border-color: var(--primary-color);
     color: var(--primary-color);
     background: rgba(0, 255, 65, 0.05);
+    box-shadow: 0 0 10px var(--primary-color);
 }
 
 .secondary:active {
     border-color: var(--cyan);
     color: var(--cyan);
-    box-shadow: 0 0 12px rgba(0, 229, 255, 0.2);
-    text-shadow: 0 0 8px var(--cyan);
+    box-shadow: none;
+    /* Removed glow on active for secondary */
+    text-shadow: none;
+    background: var(--primary-color);
+    /* Changed to primary color on active */
+    color: #000;
+    /* Text color black on active */
 }
 
 /* --- SAVE BUTTON ACCENT --- */
 .save-set-btn:active {
     border-color: var(--cyan) !important;
     color: var(--cyan) !important;
-    box-shadow: 0 0 12px rgba(0, 229, 255, 0.3);
-    text-shadow: 0 0 8px var(--cyan);
+    box-shadow: none;
+    text-shadow: none;
 }
 
 /* --- START REST BUTTON ACCENT --- */
 .start-rest-btn:active {
     border-color: var(--cyan) !important;
     color: var(--cyan) !important;
-    box-shadow: 0 0 12px rgba(0, 229, 255, 0.3);
+    box-shadow: none;
 }
 
 /* --- TERMINAL CHART (4-Week History) --- */
@@ -1880,24 +1857,14 @@ button:hover::after {
     margin-bottom: 20px;
     position: relative;
     overflow: hidden;
-    background: rgba(0, 0, 0, 0.95);
+    background: #000;
+    /* Flat black background */
 }
 
 /* CRT Scanlines over chart */
 .terminal-chart::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: repeating-linear-gradient(0deg,
-            transparent,
-            transparent 2px,
-            rgba(0, 255, 65, 0.012) 2px,
-            rgba(0, 255, 65, 0.012) 4px);
-    pointer-events: none;
-    z-index: 1;
+    display: none !important;
+    content: none !important;
 }
 
 .terminal-chart-header {
@@ -1913,7 +1880,7 @@ button:hover::after {
     font-size: 0.65rem;
     color: var(--cyan);
     letter-spacing: 2px;
-    text-shadow: 0 0 6px rgba(0, 229, 255, 0.4);
+    text-shadow: none;
 }
 
 .terminal-chart-status {
@@ -1936,7 +1903,7 @@ button:hover::after {
     min-width: 36px;
     font-size: 0.6rem;
     color: var(--amber);
-    text-shadow: 0 0 4px rgba(255, 176, 0, 0.3);
+    text-shadow: none;
     text-align: right;
     flex-shrink: 0;
 }
@@ -1944,7 +1911,8 @@ button:hover::after {
 .chart-row-bar-bg {
     flex: 1;
     height: 16px;
-    background: rgba(0, 59, 0, 0.3);
+    background: #000;
+    /* Flat black background */
     border: 1px solid var(--secondary-color);
     position: relative;
     overflow: hidden;
@@ -1953,24 +1921,15 @@ button:hover::after {
 .chart-row-bar-fill {
     height: 100%;
     background: var(--primary-color);
-    box-shadow: 0 0 8px rgba(0, 255, 65, 0.4), inset 0 0 4px rgba(0, 255, 65, 0.2);
+    box-shadow: none;
     transition: width 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     position: relative;
 }
 
 /* Block/pixelated bar fill effect */
 .chart-row-bar-fill::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: repeating-linear-gradient(90deg,
-            transparent,
-            transparent 6px,
-            rgba(0, 0, 0, 0.25) 6px,
-            rgba(0, 0, 0, 0.25) 8px);
+    display: none !important;
+    content: none !important;
 }
 
 .chart-row-vol {
@@ -1978,7 +1937,7 @@ button:hover::after {
     font-size: 0.55rem;
     color: var(--primary-color);
     text-align: right;
-    text-shadow: 0 0 4px rgba(0, 255, 65, 0.3);
+    text-shadow: none;
     flex-shrink: 0;
 }
 
@@ -1986,7 +1945,7 @@ button:hover::after {
     min-width: 22px;
     font-size: 0.5rem;
     color: var(--cyan);
-    text-shadow: 0 0 4px rgba(0, 229, 255, 0.3);
+    text-shadow: none;
     flex-shrink: 0;
 }
 
@@ -2023,17 +1982,17 @@ button:hover::after {
 
 .chart-legend-dot.green {
     background: var(--primary-color);
-    box-shadow: 0 0 4px var(--primary-color);
+    box-shadow: none;
 }
 
 .chart-legend-dot.cyan {
     background: var(--cyan);
-    box-shadow: 0 0 4px var(--cyan);
+    box-shadow: none;
 }
 
 .chart-legend-dot.amber {
     background: var(--amber);
-    box-shadow: 0 0 4px var(--amber);
+    box-shadow: none;
 }
 
 /* Chart trend indicator */
@@ -2044,17 +2003,17 @@ button:hover::after {
 
 .chart-trend.up {
     color: var(--primary-color);
-    text-shadow: 0 0 6px var(--primary-color);
+    text-shadow: none;
 }
 
 .chart-trend.down {
     color: var(--hot-red);
-    text-shadow: 0 0 6px var(--hot-red);
+    text-shadow: none;
 }
 
 .chart-trend.flat {
     color: var(--amber);
-    text-shadow: 0 0 6px var(--amber);
+    text-shadow: none;
 }
 
 /* Chart empty state */
@@ -2109,7 +2068,7 @@ button:hover::after {
 
 .week-stat-label {
     color: var(--amber);
-    text-shadow: 0 0 4px rgba(255, 176, 0, 0.2);
+    text-shadow: none;
 }
 
 .week-stat-value {
@@ -2186,19 +2145,19 @@ button:hover::after {
 /* Timer display in amber */
 #timer-display {
     color: var(--amber) !important;
-    text-shadow: 0 0 8px rgba(255, 176, 0, 0.4);
+    text-shadow: none;
 }
 
 /* Volume display in cyan (Now Green) */
 #volume-display {
     color: var(--cyan) !important;
-    text-shadow: 0 0 6px rgba(51, 255, 51, 0.3);
+    text-shadow: none;
 }
 
 /* Rest timer in amber (warning color) */
 .rest-zone {
     color: var(--amber) !important;
-    text-shadow: 0 0 6px rgba(255, 176, 0, 0.4);
+    text-shadow: none;
 }
 
 /* Sync indicator colors */
@@ -2211,50 +2170,30 @@ button:hover::after {
 .exercise-info {
     color: var(--amber) !important;
     font-size: 0.7rem;
-    text-shadow: 0 0 3px rgba(255, 176, 0, 0.2);
+    text-shadow: none;
 }
 
 /* Last logs in cyan */
 .last-logs {
     color: var(--cyan) !important;
     font-size: 0.65rem;
-    text-shadow: 0 0 3px rgba(0, 229, 255, 0.15);
+    text-shadow: none;
 }
 
 /* --- ALIEN CRT: OVERVIEW HUD --- */
+/* --- WORKOUT OVERVIEW HUD --- */
 .workout-overview {
     position: sticky;
     top: 0;
-    z-index: 50;
-    border: 10px solid;
-    border-color: #1e1e1e #181818 #111 #181818;
-    border-radius: 16px;
-    padding: 8px 10px;
-    margin-bottom: 28px;
-    backdrop-filter: blur(4px);
-    background:
-        repeating-conic-gradient(rgba(0, 229, 255, 0.005) 0% 25%, transparent 0% 50%) 0 0 / 4px 4px,
-        radial-gradient(ellipse at center, transparent 40%, rgba(0, 0, 0, 0.5) 100%),
-        rgba(0, 6, 8, 0.97);
-    box-shadow:
-        inset 0 0 0 2px #0a0a0a,
-        inset 0 0 30px rgba(0, 0, 0, 0.5),
-        inset 0 0 4px rgba(0, 229, 255, 0.1),
-        0 6px 25px rgba(0, 0, 0, 0.9);
-    animation: crtBoot 0.4s ease-out both;
-}
-
-.workout-overview::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(125deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.015) 25%, transparent 45%);
-    pointer-events: none;
-    z-index: 1;
-    border-radius: 6px;
+    z-index: 100;
+    background: #000;
+    border: 1px solid var(--primary-color);
+    border-radius: 0;
+    padding: 15px;
+    box-shadow: none;
+    margin-bottom: 20px;
+    animation: none;
+    backdrop-filter: none;
 }
 
 .workout-overview-header {
@@ -2295,8 +2234,11 @@ button:hover::after {
 .workout-overview-item:active {
     border-color: var(--primary-color);
     color: var(--primary-color);
-    text-shadow: 0 0 4px var(--primary-color);
-    background: rgba(0, 255, 65, 0.05);
+    text-shadow: none;
+    background: var(--primary-color);
+    /* Changed to primary color on active */
+    color: #000;
+    /* Text color black on active */
 }
 
 .workout-overview-item.completed {
@@ -2307,51 +2249,15 @@ button:hover::after {
 
 /* --- ALIEN CRT: INFO SECTIONS (Amber) --- */
 .info-section {
-    border: 12px solid;
-    border-color: #1e1e1e #181818 #111 #181818;
-    border-radius: 18px;
-    padding: 14px;
-    margin-bottom: 28px;
+    background: #000;
+    border: 1px solid var(--primary-color);
+    border-radius: 0;
+    padding: 20px;
+    box-shadow: none;
+    margin-bottom: 20px;
     position: relative;
-    background:
-        repeating-conic-gradient(rgba(255, 176, 0, 0.005) 0% 25%, transparent 0% 50%) 0 0 / 4px 4px,
-        radial-gradient(ellipse at center, transparent 40%, rgba(0, 0, 0, 0.6) 100%),
-        rgba(6, 4, 0, 0.95);
-    box-shadow:
-        inset 0 0 0 2px #0a0a0a,
-        inset 0 0 40px rgba(0, 0, 0, 0.6),
-        inset 0 0 6px rgba(255, 176, 0, 0.06),
-        0 8px 30px rgba(0, 0, 0, 0.95);
-    animation: crtBoot 0.5s ease-out both;
-}
-
-.info-section::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(120deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.015) 20%, transparent 40%);
-    pointer-events: none;
-    z-index: 1;
-    border-radius: 6px;
-}
-
-.info-section::after {
-    content: '';
-    position: absolute;
-    bottom: -20px;
-    right: 20px;
-    width: 40px;
-    height: 8px;
-    background:
-        radial-gradient(circle at 34px 4px, var(--amber) 2.5px, transparent 2.5px),
-        radial-gradient(circle at 8px 4px, #222 2.5px, transparent 2.5px);
-    background-repeat: no-repeat;
-    z-index: 2;
-    filter: drop-shadow(0 0 4px rgba(255, 176, 0, 0.5));
-    animation: ledPulse 3s ease-in-out infinite;
+    overflow: hidden;
+    animation: none;
 }
 
 /* --- EDITOR HEADER --- */
@@ -2362,37 +2268,20 @@ button:hover::after {
     padding-bottom: 6px;
     margin-bottom: 8px;
     border-bottom: 1px dashed var(--secondary-color);
-    text-shadow: 0 0 4px rgba(255, 176, 0, 0.2);
+    text-shadow: none;
 }
 
 /* --- SELECTION AREA (Monitor Stack) --- */
 .selection-area {
-    background: #0a0a0a;
-    border-radius: 40px;
-    padding: 30px;
-    box-shadow:
-        0 20px 50px rgba(0, 0, 0, 0.9),
-        inset 0 0 0 2px #000,
-        inset 4px 4px 10px rgba(255, 255, 255, 0.05),
-        inset -10px -10px 30px rgba(0, 0, 0, 0.9);
-    border: 1px solid #1a1a1a;
-    margin-bottom: 40px;
+    background: #000;
+    border-radius: 0;
+    padding: 20px;
+    box-shadow: none;
+    border: 1px solid var(--primary-color);
+    margin-bottom: 20px;
     position: relative;
     overflow: hidden;
-    animation: crtBoot 0.5s ease-out both;
-}
-
-.selection-area::before {
-    content: '';
-    position: absolute;
-    top: 20px;
-    left: 20px;
-    right: 20px;
-    bottom: 20px;
-    background: radial-gradient(circle at center, #051a05 0%, #000500 100%);
-    border-radius: 20px;
-    box-shadow: inset 0 0 40px #000;
-    z-index: 0;
+    animation: none;
 }
 
 .selection-area>* {
@@ -2400,51 +2289,18 @@ button:hover::after {
     z-index: 2;
 }
 
-.selection-area::after {
-    content: '';
-    position: absolute;
-    bottom: -20px;
-    right: 20px;
-    width: 40px;
-    height: 8px;
-    background:
-        radial-gradient(circle at 34px 4px, #00ff41 2.5px, transparent 2.5px),
-        radial-gradient(circle at 8px 4px, #222 2.5px, transparent 2.5px);
-    background-repeat: no-repeat;
-    z-index: 2;
-    filter: drop-shadow(0 0 4px rgba(0, 255, 65, 0.5));
-    animation: ledPulse 3s ease-in-out infinite;
-}
-
 /* --- ALIEN CRT: WORKOUT ACTIONS --- */
-/* --- ALIEN CRT: WORKOUT ACTIONS --- */
+/* --- WORKOUT ACTIONS --- */
 #workout-actions {
-    background: #0a0a0a;
-    border-radius: 30px;
-    padding: 25px;
-    box-shadow:
-        0 15px 40px rgba(0, 0, 0, 0.8),
-        inset 0 0 0 1px #000,
-        inset 3px 3px 8px rgba(255, 255, 255, 0.05),
-        inset -5px -5px 20px rgba(0, 0, 0, 0.8);
-    border: 1px solid #1a1a1a;
+    background: #000;
+    border-radius: 0;
+    padding: 20px;
+    box-shadow: none;
+    border: 1px solid var(--primary-color);
     margin-bottom: 20px;
     position: relative;
     overflow: hidden;
-    animation: crtBoot 0.45s ease-out both;
-}
-
-#workout-actions::before {
-    content: '';
-    position: absolute;
-    top: 15px;
-    left: 15px;
-    right: 15px;
-    bottom: 15px;
-    background: radial-gradient(circle at center, #051a05 0%, #000500 100%);
-    border-radius: 12px;
-    box-shadow: inset 0 0 20px #000;
-    z-index: 0;
+    animation: none;
 }
 
 #workout-actions>* {
@@ -2454,78 +2310,27 @@ button:hover::after {
 
 /* --- ALIEN CRT: HISTORY ITEMS --- */
 .history-item {
-    border: 10px solid;
-    border-color: #1e1e1e #181818 #111 #181818;
-    border-radius: 16px;
-    padding: 12px;
-    margin-bottom: 24px;
+    border: 1px solid var(--primary-color);
+    border-radius: 0;
+    padding: 20px;
+    margin-bottom: 20px;
     position: relative;
-    background:
-        repeating-conic-gradient(rgba(0, 255, 65, 0.008) 0% 25%, transparent 0% 50%) 0 0 / 4px 4px,
-        radial-gradient(ellipse at center, transparent 40%, rgba(0, 0, 0, 0.5) 100%),
-        rgba(0, 10, 0, 0.95);
-    box-shadow:
-        inset 0 0 0 2px #0a0a0a,
-        inset 0 0 30px rgba(0, 0, 0, 0.5),
-        inset 0 0 4px rgba(0, 255, 65, 0.1),
-        0 6px 25px rgba(0, 0, 0, 0.9);
-    animation: crtBoot 0.5s ease-out both;
-}
-
-.history-item::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(120deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 20%, transparent 40%);
-    pointer-events: none;
-    z-index: 1;
-    border-radius: 6px;
-}
-
-.history-item::after {
-    content: '';
-    position: absolute;
-    bottom: -18px;
-    right: 18px;
-    width: 6px;
-    height: 6px;
-    background: radial-gradient(circle, #00ff41 2px, transparent 2px);
-    z-index: 2;
-    filter: drop-shadow(0 0 4px rgba(0, 255, 65, 0.6));
-    animation: ledPulse 3s ease-in-out infinite;
+    background: #000;
+    box-shadow: none;
+    animation: none;
 }
 
 /* --- PLAN MANAGEMENT MONITOR --- */
 .plan-manage-item {
-    background: #0a0a0a;
-    border-radius: 30px;
-    padding: 25px;
-    box-shadow:
-        0 15px 40px rgba(0, 0, 0, 0.8),
-        inset 0 0 0 1px #000,
-        inset 3px 3px 8px rgba(255, 255, 255, 0.05),
-        inset -5px -5px 20px rgba(0, 0, 0, 0.8);
-    border: 1px solid #1a1a1a;
-    margin-bottom: 30px;
+    background: #000;
+    border-radius: 0;
+    padding: 20px;
+    box-shadow: none;
+    border: 1px solid var(--primary-color);
+    margin-bottom: 20px;
     position: relative;
     overflow: hidden;
-    animation: crtBoot 0.5s ease-out both;
-}
-
-.plan-manage-item::before {
-    content: '';
-    position: absolute;
-    top: 15px;
-    left: 15px;
-    right: 15px;
-    bottom: 15px;
-    background: radial-gradient(circle at center, #051a05 0%, #000500 100%);
-    border-radius: 12px;
-    box-shadow: inset 0 0 20px #000;
-    z-index: 0;
+    animation: none;
 }
 
 .plan-manage-item>* {
@@ -2534,54 +2339,22 @@ button:hover::after {
 }
 
 /* --- ALIEN CRT: CHART --- */
-/* --- ALIEN CRT: CHART --- */
+/* --- CHART CONTAINER --- */
 .terminal-chart-container {
-    background: #0a0a0a;
-    border-radius: 30px;
-    padding: 25px;
-    box-shadow:
-        0 15px 40px rgba(0, 0, 0, 0.8),
-        inset 0 0 0 1px #000,
-        inset 3px 3px 8px rgba(255, 255, 255, 0.05),
-        inset -5px -5px 20px rgba(0, 0, 0, 0.8);
-    border: 1px solid #1a1a1a;
-    margin-bottom: 30px;
+    background: #000;
+    border-radius: 0;
+    padding: 20px;
+    box-shadow: none;
+    border: 1px solid var(--primary-color);
+    margin-bottom: 20px;
     position: relative;
     overflow: hidden;
-    animation: crtBoot 0.5s ease-out both;
-}
-
-.terminal-chart-container::before {
-    content: '';
-    position: absolute;
-    top: 15px;
-    left: 15px;
-    right: 15px;
-    bottom: 15px;
-    background: radial-gradient(circle at center, #051a05 0%, #000500 100%);
-    border-radius: 12px;
-    box-shadow: inset 0 0 20px #000;
-    z-index: 0;
+    animation: none;
 }
 
 .terminal-chart-container>* {
     position: relative;
     z-index: 2;
-}
-
-.terminal-chart-container::after {
-    content: '';
-    position: absolute;
-    bottom: -20px;
-    right: 20px;
-    width: 40px;
-    height: 8px;
-    background:
-        radial-gradient(circle at 34px 4px, var(--cyan) 2.5px, transparent 2.5px),
-        radial-gradient(circle at 8px 4px, #222 2.5px, transparent 2.5px);
-    background-repeat: no-repeat;
-    z-index: 2;
-    animation: ledPulse 3s ease-in-out infinite;
 }
 
 /* --- PIXEL PENGUIN 2.0 (The Waddling Glitch) --- */
@@ -2598,7 +2371,7 @@ button:hover::after {
 }
 
 .pixel-penguin:hover {
-    filter: drop-shadow(0 0 15px var(--accent-color));
+    filter: drop-shadow(0 0 10px var(--primary-color));
 }
 
 .penguin-bubble {
