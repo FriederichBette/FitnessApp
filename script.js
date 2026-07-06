@@ -36,6 +36,15 @@ const routineSelect = document.getElementById("routine-select");
 // Creation Elements
 const exerciseListEditor = document.getElementById("exercise-list-editor");
 
+// --- SYSTEM CLOCK (MU-TH-UR READOUT) ---
+function tickSystemClock() {
+  const el = document.getElementById("sys-clock");
+  if (!el) return;
+  el.textContent = new Date().toLocaleTimeString("de-DE", { hour12: false });
+}
+tickSystemClock();
+setInterval(tickSystemClock, 1000);
+
 // --- PENGUIN LOGIC (GLITCH-BOT 2.0) ---
 function initPenguin() {
   const existing = document.getElementById("pixel-penguin");
@@ -161,6 +170,34 @@ function initPenguin() {
     "WEITER SO MEISTER"
   ];
 
+  // Shown when a single set is logged - short, frequent, punchy
+  window.penguinSetPhrases = [
+    "SATZ VERBUCHT, WEITER",
+    "DATENSATZ ERFASST. NICE",
+    "REP FÜR REP STÄRKER",
+    "GUTE WIEDERHOLUNG, OP",
+    "MUSKEL-LOG AKTUALISIERT",
+    "SAUBER AUSGEFÜHRT, OP",
+    "KRAFTKURVE STEIGT WEITER",
+    "EINE MEHR ALS GESTERN",
+    "SYSTEM REGISTRIERT FORTSCHRITT",
+    "GEWICHT. WIEDERHOLUNG. RESPEKT."
+  ];
+
+  // Shown once the whole workout is archived - bigger, more triumphant
+  window.penguinVictoryPhrases = [
+    "MISSION ERFÜLLT, OPERATOR",
+    "TRAINING ARCHIVIERT. DU LIEFERST.",
+    "PROTOKOLL KOMPLETT. RESPEKT.",
+    "DU BIST MASCHINE",
+    "STÄRKER ALS BEIM LETZTEN MAL",
+    "NOSTROMO WÄRE STOLZ",
+    "SESSION BEENDET. GROSSARTIG.",
+    "VOLLER EINSATZ. VOLLER ERFOLG.",
+    "DATEN GESICHERT. DU AUCH.",
+    "FORTSCHRITT BESTÄTIGT. WEITER SO."
+  ];
+
   // Interaction (Click/Tap without Drag)
   // We need to distinguish click from drag end
   let startX, startY;
@@ -192,14 +229,27 @@ function initPenguin() {
     setTimeout(() => { if (!isDragging) penguin.style.animation = "idleBounce 3s infinite ease-in-out"; }, duration);
   };
 
-  // Victory Dance
+  // Victory Dance - triggered once a whole workout is archived
   window.penguinDance = () => {
-    window.triggerPenguinAnim("happyDance", "DU BIST MASCHINE");
+    vibrate([40, 30, 40, 30, 90]);
+    penguin.style.animation = "none";
+    penguin.offsetHeight;
+    penguin.style.animation = "victoryDance 1.4s ease-in-out";
+    const msg = window.penguinVictoryPhrases[Math.floor(Math.random() * window.penguinVictoryPhrases.length)];
+    showPenguinBubble(msg, 6000);
+    setTimeout(() => { if (!isDragging) penguin.style.animation = "idleBounce 3s infinite ease-in-out"; }, 1400);
   };
 }
 
+// Haptic feedback helper - safe no-op where unsupported
+function vibrate(pattern) {
+  if (navigator.vibrate) {
+    try { navigator.vibrate(pattern); } catch (e) { /* ignore */ }
+  }
+}
+
 // Global showPenguinBubble
-function showPenguinBubble(text) {
+function showPenguinBubble(text, duration = 4000) {
   const bubble = document.getElementById("penguin-bubble");
   const msgSpan = document.getElementById("penguin-msg-text");
   if (!bubble || !msgSpan) return;
@@ -221,7 +271,7 @@ function showPenguinBubble(text) {
   if (window.bubbleTimeout) clearTimeout(window.bubbleTimeout);
   window.bubbleTimeout = setTimeout(() => {
     bubble.style.display = "none";
-  }, 4000);
+  }, duration);
 }
 
 // Run immediately
@@ -244,6 +294,31 @@ function notify(msg, type = "info") {
     toast.style.opacity = "0";
     setTimeout(() => toast.remove(), 300);
   }, 3000);
+}
+
+// Terminal-styled replacement for the native browser confirm() dialog
+function terminalConfirm(message) {
+  return new Promise((resolve) => {
+    const modal = document.getElementById("confirm-modal");
+    const msgEl = document.getElementById("confirm-modal-message");
+    const okBtn = document.getElementById("confirm-modal-ok");
+    const cancelBtn = document.getElementById("confirm-modal-cancel");
+
+    msgEl.textContent = message;
+    modal.style.display = "flex";
+
+    function cleanup(result) {
+      modal.style.display = "none";
+      okBtn.removeEventListener("click", onOk);
+      cancelBtn.removeEventListener("click", onCancel);
+      resolve(result);
+    }
+    function onOk() { cleanup(true); }
+    function onCancel() { cleanup(false); }
+
+    okBtn.addEventListener("click", onOk);
+    cancelBtn.addEventListener("click", onCancel);
+  });
 }
 
 // Timer Logic
@@ -587,7 +662,7 @@ async function renderMyWorkouts() {
                  <span class="history-toggle-icon collapsed-icon" style="flex-shrink: 0;">▼</span>
                  <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${routine}</span>
             </div>
-            <button onclick="deleteRoutine('${routine}')" style="width: auto; padding: 4px 8px; font-size: 0.6rem; color: var(--error-color); border-color: var(--error-color); flex-shrink: 0; margin-left: 10px;">LÖSCHEN</button>
+            <button onclick="deleteRoutine('${routine}')" class="btn-delete" style="width: auto; padding: 4px 8px; font-size: 0.6rem; flex-shrink: 0; margin-left: 10px;">LÖSCHEN</button>
         `;
     myWorkoutsList.appendChild(header);
 
@@ -609,6 +684,10 @@ async function renderMyWorkouts() {
     });
     myWorkoutsList.appendChild(groupContent);
   });
+
+  if (Object.keys(groups).length === 0) {
+    myWorkoutsList.innerHTML = "<p style='font-size:0.7rem; color:var(--text-muted);'>NOCH KEINE EIGENEN PROTOKOLLE. ERSTELLE DEIN ERSTES UNTEN.</p>";
+  }
 
   // Add safe spacer to avoid bottom nav overlap at the very end
   const spacer = document.createElement("div");
@@ -775,7 +854,7 @@ window.toggleRowLabels = (cb) => {
 };
 
 window.deleteRoutine = async (routineName) => {
-  if (!confirm(`GESAMTE ROUTINE "${routineName}" UND ALLE ENTHALTENEN PLÄNE LÖSCHEN?`)) return;
+  if (!await terminalConfirm(`GESAMTE ROUTINE "${routineName}" UND ALLE ENTHALTENEN PLÄNE LÖSCHEN?`)) return;
 
   notify("BEREINIGE_DATENBANK...");
   const { data: { user } } = await client.auth.getUser();
@@ -800,7 +879,7 @@ window.deleteRoutine = async (routineName) => {
 };
 
 window.deleteWorkout = async (id) => {
-  if (!confirm("PLAN WIRKLICH LÖSCHEN?")) return;
+  if (!await terminalConfirm("PLAN WIRKLICH LÖSCHEN?")) return;
   await client.from("workout_exercises").delete().eq("workout_id", id);
   await client.from("workouts").delete().eq("id", id);
   await init();
@@ -1614,7 +1693,7 @@ function createSetRow(i, exName, isCardio, weight, reps, rest) {
         </button>
 
         <!-- Delete Button (Hidden by default) -->
-        <button class="delete-set-btn" style="display:none; color:red; border:1px solid red; background:transparent; padding:2px 6px; font-size:0.7rem; margin-left:5px;">X</button>
+        <button class="delete-set-btn" style="display:none; color:var(--error-color); border:1px solid var(--error-color); background:transparent; padding:2px 6px; font-size:0.7rem; margin-left:5px;">X</button>
 
         <div class="rest-zone" id="rest-${exName.replace(/\s+/g, '-')}-${i}" style="font-size: 0.6rem; color: var(--text-muted); display: none; overflow: hidden; text-overflow: ellipsis; width:100%;"></div>
     `;
@@ -1644,8 +1723,10 @@ window.saveSetManually = (btn) => {
   updateVolume();
 
   // Penguin Motivation
+  vibrate(15);
   const winAnims = ["flip", "flex", "happyDance"];
-  window.triggerPenguinAnim(winAnims[Math.floor(Math.random() * winAnims.length)]);
+  const setMsg = window.penguinSetPhrases[Math.floor(Math.random() * window.penguinSetPhrases.length)];
+  window.triggerPenguinAnim(winAnims[Math.floor(Math.random() * winAnims.length)], setMsg);
 
   // 3. Visual Feedback
   const originalText = btn.innerHTML;
@@ -1653,6 +1734,13 @@ window.saveSetManually = (btn) => {
   btn.style.borderColor = "var(--primary-color)";
   btn.style.color = "var(--primary-color)";
   btn.style.fontWeight = "bold";
+
+  const row = btn.closest(".set-row");
+  if (row) {
+    row.classList.remove("set-saved-flash");
+    void row.offsetWidth; // restart animation if triggered again quickly
+    row.classList.add("set-saved-flash");
+  }
 
   notify("DATENSATZ IN CLOUD GESICHERT");
 
@@ -2092,7 +2180,7 @@ async function saveWorkout() {
 
 // Abbrechen Button Logik
 document.getElementById("abort-workout-btn").addEventListener("click", async () => {
-  if (confirm("TRAINING WIRKLICH ABBRECHEN?")) {
+  if (await terminalConfirm("TRAINING WIRKLICH ABBRECHEN?")) {
     document.querySelector(".bottom-nav").style.display = "flex";
     document.querySelector(".selection-area").style.display = "block";
     document.getElementById("next-workout-hint").style.display = "block";
@@ -2169,7 +2257,7 @@ document.getElementById("resume-yes-btn")?.addEventListener("click", async (e) =
 });
 
 document.getElementById("resume-no-btn")?.addEventListener("click", async () => {
-  if (!confirm("SESSION WIRKLICH LÖSCHEN?")) return;
+  if (!await terminalConfirm("SESSION WIRKLICH LÖSCHEN?")) return;
 
   // Reset session state
   _activeWorkoutLoaded = false;
@@ -2472,7 +2560,7 @@ function renderHistory() {
                     <span>${displayName.toUpperCase()}</span>
                 </div>
                 <!-- Delete Button requires stopPropagation to not trigger collapse -->
-                <button onclick="event.stopPropagation(); deleteLogSession('${date}')" style="width:auto; padding:2px 6px; font-size:0.6rem; color:var(--error-color); border-color:var(--error-color); background:rgba(255, 62, 62, 0.1);">LÖSCHEN</button>
+                <button onclick="event.stopPropagation(); deleteLogSession('${date}')" class="btn-delete" style="width:auto; padding:2px 6px; font-size:0.6rem;">LÖSCHEN</button>
             </div>
             <div class="history-stats">
                 <span>VOL: ${totalVol.toLocaleString()} KG</span>
@@ -2551,7 +2639,7 @@ document.getElementById("export-csv-btn").addEventListener("click", () => {
 });
 
 window.deleteLogSession = async (date) => {
-  if (!confirm(`PROTOKOLL VOM ${date} WIRKLICH LÖSCHEN?`)) return;
+  if (!await terminalConfirm(`PROTOKOLL VOM ${date} WIRKLICH LÖSCHEN?`)) return;
 
   const { data: { user } } = await client.auth.getUser();
   if (!user) return notify("FEHLER: NICHT ANGEMELDET", "error");

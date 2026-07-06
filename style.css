@@ -1,25 +1,31 @@
 ﻿:root {
-    --bg-color: #020405;
-    /* Deep Space Black/Blue Tint */
+    --bg-color: #000500;
+    /* Near-Black, slight green cast */
     --primary-color: #33ff00;
-    /* Terminal Green (Data) */
-    --secondary-color: #00aaff;
-    /* Command Blue (Structure/Frames) */
-    --accent-color: #004400;
+    /* MU-TH-UR Green Phosphor */
+    --secondary-color: #1f9900;
+    /* Dimmer Green (Structure/Frames) */
+    --accent-color: #003b00;
     /* Dim Green Backgrounds */
     --text-color: #ccffcc;
-    /* Pale Phosphor */
-    --text-muted: #0077aa;
-    /* Muted Blue Text */
-    --error-color: #ffae00;
-    /* Safety Amber (Warnings) */
-    --terminal-font: 'Share Tech Mono', monospace;
+    /* Pale Green Phosphor */
+    --text-muted: #4d9926;
+    /* Muted Green Text (Labels) */
+    --error-color: #33ff00;
+    /* No separate hue - alerts use reverse-video / blink, never a new color */
+    --terminal-font: 'VT323', 'Share Tech Mono', monospace;
 
-    /* Legacy Colors mapped to new Nostromo theme */
-    --amber: #ffae00;
-    --cyan: #00aaff;
-    --magenta: #00aaff;
-    --hot-red: #ffae00;
+    /* Legacy color slots - all collapsed onto the single green phosphor */
+    --amber: #33ff00;
+    --cyan: #1f9900;
+    --magenta: #1f9900;
+    --hot-red: #33ff00;
+}
+
+html {
+    /* VT323 is a bitmap-style font and renders visually smaller than Share Tech Mono -
+       bump the root size so all rem-based sizing compensates uniformly. */
+    font-size: 20px;
 }
 
 * {
@@ -92,7 +98,7 @@
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: #2b3b2b;
+    background: #1a3b1a;
     border-color: var(--primary-color);
     box-shadow: 0 0 10px var(--primary-color);
 }
@@ -207,9 +213,9 @@ body.page-flicker .container {
 input,
 select,
 button {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 16px;
-    /* Prevents iOS Zoom on focus */
+    font-family: var(--terminal-font);
+    font-size: 20px;
+    /* Comfortably above 16px so iOS does not zoom on focus */
 }
 
 /* Mobile Optimierungen */
@@ -331,18 +337,18 @@ body::after {
     width: 180px;
     height: 16px;
     background:
-        /* 1. Power Light (White/Blue pulsing) */
-        radial-gradient(circle at 10px 8px, rgba(200, 220, 255, 0.9) 2px, rgba(0, 0, 0, 0.2) 6px),
-        /* 2. Red Alert (Dim) */
-        radial-gradient(circle at 40px 8px, rgba(150, 0, 0, 0.4) 2px, rgba(0, 0, 0, 0.2) 6px),
-        /* 3. Blue Status A */
-        radial-gradient(circle at 70px 8px, rgba(0, 150, 255, 0.6) 2px, rgba(0, 0, 0, 0.2) 6px),
-        /* 4. Blue Status B */
-        radial-gradient(circle at 90px 8px, rgba(0, 150, 255, 0.6) 2px, rgba(0, 0, 0, 0.2) 6px),
-        /* 5. Blue Status C */
-        radial-gradient(circle at 110px 8px, rgba(0, 150, 255, 0.6) 2px, rgba(0, 0, 0, 0.2) 6px),
-        /* 6. Amber/Orange Warning */
-        radial-gradient(circle at 140px 8px, rgba(255, 174, 0, 0.5) 2px, rgba(0, 0, 0, 0.2) 6px);
+        /* 1. Power Light (bright, steady) */
+        radial-gradient(circle at 10px 8px, rgba(51, 255, 0, 0.95) 2px, rgba(0, 0, 0, 0.2) 6px),
+        /* 2. Standby (very dim) */
+        radial-gradient(circle at 40px 8px, rgba(51, 255, 0, 0.15) 2px, rgba(0, 0, 0, 0.2) 6px),
+        /* 3. Status A (mid) */
+        radial-gradient(circle at 70px 8px, rgba(51, 255, 0, 0.55) 2px, rgba(0, 0, 0, 0.2) 6px),
+        /* 4. Status B (mid) */
+        radial-gradient(circle at 90px 8px, rgba(51, 255, 0, 0.55) 2px, rgba(0, 0, 0, 0.2) 6px),
+        /* 5. Status C (mid) */
+        radial-gradient(circle at 110px 8px, rgba(51, 255, 0, 0.55) 2px, rgba(0, 0, 0, 0.2) 6px),
+        /* 6. Warning (bright) */
+        radial-gradient(circle at 140px 8px, rgba(51, 255, 0, 0.8) 2px, rgba(0, 0, 0, 0.2) 6px);
     background-repeat: no-repeat;
     border-radius: 4px;
     box-shadow: 0 0 5px rgba(0, 0, 0, 0.5) inset;
@@ -435,10 +441,10 @@ header::after {
     width: 16px;
     height: 16px;
     background: radial-gradient(circle, var(--primary-color) 2px, transparent 3px);
-    border: 1px solid rgba(0, 255, 65, 0.3);
+    border: 1px solid rgba(51, 255, 0, 0.3);
     border-radius: 50%;
     position: relative;
-    box-shadow: 0 0 5px rgba(0, 255, 65, 0.2);
+    box-shadow: 0 0 5px rgba(51, 255, 0, 0.2);
 }
 
 .motion-tracker::after {
@@ -506,6 +512,15 @@ h1 {
     letter-spacing: 1px;
 }
 
+.sys-clock {
+    font-size: 0.65rem;
+    color: var(--secondary-color);
+    letter-spacing: 1px;
+    padding-top: 3px;
+    text-shadow: 0 0 4px var(--secondary-color);
+    white-space: nowrap;
+}
+
 h1:hover {
     text-shadow: 2px 0 var(--error-color), -2px 0 var(--primary-color);
     animation: glitch 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) both infinite;
@@ -550,7 +565,7 @@ h1 {
     content: '';
     flex-grow: 1;
     height: 1px;
-    background: rgba(0, 255, 65, 0.2);
+    background: rgba(51, 255, 0, 0.2);
     margin-left: 10px;
 }
 
@@ -597,8 +612,15 @@ h1 {
     color: var(--primary-color);
 }
 
+/* Destructive actions: reverse-video instead of a second hue - stays strictly monochrome */
 .btn-delete {
     border-color: var(--error-color);
+    color: var(--bg-color);
+    background: var(--error-color);
+}
+
+.btn-delete:hover {
+    background: var(--bg-color);
     color: var(--error-color);
 }
 
@@ -683,22 +705,22 @@ h1 {
 
     0%,
     100% {
-        filter: hue-rotate(0deg);
+        filter: brightness(1);
         transform: scale(1);
     }
 
     25% {
-        filter: hue-rotate(90deg);
+        filter: brightness(1.6);
         transform: scale(1.2) skewX(10deg);
     }
 
     50% {
-        filter: hue-rotate(180deg);
+        filter: brightness(0.7);
         transform: scale(1) skewX(-10deg);
     }
 
     75% {
-        filter: hue-rotate(270deg);
+        filter: brightness(1.6);
         transform: scale(1.2) skewX(10deg);
     }
 }
@@ -736,14 +758,14 @@ select {
 }
 
 ::placeholder {
-    color: rgba(0, 255, 65, 0.3);
+    color: rgba(51, 255, 0, 0.3);
     text-shadow: none;
 }
 
 input:focus,
 select:focus {
     border-color: var(--primary-color);
-    box-shadow: 0 0 15px rgba(0, 255, 65, 0.4), inset 0 0 10px rgba(0, 255, 65, 0.1);
+    box-shadow: 0 0 15px rgba(51, 255, 0, 0.4), inset 0 0 10px rgba(51, 255, 0, 0.1);
     border-radius: 0;
 }
 
@@ -774,7 +796,7 @@ button,
         repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.2) 0px, rgba(0, 0, 0, 0.2) 1px, transparent 1px, transparent 2px),
         /* Scanlines */
         radial-gradient(ellipse at center, rgba(0, 20, 0, 0.4) 0%, rgba(0, 0, 0, 0.8) 100%),
-        rgba(0, 5, 10, 0.95);
+        rgba(0, 8, 4, 0.95);
     /* Deep Blue-Black Screen */
 
     /* === SCREEN DEPTH === */
@@ -783,7 +805,7 @@ button,
         inset 0 0 0 2px #000,
         inset 0 0 10px rgba(0, 0, 0, 1),
         /* Screen glow reflection on casing (Blue) */
-        inset 0 0 5px rgba(0, 170, 255, 0.1),
+        inset 0 0 5px rgba(51, 255, 0, 0.1),
         /* Casing external shadow */
         0 0 0 1px #111,
         0 8px 30px rgba(0, 0, 0, 0.95),
@@ -845,12 +867,12 @@ button,
     width: 55px;
     height: 8px;
     background:
-        radial-gradient(circle at 48px 4px, #00ff41 2.5px, transparent 2.5px),
+        radial-gradient(circle at 48px 4px, #33ff00 2.5px, transparent 2.5px),
         radial-gradient(circle at 28px 4px, #2a2a2a 2.5px, transparent 2.5px),
         radial-gradient(circle at 8px 4px, #222 2.5px, transparent 2.5px);
     background-repeat: no-repeat;
     z-index: 2;
-    filter: drop-shadow(0 0 4px rgba(0, 255, 65, 0.5));
+    filter: drop-shadow(0 0 4px rgba(51, 255, 0, 0.5));
     animation: ledPulse 3s ease-in-out infinite;
 }
 
@@ -963,27 +985,46 @@ button,
 .nav-item {
     flex: 1;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 3px;
     border: none;
     border-right: 1px solid var(--secondary-color);
-    padding: 0 5px;
+    padding: 6px 5px 0;
     transition: all 0.1s ease;
+}
+
+.nav-icon {
+    width: 18px;
+    height: 18px;
+    color: var(--text-muted);
+    transition: color 0.15s ease, filter 0.15s ease;
+}
+
+.nav-item.active .nav-icon {
+    color: var(--primary-color);
+    filter: drop-shadow(0 0 4px var(--primary-color));
 }
 
 .nav-item:last-child {
     border-right: none;
 }
 
+.nav-item {
+    color: var(--text-muted);
+}
+
 .nav-item.active {
     background-color: rgba(0, 59, 0, 0.4);
-    box-shadow: inset 0 2px 8px rgba(0, 255, 65, 0.15);
+    box-shadow: inset 0 2px 8px rgba(51, 255, 0, 0.15);
+    color: var(--primary-color);
     text-shadow: 0 0 6px var(--primary-color);
     border-top: 2px solid var(--primary-color);
 }
 
 .nav-item:active {
-    background: rgba(204, 255, 0, 0.08);
+    background: rgba(51, 255, 0, 0.08);
     border-top-color: var(--amber);
 }
 
@@ -1170,7 +1211,7 @@ button,
     font-size: 0.7rem;
     color: var(--primary-color);
     border-bottom: 1px dashed var(--secondary-color);
-    background: rgba(0, 255, 65, 0.02);
+    background: rgba(51, 255, 0, 0.02);
 }
 
 .history-content {
@@ -1191,7 +1232,7 @@ button,
 }
 
 .history-header:hover {
-    background: rgba(0, 255, 65, 0.1);
+    background: rgba(51, 255, 0, 0.1);
 }
 
 .collapsed {
@@ -1357,7 +1398,7 @@ button,
     word-wrap: break-word;
     pointer-events: none;
     text-shadow: 0 0 4px var(--primary-color);
-    box-shadow: 0 0 10px rgba(204, 255, 0, 0.2), inset 0 0 8px rgba(0, 255, 65, 0.03);
+    box-shadow: 0 0 10px rgba(51, 255, 0, 0.2), inset 0 0 8px rgba(51, 255, 0, 0.03);
     z-index: 10002;
     animation: bubbleFadeIn 0.2s ease-out;
     max-width: 180px;
@@ -1368,14 +1409,14 @@ button,
 .rest-zone {
     font-size: 0.7rem;
     color: var(--amber);
-    background: rgba(204, 255, 0, 0.08);
-    border: 1px solid rgba(204, 255, 0, 0.3);
+    background: rgba(51, 255, 0, 0.08);
+    border: 1px solid rgba(51, 255, 0, 0.3);
     padding: 3px 6px;
     margin-top: 5px;
     overflow: hidden;
     text-align: center;
     font-weight: bold;
-    text-shadow: 0 0 6px rgba(204, 255, 0, 0.4);
+    text-shadow: 0 0 6px rgba(51, 255, 0, 0.4);
 }
 
 
@@ -1394,6 +1435,21 @@ button,
 /* Mask for triangle to make it outlined (simulate hollow arrow) - optional, simplified to solid for stability */
 
 
+
+/* Brief confirmation flash on a set-row right after it's logged */
+.set-row.set-saved-flash {
+    animation: setSavedFlash 0.6s ease-out;
+}
+
+@keyframes setSavedFlash {
+    0% {
+        background: rgba(51, 255, 0, 0.35);
+    }
+
+    100% {
+        background: transparent;
+    }
+}
 
 @keyframes victoryDance {
     0% {
@@ -1464,7 +1520,7 @@ button,
     line-height: 90px;
     margin: 0 auto 15px;
     border-radius: 5px;
-    box-shadow: 0 0 20px rgba(0, 255, 65, 0.2);
+    box-shadow: 0 0 20px rgba(51, 255, 0, 0.2);
 }
 
 .brand-title {
@@ -1519,13 +1575,13 @@ button,
     transition: all 0.3s ease;
     max-width: 300px;
     letter-spacing: 2px;
-    box-shadow: 0 0 15px rgba(0, 255, 65, 0.1);
+    box-shadow: 0 0 15px rgba(51, 255, 0, 0.1);
 }
 
 .mega-btn:hover {
     background: var(--primary-color);
     color: #000;
-    box-shadow: 0 0 30px rgba(0, 255, 65, 0.4);
+    box-shadow: 0 0 30px rgba(51, 255, 0, 0.4);
 }
 
 .mega-btn .btn-decor {
@@ -1819,7 +1875,7 @@ button:hover::after {
 .secondary:hover {
     border-color: var(--primary-color);
     color: var(--primary-color);
-    background: rgba(0, 255, 65, 0.05);
+    background: rgba(51, 255, 0, 0.05);
     box-shadow: 0 0 10px var(--primary-color);
 }
 
@@ -2247,19 +2303,6 @@ button:hover::after {
     opacity: 0.5;
 }
 
-/* --- ALIEN CRT: INFO SECTIONS (Amber) --- */
-.info-section {
-    background: #000;
-    border: 1px solid var(--primary-color);
-    border-radius: 0;
-    padding: 20px;
-    box-shadow: none;
-    margin-bottom: 20px;
-    position: relative;
-    overflow: hidden;
-    animation: none;
-}
-
 /* --- EDITOR HEADER --- */
 .editor-header {
     font-size: 0.65rem;
@@ -2271,90 +2314,90 @@ button:hover::after {
     text-shadow: none;
 }
 
-/* --- SELECTION AREA (Monitor Stack) --- */
-.selection-area {
-    background: #000;
-    border-radius: 0;
-    padding: 20px;
-    box-shadow: none;
-    border: 1px solid var(--primary-color);
-    margin-bottom: 20px;
-    position: relative;
-    overflow: hidden;
-    animation: none;
-}
-
-.selection-area>* {
-    position: relative;
-    z-index: 2;
-}
-
-/* --- ALIEN CRT: WORKOUT ACTIONS --- */
-/* --- WORKOUT ACTIONS --- */
-#workout-actions {
-    background: #000;
-    border-radius: 0;
-    padding: 20px;
-    box-shadow: none;
-    border: 1px solid var(--primary-color);
-    margin-bottom: 20px;
-    position: relative;
-    overflow: hidden;
-    animation: none;
-}
-
-#workout-actions>* {
-    position: relative;
-    z-index: 2;
-}
-
-/* --- ALIEN CRT: HISTORY ITEMS --- */
-.history-item {
-    border: 1px solid var(--primary-color);
-    border-radius: 0;
-    padding: 20px;
-    margin-bottom: 20px;
-    position: relative;
-    background: #000;
-    box-shadow: none;
-    animation: none;
-}
-
-/* --- PLAN MANAGEMENT MONITOR --- */
-.plan-manage-item {
-    background: #000;
-    border-radius: 0;
-    padding: 20px;
-    box-shadow: none;
-    border: 1px solid var(--primary-color);
-    margin-bottom: 20px;
-    position: relative;
-    overflow: hidden;
-    animation: none;
-}
-
-.plan-manage-item>* {
-    position: relative;
-    z-index: 2;
-}
-
-/* --- ALIEN CRT: CHART --- */
-/* --- CHART CONTAINER --- */
+/* --- INDIVIDUAL CRT MONITORS ---
+   Every panel is its own physical tube screen: thick bevelled casing,
+   scanlines + phosphor vignette, glass reflection, power LED, boot flicker.
+   This is deliberately the same treatment as .exercise-card so the whole
+   app reads as a wall of separate console monitors, not one flat page. */
+.info-section,
+.selection-area,
+#workout-actions,
+.history-item,
+.plan-manage-item,
 .terminal-chart-container {
-    background: #000;
-    border-radius: 0;
-    padding: 20px;
-    box-shadow: none;
-    border: 1px solid var(--primary-color);
-    margin-bottom: 20px;
+    border: 12px solid;
+    border-color: #0a0a0a #000 #000 #050505;
+    border-radius: 6px;
+    padding: 16px;
+    margin-bottom: 24px;
     position: relative;
-    overflow: hidden;
-    animation: none;
+    overflow: visible;
+
+    background:
+        repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.2) 0px, rgba(0, 0, 0, 0.2) 1px, transparent 1px, transparent 2px),
+        radial-gradient(ellipse at center, rgba(0, 20, 0, 0.4) 0%, rgba(0, 0, 0, 0.8) 100%),
+        rgba(0, 8, 4, 0.95);
+
+    box-shadow:
+        inset 0 0 0 2px #000,
+        inset 0 0 10px rgba(0, 0, 0, 1),
+        inset 0 0 5px rgba(51, 255, 0, 0.1),
+        0 0 0 1px #111,
+        0 8px 30px rgba(0, 0, 0, 0.95),
+        0 3px 8px rgba(0, 0, 0, 0.8);
+
+    animation: crtBoot 0.5s ease-out both, monitorGlitch 15s infinite ease-in-out;
 }
 
+.info-section>*,
+.selection-area>*,
+#workout-actions>*,
+.history-item>*,
+.plan-manage-item>*,
 .terminal-chart-container>* {
     position: relative;
     z-index: 2;
+}
+
+/* Glass reflection */
+.info-section::before,
+.selection-area::before,
+#workout-actions::before,
+.history-item::before,
+.plan-manage-item::before,
+.terminal-chart-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(120deg,
+            rgba(255, 255, 255, 0.07) 0%,
+            rgba(255, 255, 255, 0.02) 20%,
+            transparent 40%);
+    pointer-events: none;
+    z-index: 1;
+    border-radius: 6px;
+}
+
+/* Power LED on the thick casing */
+.info-section::after,
+.selection-area::after,
+#workout-actions::after,
+.history-item::after,
+.plan-manage-item::after,
+.terminal-chart-container::after {
+    content: '';
+    position: absolute;
+    bottom: -18px;
+    right: 16px;
+    width: 14px;
+    height: 8px;
+    background: radial-gradient(circle at 4px 4px, var(--primary-color) 2.5px, transparent 2.5px);
+    z-index: 2;
+    filter: drop-shadow(0 0 4px rgba(51, 255, 0, 0.5));
+    animation: ledPulse 3s ease-in-out infinite;
 }
 
 /* --- PIXEL PENGUIN 2.0 (The Waddling Glitch) --- */
@@ -2385,7 +2428,7 @@ button:hover::after {
     color: var(--primary-color);
     white-space: nowrap;
     text-transform: uppercase;
-    box-shadow: 0 0 10px rgba(51, 255, 51, 0.2);
+    box-shadow: 0 0 10px rgba(51, 255, 0, 0.2);
     pointer-events: none;
     z-index: 10001;
     animation: terminalPulse 2s infinite ease-in-out;
